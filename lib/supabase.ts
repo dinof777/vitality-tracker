@@ -1,17 +1,19 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
-// Single Supabase client for the app. The anon key is safe to expose to the
-// browser (it's gated by Row Level Security in Supabase). Used from both
-// client components and Next.js API routes for this personal single-user app.
+// Lazy, crash-safe Supabase access. The anon key is safe in the browser
+// (gated by Row Level Security). Until .env.local is filled in,
+// isSupabaseConfigured is false and getSupabase() returns null so the app
+// still runs (logger works in local-only mode) instead of throwing at import.
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
-    'Missing Supabase env vars. Copy .env.local.example to .env.local and fill in ' +
-      'NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY from your Supabase project settings.'
-  );
+export const isSupabaseConfigured = Boolean(url && anonKey);
+
+let client: SupabaseClient | null = null;
+
+export function getSupabase(): SupabaseClient | null {
+  if (!isSupabaseConfigured) return null;
+  if (!client) client = createClient(url as string, anonKey as string);
+  return client;
 }
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
