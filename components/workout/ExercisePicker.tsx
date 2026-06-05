@@ -1,8 +1,9 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import type { Exercise } from '@/lib/database.types';
+import { useEffect, useMemo, useState } from 'react';
+import type { Equipment, Exercise } from '@/lib/database.types';
 import { EQUIPMENT_LABEL, EQUIPMENT_ORDER, SAMPLE_EXERCISES } from '@/lib/exercises';
+import { loadProfile } from '@/lib/profile';
 import ExerciseThumb from './ExerciseThumb';
 import ExerciseDetailSheet from './ExerciseDetailSheet';
 
@@ -24,19 +25,26 @@ export default function ExercisePicker({
 }: ExercisePickerProps) {
   const [query, setQuery] = useState('');
   const [preview, setPreview] = useState<Exercise | null>(null);
+  // Filter to the equipment in the saved profile (read after mount to avoid a
+  // hydration mismatch). null = no profile → show everything.
+  const [equipFilter, setEquipFilter] = useState<Equipment[] | null>(null);
+  useEffect(() => setEquipFilter(loadProfile()?.equipment ?? null), []);
 
   const groups = useMemo(() => {
     const q = query.toLowerCase();
     const exclude = new Set(excludeIds);
     const available = exercises.filter(
-      (e) => !exclude.has(e.id) && e.name.toLowerCase().includes(q),
+      (e) =>
+        !exclude.has(e.id) &&
+        e.name.toLowerCase().includes(q) &&
+        (!equipFilter || (e.equipment != null && equipFilter.includes(e.equipment))),
     );
     return EQUIPMENT_ORDER.map((eq) => ({
       equipment: eq,
       label: EQUIPMENT_LABEL[eq],
       items: available.filter((e) => e.equipment === eq),
     })).filter((g) => g.items.length > 0);
-  }, [query, excludeIds, exercises]);
+  }, [query, excludeIds, exercises, equipFilter]);
 
   return (
     <div className="space-y-3 rounded-lg border border-border bg-surface p-3">

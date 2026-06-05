@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import type { Exercise } from '@/lib/database.types';
 import { EQUIPMENT_LABEL } from '@/lib/exercises';
+import { intensityParams, loadProfile } from '@/lib/profile';
 import ExerciseThumb from './ExerciseThumb';
 import OverloadSparkline from './OverloadSparkline';
 
@@ -31,6 +32,15 @@ export default function ExerciseDetailSheet({
   }, [onClose]);
 
   const timed = exercise.equipment === 'isometric' || exercise.equipment === 'stretch';
+
+  // Recommended prescription from the saved profile's intensity (or moderate).
+  const [recommend, setRecommend] = useState('');
+  useEffect(() => {
+    const ip = intensityParams(loadProfile()?.intensity ?? 'moderate');
+    setRecommend(
+      timed ? `${ip.sets} sets · hold for time` : `${ip.sets} sets × ${ip.reps} reps @ ${ip.tempo} tempo`,
+    );
+  }, [timed]);
 
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center" role="dialog" aria-modal="true">
@@ -86,6 +96,14 @@ export default function ExerciseDetailSheet({
             <div>
               <p className="mb-1 text-caption text-text-muted">COACHING CUE</p>
               <p className="text-body text-text-primary">{exercise.default_cue}</p>
+            </div>
+          )}
+
+          {/* Recommended prescription (from profile intensity) */}
+          {recommend && (
+            <div>
+              <p className="mb-1 text-caption text-text-muted">RECOMMENDED</p>
+              <p className="text-body text-text-primary nums">{recommend}</p>
             </div>
           )}
 

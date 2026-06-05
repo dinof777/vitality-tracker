@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import type { Exercise } from '@/lib/database.types';
 import type { LoggedSet } from '@/lib/workout-types';
 import { fetchRoutine } from '@/lib/routines';
+import { SAMPLE_EXERCISES } from '@/lib/exercises';
 import ExerciseCard from './ExerciseCard';
 import ExercisePicker from './ExercisePicker';
 import InfoLegend from './InfoLegend';
@@ -29,13 +30,26 @@ export default function WorkoutSession({
 }: WorkoutSessionProps) {
   const searchParams = useSearchParams();
   const routineParam = searchParams.get('routine');
+  const exParam = searchParams.get('ex');
+
+  // Generated workout: ?ex=<comma-separated exercise ids>.
+  const exFromParam = exParam
+    ? exParam
+        .split(',')
+        .map((id) => SAMPLE_EXERCISES.find((e) => e.id === id))
+        .filter((e): e is Exercise => Boolean(e))
+    : [];
 
   const [workoutId, setWorkoutId] = useState<string | null>(
     initialWorkoutId && isUuid(initialWorkoutId) ? initialWorkoutId : null,
   );
   const routineId = routineParam && isUuid(routineParam) ? routineParam : null;
-  const [exercises, setExercises] = useState<Exercise[]>(initialExercises);
-  const [picking, setPicking] = useState(initialExercises.length === 0 && !routineParam);
+  const [exercises, setExercises] = useState<Exercise[]>(
+    exFromParam.length ? exFromParam : initialExercises,
+  );
+  const [picking, setPicking] = useState(
+    exFromParam.length === 0 && initialExercises.length === 0 && !routineParam,
+  );
   const [loadingRoutine, setLoadingRoutine] = useState(Boolean(routineParam));
   const [setCount, setSetCount] = useState(0);
 
