@@ -3,14 +3,16 @@
 import { useState } from 'react';
 import type { Exercise } from '@/lib/database.types';
 import type { LoggedSet } from '@/lib/workout-types';
-import { SAMPLE_EXERCISES } from '@/lib/exercises';
 import ExerciseCard from './ExerciseCard';
+import ExercisePicker from './ExercisePicker';
 
 interface WorkoutSessionProps {
   // Route param. A real UUID resumes that workout; 'active'/anything else
   // starts a fresh local session (the server assigns an id on first sync).
   initialWorkoutId?: string;
-  exercises?: Exercise[];
+  // Pre-loaded exercises (e.g. when started from a routine). Defaults to empty —
+  // you add exercises via the picker.
+  initialExercises?: Exercise[];
 }
 
 const isUuid = (v: string) =>
@@ -20,11 +22,13 @@ type SyncState = 'idle' | 'syncing' | 'synced' | 'local';
 
 export default function WorkoutSession({
   initialWorkoutId,
-  exercises = SAMPLE_EXERCISES,
+  initialExercises = [],
 }: WorkoutSessionProps) {
   const [workoutId, setWorkoutId] = useState<string | null>(
     initialWorkoutId && isUuid(initialWorkoutId) ? initialWorkoutId : null,
   );
+  const [exercises, setExercises] = useState<Exercise[]>(initialExercises);
+  const [picking, setPicking] = useState(initialExercises.length === 0);
   const [setCount, setSetCount] = useState(0);
   const [sync, setSync] = useState<SyncState>('idle');
   const [finished, setFinished] = useState(false);
@@ -39,7 +43,7 @@ export default function WorkoutSession({
         body: JSON.stringify({ ...entry, workoutId }),
       });
       if (res.status === 503) {
-        setSync('local'); // Supabase not configured yet — kept on-device
+        setSync('local'); // DB not configured yet — kept on-device
         return;
       }
       if (!res.ok) throw new Error(await res.text());
@@ -97,6 +101,27 @@ export default function WorkoutSession({
           <ExerciseCard key={ex.id} exercise={ex} onLogSet={handleLogSet} />
         ))}
       </div>
+
+      {picking ? (
+        <div className="mt-4">
+          <ExercisePicker
+            excludeIds={exercises.map((e) => e.id)}
+            onPick={(ex) => {
+              setExercises((prev) => [...prev, ex]);
+              setPicking(false);
+            }}
+            onClose={exercises.length > 0 ? () => setPicking(false) : undefined}
+          />
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setPicking(true)}
+          className="mt-4 flex h-12 w-full items-center justify-center rounded-md border border-border text-label text-text-primary transition-all duration-150 active:scale-[0.97] active:bg-surface"
+        >
+          + ADD EXERCISE
+        </button>
+      )}
 
       {/* Sticky Finish Workout */}
       <div className="fixed inset-x-0 bottom-0 mx-auto max-w-md px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-2">

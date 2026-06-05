@@ -7,11 +7,14 @@
 
 -- exercises: the master library of movements you can log.
 -- default_cue holds Brian Pruett's form reminder (e.g. "3s negative, squeeze top").
+-- equipment is constrained to the Vitality kit: dumbbells, bands, isometric
+-- holds, and stretches (no barbells/machines).
 create table if not exists exercises (
   id           uuid primary key default gen_random_uuid(),
   name         text not null,
   muscle_group text,
   default_cue  text,
+  equipment    text check (equipment in ('dumbbell', 'band', 'isometric', 'stretch')),
   created_at   timestamptz not null default now()
 );
 

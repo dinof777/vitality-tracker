@@ -4,11 +4,14 @@
 
 export type SetType = 'normal' | 'amrap' | 'dropset' | 'half_rep';
 
+export type Equipment = 'dumbbell' | 'band' | 'isometric' | 'stretch';
+
 export interface Exercise {
   id: string;
   name: string;
   muscle_group: string | null;
   default_cue: string | null;
+  equipment: Equipment | null;
   created_at: string;
 }
 
