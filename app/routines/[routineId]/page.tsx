@@ -13,7 +13,7 @@ import {
 } from '@/lib/routines';
 import ExercisePicker from '@/components/workout/ExercisePicker';
 import ExerciseThumb from '@/components/workout/ExerciseThumb';
-import { syncrofitRunUrl } from '@/lib/syncrofit';
+import { syncrofitImportUrl } from '@/lib/syncrofit';
 
 export default function RoutineDetailPage() {
   const { routineId } = useParams<{ routineId: string }>();
@@ -76,25 +76,33 @@ export default function RoutineDetailPage() {
 
   const remove = (index: number) => persist(rows.filter((_, i) => i !== index));
 
-  // Hand this routine to the SyncroFit interval-timer app as a timed circuit.
-  // Works on an iPhone with SyncroFit installed; elsewhere there's no handler,
-  // so we also reveal a copy-link fallback.
-  const sendToSyncrofit = () => {
+  // Hand this routine to SyncroFit as a timed circuit. Copy the import link to
+  // the clipboard (so SyncroFit's in-app Import works) AND open the deep link
+  // (so a build with onOpenURL auto-imports). Needs SyncroFit on the iPhone.
+  const sendToSyncrofit = async () => {
     if (!routine || rows.length === 0) return;
+    const url = syncrofitImportUrl({ ...routine, exercises: rows });
     setSyncHint(true);
     try {
-      window.location.href = syncrofitRunUrl({ ...routine, exercises: rows });
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
     } catch {
-      /* no handler on this device — fallback shown below */
+      /* clipboard unavailable */
+    }
+    try {
+      window.location.href = url;
+    } catch {
+      /* no handler — clipboard + in-app Import still works */
     }
   };
 
   const copySyncLink = async () => {
     if (!routine) return;
     try {
-      await navigator.clipboard.writeText(syncrofitRunUrl({ ...routine, exercises: rows }));
+      await navigator.clipboard.writeText(syncrofitImportUrl({ ...routine, exercises: rows }));
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setTimeout(() => setCopied(false), 2500);
     } catch {
       /* clipboard unavailable */
     }
@@ -213,24 +221,27 @@ export default function RoutineDetailPage() {
       {syncHint ? (
         <div className="mt-2 space-y-2 rounded-md border border-border bg-surface p-3">
           <p className="text-caption text-text-muted">
-            Opening <span className="text-text-primary">SyncroFit</span>… this needs the
-            SyncroFit app installed on your <span className="text-text-primary">iPhone</span>.
-            Nothing happened?
+            {copied ? (
+              <>
+                <span className="font-semibold text-success">Link copied ✓</span> — if SyncroFit
+                didn&apos;t open and load the circuit, open <span className="text-text-primary">SyncroFit</span>{' '}
+                on your iPhone and tap <span className="text-text-primary">Import</span> (the link&apos;s on your clipboard).
+              </>
+            ) : (
+              <>Opening <span className="text-text-primary">SyncroFit</span>… needs the app installed on your iPhone.</>
+            )}
           </p>
           <button
             type="button"
             onClick={copySyncLink}
             className="h-9 w-full rounded-md border border-border text-caption font-semibold text-accent active:bg-surface-raised"
           >
-            {copied ? 'Link copied ✓' : 'Copy circuit link'}
+            {copied ? 'Copy again' : 'Copy circuit link'}
           </button>
-          <p className="text-caption text-text-faint">
-            Then open it in Safari on your iPhone (or paste into the SyncroFit Import).
-          </p>
         </div>
       ) : (
         <p className="mt-2 px-1 text-caption text-text-faint">
-          Opens this routine as a timed circuit in the SyncroFit interval-timer app (iPhone).
+          Sends this routine to SyncroFit as a timed circuit (needs the SyncroFit app on your iPhone).
         </p>
       )}
 
