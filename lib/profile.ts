@@ -12,7 +12,8 @@ export interface Profile {
 
 export const EQUIPMENT_CHOICES: { value: Equipment; label: string; hint: string }[] = [
   { value: 'dumbbell', label: 'Dumbbells', hint: 'Adjustable or fixed' },
-  { value: 'band', label: 'Resistance Bands', hint: 'Loop or handled' },
+  { value: 'tube_band', label: 'Tube Bands', hint: 'Long bands with handles' },
+  { value: 'loop_band', label: 'Loop Bands', hint: 'Mini / booty bands' },
   { value: 'isometric', label: 'Bodyweight Holds', hint: 'Planks, wall sits, holds' },
   { value: 'stretch', label: 'Stretching', hint: 'Mobility & recovery' },
 ];
@@ -62,7 +63,15 @@ export function loadProfile(): Profile | null {
   if (typeof window === 'undefined') return null;
   try {
     const raw = window.localStorage.getItem(KEY);
-    return raw ? (JSON.parse(raw) as Profile) : null;
+    if (!raw) return null;
+    const p = JSON.parse(raw) as Profile & { equipment: string[] };
+    // Migrate the old single 'band' category → tube_band + loop_band.
+    if (p.equipment?.includes('band')) {
+      p.equipment = Array.from(
+        new Set(p.equipment.flatMap((e) => (e === 'band' ? ['tube_band', 'loop_band'] : [e]))),
+      ) as Equipment[];
+    }
+    return p;
   } catch {
     return null;
   }

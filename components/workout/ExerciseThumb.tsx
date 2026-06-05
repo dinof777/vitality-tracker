@@ -24,11 +24,19 @@ function EquipmentIcon({ equipment }: { equipment: Equipment | null }) {
           <path d="M3 9v6M6 7v10M18 7v10M21 9v6M6 12h12" />
         </svg>
       );
-    case 'band':
+    case 'tube_band':
+      // Long band with two handles.
       return (
         <svg viewBox="0 0 24 24" className="h-1/2 w-1/2" {...common}>
           <path d="M4 7v10M20 7v10" />
           <path d="M4 12c5-6 11 6 16 0" />
+        </svg>
+      );
+    case 'loop_band':
+      // Mini loop band — a ring.
+      return (
+        <svg viewBox="0 0 24 24" className="h-1/2 w-1/2" {...common}>
+          <ellipse cx="12" cy="12" rx="8" ry="5" />
         </svg>
       );
     case 'isometric':

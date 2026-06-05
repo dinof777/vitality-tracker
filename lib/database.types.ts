@@ -4,7 +4,7 @@
 
 export type SetType = 'normal' | 'amrap' | 'dropset' | 'half_rep';
 
-export type Equipment = 'dumbbell' | 'band' | 'isometric' | 'stretch';
+export type Equipment = 'dumbbell' | 'tube_band' | 'loop_band' | 'isometric' | 'stretch';
 
 export interface Exercise {
   id: string;

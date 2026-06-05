@@ -15,7 +15,13 @@ import {
 export default function SetupPage() {
   const router = useRouter();
   const [step, setStep] = useState(0);
-  const [equipment, setEquipment] = useState<Equipment[]>(['dumbbell', 'band', 'isometric', 'stretch']);
+  const [equipment, setEquipment] = useState<Equipment[]>([
+    'dumbbell',
+    'tube_band',
+    'loop_band',
+    'isometric',
+    'stretch',
+  ]);
   const [focus, setFocus] = useState('full');
   const [intensity, setIntensity] = useState<Intensity>('moderate');
 
