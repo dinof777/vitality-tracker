@@ -19,6 +19,10 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "Vitality",
   },
+  other: {
+    // Modern standard replacing the deprecated apple-mobile-web-app-capable.
+    "mobile-web-app-capable": "yes",
+  },
 };
 
 export const viewport: Viewport = {

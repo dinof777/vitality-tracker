@@ -21,6 +21,8 @@ export default function RoutineDetailPage() {
   const [rows, setRows] = useState<RoutineExerciseRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [picking, setPicking] = useState(false);
+  const [syncHint, setSyncHint] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     fetchRoutine(routineId).then((r) => {
@@ -75,9 +77,27 @@ export default function RoutineDetailPage() {
   const remove = (index: number) => persist(rows.filter((_, i) => i !== index));
 
   // Hand this routine to the SyncroFit interval-timer app as a timed circuit.
+  // Works on an iPhone with SyncroFit installed; elsewhere there's no handler,
+  // so we also reveal a copy-link fallback.
   const sendToSyncrofit = () => {
     if (!routine || rows.length === 0) return;
-    window.location.href = syncrofitRunUrl({ ...routine, exercises: rows });
+    setSyncHint(true);
+    try {
+      window.location.href = syncrofitRunUrl({ ...routine, exercises: rows });
+    } catch {
+      /* no handler on this device — fallback shown below */
+    }
+  };
+
+  const copySyncLink = async () => {
+    if (!routine) return;
+    try {
+      await navigator.clipboard.writeText(syncrofitRunUrl({ ...routine, exercises: rows }));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* clipboard unavailable */
+    }
   };
 
   if (loading) {
@@ -189,9 +209,30 @@ export default function RoutineDetailPage() {
           ⏱ SEND TO SYNCROFIT
         </button>
       )}
-      <p className="mt-2 px-1 text-caption text-text-faint">
-        Opens this routine as a timed circuit in the SyncroFit interval-timer app (iPhone).
-      </p>
+
+      {syncHint ? (
+        <div className="mt-2 space-y-2 rounded-md border border-border bg-surface p-3">
+          <p className="text-caption text-text-muted">
+            Opening <span className="text-text-primary">SyncroFit</span>… this needs the
+            SyncroFit app installed on your <span className="text-text-primary">iPhone</span>.
+            Nothing happened?
+          </p>
+          <button
+            type="button"
+            onClick={copySyncLink}
+            className="h-9 w-full rounded-md border border-border text-caption font-semibold text-accent active:bg-surface-raised"
+          >
+            {copied ? 'Link copied ✓' : 'Copy circuit link'}
+          </button>
+          <p className="text-caption text-text-faint">
+            Then open it in Safari on your iPhone (or paste into the SyncroFit Import).
+          </p>
+        </div>
+      ) : (
+        <p className="mt-2 px-1 text-caption text-text-faint">
+          Opens this routine as a timed circuit in the SyncroFit interval-timer app (iPhone).
+        </p>
+      )}
 
       {/* Sticky Start Workout */}
       <div className="fixed inset-x-0 bottom-16 mx-auto max-w-md px-4 pt-2">
