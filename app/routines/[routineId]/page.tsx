@@ -1,64 +1,85 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { SAMPLE_EXERCISES } from '@/lib/exercises';
+import type { Exercise } from '@/lib/database.types';
 import {
   DAY_LABELS,
-  getRoutine,
-  updateRoutine,
-  type LocalRoutine,
-} from '@/lib/routine-store';
-
-const exName = (id: string) => SAMPLE_EXERCISES.find((e) => e.id === id)?.name ?? id;
+  fetchRoutine,
+  saveRoutineExercises,
+  type RoutineExerciseRow,
+  type RoutineWithExercises,
+} from '@/lib/routines';
+import ExercisePicker from '@/components/workout/ExercisePicker';
+import ExerciseThumb from '@/components/workout/ExerciseThumb';
 
 export default function RoutineDetailPage() {
   const { routineId } = useParams<{ routineId: string }>();
-  const [routine, setRoutine] = useState<LocalRoutine | null>(null);
+  const [routine, setRoutine] = useState<RoutineWithExercises | null>(null);
+  const [rows, setRows] = useState<RoutineExerciseRow[]>([]);
+  const [loading, setLoading] = useState(true);
   const [picking, setPicking] = useState(false);
-  const [query, setQuery] = useState('');
 
   useEffect(() => {
-    setRoutine(getRoutine(routineId) ?? null);
+    fetchRoutine(routineId).then((r) => {
+      setRoutine(r);
+      setRows(r?.exercises ?? []);
+      setLoading(false);
+    });
   }, [routineId]);
 
-  const save = (next: LocalRoutine) => {
-    updateRoutine(next);
-    setRoutine({ ...next });
+  // Persist the current order/contents to the DB.
+  const persist = (next: RoutineExerciseRow[]) => {
+    setRows(next);
+    void saveRoutineExercises(
+      routineId,
+      next.map((r) => ({
+        exerciseId: r.exercise_id,
+        sets: r.default_sets,
+        reps: r.default_reps,
+        tempo: r.default_tempo,
+      })),
+    );
   };
 
-  const addExercise = (exerciseId: string) => {
-    if (!routine) return;
-    save({
-      ...routine,
-      exercises: [...routine.exercises, { exerciseId, sets: 3, reps: '8-12', tempo: '3-1-1' }],
-    });
+  const addExercise = (ex: Exercise) => {
+    persist([
+      ...rows,
+      {
+        id: `tmp-${ex.id}`,
+        exercise_id: ex.id,
+        sort_order: rows.length,
+        default_sets: 3,
+        default_reps: '8-12',
+        default_tempo: '3-1-1',
+        name: ex.name,
+        muscle_group: ex.muscle_group,
+        equipment: ex.equipment,
+        image_url: ex.image_url,
+        default_cue: ex.default_cue,
+      },
+    ]);
     setPicking(false);
-    setQuery('');
   };
 
   const move = (index: number, dir: -1 | 1) => {
-    if (!routine) return;
-    const next = [...routine.exercises];
+    const next = [...rows];
     const target = index + dir;
     if (target < 0 || target >= next.length) return;
     [next[index], next[target]] = [next[target], next[index]];
-    save({ ...routine, exercises: next });
+    persist(next);
   };
 
-  const remove = (index: number) => {
-    if (!routine) return;
-    save({ ...routine, exercises: routine.exercises.filter((_, i) => i !== index) });
-  };
+  const remove = (index: number) => persist(rows.filter((_, i) => i !== index));
 
-  const filtered = useMemo(() => {
-    const q = query.toLowerCase();
-    const already = new Set(routine?.exercises.map((e) => e.exerciseId));
-    return SAMPLE_EXERCISES.filter(
-      (e) => !already.has(e.id) && e.name.toLowerCase().includes(q),
+  if (loading) {
+    return (
+      <main className="mx-auto min-h-dvh max-w-md px-4 pt-8">
+        <div className="h-8 w-40 animate-pulse rounded bg-surface" />
+      </main>
     );
-  }, [query, routine]);
+  }
 
   if (!routine) {
     return (
@@ -72,21 +93,21 @@ export default function RoutineDetailPage() {
   }
 
   return (
-    <main className="mx-auto min-h-dvh max-w-md px-4 pb-28 pt-8">
+    <main className="mx-auto min-h-dvh max-w-md px-4 pb-32 pt-8">
       <Link href="/routines" className="text-caption text-text-muted">
         ← Routines
       </Link>
       <header className="mb-5 mt-2">
         <h1 className="text-h1 text-text-primary">{routine.name}</h1>
-        {routine.dayOfWeek && (
-          <p className="text-caption text-text-muted">{DAY_LABELS[routine.dayOfWeek]}</p>
+        {routine.day_of_week && (
+          <p className="text-caption text-text-muted">{DAY_LABELS[routine.day_of_week]}</p>
         )}
       </header>
 
       <ul className="space-y-2">
-        {routine.exercises.map((re, i) => (
+        {rows.map((re, i) => (
           <li
-            key={`${re.exerciseId}-${i}`}
+            key={re.id}
             className="flex items-center gap-3 rounded-md border border-border bg-surface p-3"
           >
             <div className="flex flex-col gap-1">
@@ -103,18 +124,17 @@ export default function RoutineDetailPage() {
                 type="button"
                 onClick={() => move(i, 1)}
                 className="text-text-faint active:text-accent disabled:opacity-30"
-                disabled={i === routine.exercises.length - 1}
+                disabled={i === rows.length - 1}
                 aria-label="Move down"
               >
                 ▼
               </button>
             </div>
+            <ExerciseThumb equipment={re.equipment} imageUrl={re.image_url} name={re.name} size={40} />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-body font-semibold text-text-primary">
-                {exName(re.exerciseId)}
-              </p>
+              <p className="truncate text-body font-semibold text-text-primary">{re.name}</p>
               <p className="text-caption text-text-muted nums">
-                {re.sets} × {re.reps} · {re.tempo}
+                {re.default_sets} × {re.default_reps} · {re.default_tempo}
               </p>
             </div>
             <button
@@ -127,7 +147,7 @@ export default function RoutineDetailPage() {
             </button>
           </li>
         ))}
-        {routine.exercises.length === 0 && (
+        {rows.length === 0 && (
           <li className="rounded-md border border-dashed border-border p-5 text-center text-caption text-text-muted">
             No exercises yet. Add your first movement.
           </li>
@@ -135,37 +155,12 @@ export default function RoutineDetailPage() {
       </ul>
 
       {picking ? (
-        <div className="mt-4 space-y-2 rounded-lg border border-border bg-surface p-3">
-          <input
-            autoFocus
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search exercises…"
-            className="h-12 w-full rounded-md bg-surface-raised px-3 text-body text-text-primary outline-none focus:ring-2 focus:ring-accent"
+        <div className="mt-4">
+          <ExercisePicker
+            excludeIds={rows.map((r) => r.exercise_id)}
+            onPick={addExercise}
+            onClose={() => setPicking(false)}
           />
-          <div className="max-h-64 space-y-1 overflow-y-auto">
-            {filtered.map((e) => (
-              <button
-                key={e.id}
-                type="button"
-                onClick={() => addExercise(e.id)}
-                className="flex w-full items-center justify-between rounded-md px-3 py-3 text-left active:bg-surface-raised"
-              >
-                <span className="text-body text-text-primary">{e.name}</span>
-                <span className="text-caption text-text-muted">{e.muscle_group}</span>
-              </button>
-            ))}
-            {filtered.length === 0 && (
-              <p className="px-3 py-3 text-caption text-text-faint">No matches.</p>
-            )}
-          </div>
-          <button
-            type="button"
-            onClick={() => setPicking(false)}
-            className="h-10 w-full rounded-md border border-border text-label text-text-muted"
-          >
-            Done
-          </button>
         </div>
       ) : (
         <button
@@ -180,7 +175,7 @@ export default function RoutineDetailPage() {
       {/* Sticky Start Workout */}
       <div className="fixed inset-x-0 bottom-16 mx-auto max-w-md px-4 pt-2">
         <Link
-          href="/workout/active"
+          href={`/workout/active?routine=${routine.id}`}
           className="flex h-14 w-full items-center justify-center rounded-md bg-accent text-label text-on-accent shadow-lift transition-all duration-150 active:scale-[0.97] active:bg-accent-press"
         >
           START WORKOUT

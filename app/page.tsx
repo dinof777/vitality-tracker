@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import StreakBadge from '@/components/daily5/StreakBadge';
 import { computeStreak } from '@/lib/daily5';
-import { DAY_LABELS, loadRoutines, type LocalRoutine } from '@/lib/routine-store';
+import { DAY_LABELS, fetchRoutines, type RoutineWithExercises } from '@/lib/routines';
 
 function greeting(hour: number): string {
   if (hour < 12) return 'Good morning';
@@ -15,15 +15,16 @@ function greeting(hour: number): string {
 export default function Home() {
   const [greet, setGreet] = useState('Welcome');
   const [streak, setStreak] = useState(0);
-  const [todayRoutine, setTodayRoutine] = useState<LocalRoutine | null>(null);
+  const [todayRoutine, setTodayRoutine] = useState<RoutineWithExercises | null>(null);
 
   useEffect(() => {
     const now = new Date();
     setGreet(greeting(now.getHours()));
     setStreak(computeStreak());
     const isoDay = now.getDay() === 0 ? 7 : now.getDay(); // 1=Mon..7=Sun
-    const routines = loadRoutines();
-    setTodayRoutine(routines.find((r) => r.dayOfWeek === isoDay) ?? routines[0] ?? null);
+    fetchRoutines().then((routines) => {
+      setTodayRoutine(routines.find((r) => r.day_of_week === isoDay) ?? routines[0] ?? null);
+    });
   }, []);
 
   return (
@@ -39,14 +40,14 @@ export default function Home() {
       <section className="mt-8 rounded-lg border border-border bg-surface p-4">
         <p className="text-caption text-text-muted">TODAY&apos;S ROUTINE</p>
         {todayRoutine ? (
-          <>
-            <p className="mt-1 text-h2 text-text-primary">{todayRoutine.name}</p>
+          <Link href={`/routines/${todayRoutine.id}`} className="mt-1 block">
+            <p className="text-h2 text-text-primary">{todayRoutine.name}</p>
             <p className="text-caption text-text-muted nums">
               {todayRoutine.exercises.length} exercise
               {todayRoutine.exercises.length === 1 ? '' : 's'}
-              {todayRoutine.dayOfWeek ? ` · ${DAY_LABELS[todayRoutine.dayOfWeek]}` : ''}
+              {todayRoutine.day_of_week ? ` · ${DAY_LABELS[todayRoutine.day_of_week]}` : ''}
             </p>
-          </>
+          </Link>
         ) : (
           <p className="mt-1 text-body text-text-muted">
             No routine yet —{' '}
@@ -62,7 +63,7 @@ export default function Home() {
 
       <div className="space-y-3">
         <Link
-          href="/workout/active"
+          href={todayRoutine ? `/workout/active?routine=${todayRoutine.id}` : '/workout/active'}
           className="flex h-14 w-full items-center justify-center rounded-md bg-accent text-label text-on-accent transition-all duration-150 active:scale-[0.97] active:bg-accent-press"
         >
           START TODAY&apos;S WORKOUT

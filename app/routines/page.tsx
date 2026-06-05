@@ -5,25 +5,36 @@ import Link from 'next/link';
 import {
   DAY_LABELS,
   createRoutine,
-  loadRoutines,
-  type LocalRoutine,
-} from '@/lib/routine-store';
+  fetchRoutines,
+  type RoutineWithExercises,
+} from '@/lib/routines';
 
 export default function RoutinesPage() {
-  const [routines, setRoutines] = useState<LocalRoutine[]>([]);
+  const [routines, setRoutines] = useState<RoutineWithExercises[]>([]);
+  const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState('');
   const [day, setDay] = useState<number | null>(null);
+  const [saving, setSaving] = useState(false);
 
-  useEffect(() => setRoutines(loadRoutines()), []);
+  const load = () => fetchRoutines().then((r) => {
+    setRoutines(r);
+    setLoading(false);
+  });
 
-  const add = () => {
-    if (!name.trim()) return;
-    createRoutine(name.trim(), day);
-    setRoutines(loadRoutines());
+  useEffect(() => {
+    load();
+  }, []);
+
+  const add = async () => {
+    if (!name.trim() || saving) return;
+    setSaving(true);
+    await createRoutine(name.trim(), day);
     setName('');
     setDay(null);
     setAdding(false);
+    setSaving(false);
+    load();
   };
 
   return (
@@ -45,17 +56,24 @@ export default function RoutinesPage() {
               <p className="text-h3 text-text-primary">{r.name}</p>
               <p className="text-caption text-text-muted nums">
                 {r.exercises.length} exercise{r.exercises.length === 1 ? '' : 's'}
-                {r.dayOfWeek ? ` · ${DAY_LABELS[r.dayOfWeek]}` : ''}
+                {r.day_of_week ? ` · ${DAY_LABELS[r.day_of_week]}` : ''}
               </p>
             </div>
             <span className="text-text-faint">›</span>
           </Link>
         ))}
 
-        {routines.length === 0 && !adding && (
+        {!loading && routines.length === 0 && !adding && (
           <p className="rounded-lg border border-dashed border-border p-6 text-center text-body text-text-muted">
             No routines yet. Build your first blueprint.
           </p>
+        )}
+        {loading && (
+          <div className="space-y-3">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="h-20 animate-pulse rounded-lg bg-surface" />
+            ))}
+          </div>
         )}
       </div>
 
@@ -90,9 +108,10 @@ export default function RoutinesPage() {
             <button
               type="button"
               onClick={add}
-              className="h-12 flex-1 rounded-md bg-accent text-label text-on-accent active:scale-[0.97]"
+              disabled={saving}
+              className="h-12 flex-1 rounded-md bg-accent text-label text-on-accent active:scale-[0.97] disabled:opacity-50"
             >
-              CREATE
+              {saving ? 'CREATING…' : 'CREATE'}
             </button>
             <button
               type="button"

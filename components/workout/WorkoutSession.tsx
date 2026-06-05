@@ -1,8 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import type { Exercise } from '@/lib/database.types';
 import type { LoggedSet } from '@/lib/workout-types';
+import { fetchRoutine } from '@/lib/routines';
 import ExerciseCard from './ExerciseCard';
 import ExercisePicker from './ExercisePicker';
 import InfoLegend from './InfoLegend';
@@ -25,12 +27,51 @@ export default function WorkoutSession({
   initialWorkoutId,
   initialExercises = [],
 }: WorkoutSessionProps) {
+  const searchParams = useSearchParams();
+  const routineParam = searchParams.get('routine');
+
   const [workoutId, setWorkoutId] = useState<string | null>(
     initialWorkoutId && isUuid(initialWorkoutId) ? initialWorkoutId : null,
   );
+  const routineId = routineParam && isUuid(routineParam) ? routineParam : null;
   const [exercises, setExercises] = useState<Exercise[]>(initialExercises);
-  const [picking, setPicking] = useState(initialExercises.length === 0);
+  const [picking, setPicking] = useState(initialExercises.length === 0 && !routineParam);
+  const [loadingRoutine, setLoadingRoutine] = useState(Boolean(routineParam));
   const [setCount, setSetCount] = useState(0);
+
+  // When started from a routine, pre-load its exercises into the logger.
+  useEffect(() => {
+    if (!routineParam) return;
+    let active = true;
+    fetchRoutine(routineParam)
+      .then((r) => {
+        if (!active) return;
+        if (r && r.exercises.length > 0) {
+          setExercises(
+            r.exercises.map((re) => ({
+              id: re.exercise_id,
+              name: re.name,
+              muscle_group: re.muscle_group,
+              equipment: re.equipment,
+              image_url: re.image_url,
+              default_cue: re.default_cue,
+              created_at: '',
+            })),
+          );
+        } else {
+          setPicking(true);
+        }
+        setLoadingRoutine(false);
+      })
+      .catch(() => {
+        if (!active) return;
+        setPicking(true);
+        setLoadingRoutine(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [routineParam]);
   const [sync, setSync] = useState<SyncState>('idle');
   const [finished, setFinished] = useState(false);
   const [showLegend, setShowLegend] = useState(false);
@@ -42,7 +83,7 @@ export default function WorkoutSession({
       const res = await fetch('/api/log', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...entry, workoutId }),
+        body: JSON.stringify({ ...entry, workoutId, routineId }),
       });
       if (res.status === 503) {
         setSync('local'); // DB not configured yet — kept on-device
@@ -113,6 +154,14 @@ export default function WorkoutSession({
       {showLegend && (
         <div className="mb-4">
           <InfoLegend />
+        </div>
+      )}
+
+      {loadingRoutine && (
+        <div className="space-y-4">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="h-40 animate-pulse rounded-lg bg-surface" />
+          ))}
         </div>
       )}
 
