@@ -6,6 +6,7 @@ import type { LoggedSet } from '@/lib/workout-types';
 import { SET_TYPES } from '@/lib/workout-types';
 import SetLogRow from './SetLogRow';
 import RestTimer from './RestTimer';
+import OverloadSparkline from './OverloadSparkline';
 
 interface ExerciseCardProps {
   exercise: Exercise;
@@ -42,6 +43,8 @@ export default function ExerciseCard({ exercise, onLogSet }: ExerciseCardProps) 
           <p className="text-caption italic text-text-muted">{exercise.default_cue}</p>
         )}
       </div>
+
+      <OverloadSparkline exerciseId={exercise.id} />
 
       {/* Completed sets this session */}
       {sets.length > 0 && (
