@@ -13,6 +13,8 @@ let sql: NeonQueryFunction<false, false> | null = null;
 
 export function getSql(): NeonQueryFunction<false, false> | null {
   if (!url) return null;
-  if (!sql) sql = neon(url);
+  // The Neon HTTP driver queries via fetch; Next.js caches fetch by default,
+  // which would freeze query results. Force no-store so every query reads live.
+  if (!sql) sql = neon(url, { fetchOptions: { cache: 'no-store' } });
   return sql;
 }
