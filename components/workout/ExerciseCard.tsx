@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Exercise } from '@/lib/database.types';
 import type { LoggedSet } from '@/lib/workout-types';
 import { SET_TYPES } from '@/lib/workout-types';
@@ -13,20 +13,51 @@ interface ExerciseCardProps {
   onLogSet: (entry: LoggedSet) => void;
 }
 
+interface LastSet {
+  weight: number | null;
+  reps: number | null;
+  tempo: string;
+}
+
 const setTypeLabel = (v: string) =>
   SET_TYPES.find((s) => s.value === v)?.label ?? v;
 
 // One exercise within a workout: name + cue, a summary of completed sets, the
-// rest timer (shown after a set is logged), and the active set-log row.
+// rest timer (shown after a set is logged), and the active set-log row. The row
+// pre-fills from this session's previous set, or the last logged set in the DB.
 export default function ExerciseCard({ exercise, onLogSet }: ExerciseCardProps) {
   const [sets, setSets] = useState<LoggedSet[]>([]);
   const [showTimer, setShowTimer] = useState(false);
+  const [dbLast, setDbLast] = useState<LastSet | null>(null);
+  const [lastLoaded, setLastLoaded] = useState(false);
+
+  // Fetch the most recent logged set so the first input is pre-filled.
+  useEffect(() => {
+    let active = true;
+    fetch(`/api/exercises/${exercise.id}/last`)
+      .then((r) => r.json())
+      .then((j) => {
+        if (!active) return;
+        setDbLast(j.last ?? null);
+        setLastLoaded(true);
+      })
+      .catch(() => active && setLastLoaded(true));
+    return () => {
+      active = false;
+    };
+  }, [exercise.id]);
 
   const handleLogSet = (entry: LoggedSet) => {
     setSets((prev) => [...prev, entry]);
     setShowTimer(true);
     onLogSet(entry);
   };
+
+  // Pre-fill priority: this session's previous set, else the DB's last set.
+  const prevSet = sets.length > 0 ? sets[sets.length - 1] : null;
+  const prefill: LastSet | null = prevSet
+    ? { weight: prevSet.weight, reps: prevSet.reps, tempo: prevSet.tempo }
+    : dbLast;
 
   return (
     <section className="space-y-3 rounded-lg border border-border bg-surface p-4">
@@ -76,11 +107,17 @@ export default function ExerciseCard({ exercise, onLogSet }: ExerciseCardProps) 
 
       {showTimer && <RestTimer onDismiss={() => setShowTimer(false)} />}
 
-      <SetLogRow
-        exerciseId={exercise.id}
-        setNumber={sets.length + 1}
-        onLogSet={handleLogSet}
-      />
+      {lastLoaded && (
+        <SetLogRow
+          key={`row-${sets.length}`}
+          exerciseId={exercise.id}
+          setNumber={sets.length + 1}
+          defaultWeight={prefill?.weight ?? null}
+          defaultReps={prefill?.reps ?? null}
+          defaultTempo={prefill?.tempo ?? '3-1-1'}
+          onLogSet={handleLogSet}
+        />
+      )}
     </section>
   );
 }

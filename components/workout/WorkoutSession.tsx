@@ -5,6 +5,7 @@ import type { Exercise } from '@/lib/database.types';
 import type { LoggedSet } from '@/lib/workout-types';
 import ExerciseCard from './ExerciseCard';
 import ExercisePicker from './ExercisePicker';
+import InfoLegend from './InfoLegend';
 
 interface WorkoutSessionProps {
   // Route param. A real UUID resumes that workout; 'active'/anything else
@@ -32,6 +33,7 @@ export default function WorkoutSession({
   const [setCount, setSetCount] = useState(0);
   const [sync, setSync] = useState<SyncState>('idle');
   const [finished, setFinished] = useState(false);
+  const [showLegend, setShowLegend] = useState(false);
 
   const handleLogSet = async (entry: LoggedSet) => {
     setSetCount((n) => n + 1);
@@ -91,10 +93,28 @@ export default function WorkoutSession({
             {setCount} {setCount === 1 ? 'set' : 'sets'} logged
           </p>
         </div>
-        <span className={`text-caption font-semibold ${syncColor[sync]}`}>
-          ● {syncLabel[sync]}
-        </span>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setShowLegend((v) => !v)}
+            aria-label="What do these numbers mean?"
+            className={`flex h-7 w-7 items-center justify-center rounded-full border border-border text-caption font-bold transition-colors ${
+              showLegend ? 'bg-accent text-on-accent' : 'text-text-muted'
+            }`}
+          >
+            ?
+          </button>
+          <span className={`text-caption font-semibold ${syncColor[sync]}`}>
+            ● {syncLabel[sync]}
+          </span>
+        </div>
       </header>
+
+      {showLegend && (
+        <div className="mb-4">
+          <InfoLegend />
+        </div>
+      )}
 
       <div className="space-y-4">
         {exercises.map((ex) => (

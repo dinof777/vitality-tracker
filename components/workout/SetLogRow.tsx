@@ -2,27 +2,32 @@
 
 import { useState } from 'react';
 import type { SetType } from '@/lib/database.types';
-import { SET_TYPES, TEMPO_PRESETS, type LoggedSet } from '@/lib/workout-types';
+import { SET_TYPES, SET_TYPE_INFO, TEMPO_INFO, TEMPO_PRESETS, type LoggedSet } from '@/lib/workout-types';
 
 interface SetLogRowProps {
   exerciseId: string;
   setNumber: number;
+  defaultWeight?: number | null;
+  defaultReps?: number | null;
   defaultTempo?: string;
   onLogSet: (entry: LoggedSet) => void;
 }
 
 // One row for logging a single set: weight + reps inputs, tempo badge picker,
-// set-type chips, and a full-width Log Set button. All targets >= 48px.
+// set-type chips, and a full-width Log Set button. Inputs pre-fill from the
+// previous set (progressive overload). All targets >= 48px.
 export default function SetLogRow({
   exerciseId,
   setNumber,
+  defaultWeight = null,
+  defaultReps = null,
   defaultTempo = '3-1-1',
   onLogSet,
 }: SetLogRowProps) {
-  const [weight, setWeight] = useState('');
-  const [reps, setReps] = useState('');
+  const [weight, setWeight] = useState(defaultWeight != null ? String(defaultWeight) : '');
+  const [reps, setReps] = useState(defaultReps != null ? String(defaultReps) : '');
   const [tempo, setTempo] = useState(defaultTempo);
-  const [customTempo, setCustomTempo] = useState(false);
+  const [customTempo, setCustomTempo] = useState(!TEMPO_PRESETS.includes(defaultTempo as never));
   const [setType, setSetType] = useState<SetType>('normal');
 
   const handleLog = () => {
@@ -34,9 +39,7 @@ export default function SetLogRow({
       tempo,
       setType,
     });
-    setWeight('');
-    setReps('');
-    setSetType('normal');
+    // The parent remounts this row for the next set with fresh pre-fill.
   };
 
   const inputClass =
@@ -76,13 +79,14 @@ export default function SetLogRow({
       </div>
 
       {/* Tempo badge picker */}
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2" title={TEMPO_INFO}>
         {TEMPO_PRESETS.map((t) => {
           const active = !customTempo && tempo === t;
           return (
             <button
               key={t}
               type="button"
+              title={TEMPO_INFO}
               onClick={() => {
                 setCustomTempo(false);
                 setTempo(t);
@@ -126,6 +130,7 @@ export default function SetLogRow({
             <button
               key={st.value}
               type="button"
+              title={SET_TYPE_INFO[st.value]}
               onClick={() => setSetType(st.value)}
               className={`h-9 flex-1 rounded-full text-caption font-semibold transition-colors ${
                 active ? activeClass : 'text-text-muted'

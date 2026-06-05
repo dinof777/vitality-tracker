@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Sparkline from '@/components/charts/Sparkline';
 import { SAMPLE_HISTORY } from '@/lib/sample-history';
+import { LAST_INFO } from '@/lib/workout-types';
 
 interface OverloadSparklineProps {
   exerciseId: string;
@@ -41,7 +42,7 @@ export default function OverloadSparkline({ exerciseId }: OverloadSparklineProps
   return (
     <div className="rounded-md bg-surface-raised/50 px-3 py-2">
       <div className="flex items-center justify-between">
-        <span className="text-caption text-text-muted">
+        <span className="text-caption text-text-muted" title={LAST_INFO}>
           LAST{' '}
           <span className="nums font-semibold text-text-primary">
             {data.length ? `${last} lb` : '—'}
