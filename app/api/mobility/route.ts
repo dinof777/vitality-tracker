@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { getSql } from '@/lib/db';
 
+// Always read live DB state — never serve a cached response.
+export const dynamic = 'force-dynamic';
+
 // GET /api/mobility?date=YYYY-MM-DD — today's mobility log (if any).
 export async function GET(req: Request) {
   const sql = getSql();

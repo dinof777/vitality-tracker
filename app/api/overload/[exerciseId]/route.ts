@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { getSql } from '@/lib/db';
 
+// Always read live DB state — never serve a cached response.
+export const dynamic = 'force-dynamic';
+
 // GET /api/overload/[exerciseId] — max weight per the last 8 workout dates for
 // an exercise, oldest-to-newest, for the progressive-overload sparkline.
 export async function GET(
