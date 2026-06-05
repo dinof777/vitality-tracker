@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import type { Exercise } from '@/lib/database.types';
 import { EQUIPMENT_LABEL, EQUIPMENT_ORDER, SAMPLE_EXERCISES } from '@/lib/exercises';
+import ExerciseThumb from './ExerciseThumb';
 
 interface ExercisePickerProps {
   excludeIds?: string[];
@@ -52,9 +53,15 @@ export default function ExercisePicker({
                   key={e.id}
                   type="button"
                   onClick={() => onPick(e)}
-                  className="flex w-full items-center justify-between rounded-md px-3 py-3 text-left active:bg-surface-raised"
+                  className="flex w-full items-center gap-3 rounded-md px-2 py-2 text-left active:bg-surface-raised"
                 >
-                  <span className="text-body text-text-primary">{e.name}</span>
+                  <ExerciseThumb
+                    equipment={e.equipment}
+                    imageUrl={e.image_url}
+                    name={e.name}
+                    size={40}
+                  />
+                  <span className="flex-1 text-body text-text-primary">{e.name}</span>
                   <span className="text-caption text-text-muted">{e.muscle_group}</span>
                 </button>
               ))}

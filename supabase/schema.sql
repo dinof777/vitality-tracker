@@ -15,6 +15,7 @@ create table if not exists exercises (
   muscle_group text,
   default_cue  text,
   equipment    text check (equipment in ('dumbbell', 'band', 'isometric', 'stretch')),
+  image_url    text,
   created_at   timestamptz not null default now()
 );
 

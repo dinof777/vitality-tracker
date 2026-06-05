@@ -1,4 +1,5 @@
 import OverloadSparkline from '@/components/workout/OverloadSparkline';
+import ExerciseThumb from '@/components/workout/ExerciseThumb';
 import { SAMPLE_EXERCISES } from '@/lib/exercises';
 
 // Progress overview — progressive-overload sparkline per exercise.
@@ -14,8 +15,14 @@ export default function ProgressPage() {
       <div className="space-y-3">
         {SAMPLE_EXERCISES.map((ex) => (
           <section key={ex.id} className="rounded-lg border border-border bg-surface p-4">
-            <div className="mb-2 flex items-center gap-2">
-              <h3 className="text-h3 text-text-primary">{ex.name}</h3>
+            <div className="mb-2 flex items-center gap-3">
+              <ExerciseThumb
+                equipment={ex.equipment}
+                imageUrl={ex.image_url}
+                name={ex.name}
+                size={40}
+              />
+              <h3 className="flex-1 text-h3 text-text-primary">{ex.name}</h3>
               {ex.muscle_group && (
                 <span className="rounded-sm bg-surface-raised px-2 py-0.5 text-caption text-text-muted">
                   {ex.muscle_group}

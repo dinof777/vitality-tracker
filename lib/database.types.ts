@@ -12,6 +12,7 @@ export interface Exercise {
   muscle_group: string | null;
   default_cue: string | null;
   equipment: Equipment | null;
+  image_url: string | null;
   created_at: string;
 }
 

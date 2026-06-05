@@ -7,6 +7,7 @@ import { SET_TYPES } from '@/lib/workout-types';
 import SetLogRow from './SetLogRow';
 import RestTimer from './RestTimer';
 import OverloadSparkline from './OverloadSparkline';
+import ExerciseThumb from './ExerciseThumb';
 
 interface ExerciseCardProps {
   exercise: Exercise;
@@ -61,18 +62,26 @@ export default function ExerciseCard({ exercise, onLogSet }: ExerciseCardProps) 
 
   return (
     <section className="space-y-3 rounded-lg border border-border bg-surface p-4">
-      <div className="space-y-1">
-        <div className="flex items-center gap-2">
-          <h3 className="text-h3 text-text-primary">{exercise.name}</h3>
-          {exercise.muscle_group && (
-            <span className="rounded-sm bg-surface-raised px-2 py-0.5 text-caption text-text-muted">
-              {exercise.muscle_group}
-            </span>
+      <div className="flex items-start gap-3">
+        <ExerciseThumb
+          equipment={exercise.equipment}
+          imageUrl={exercise.image_url}
+          name={exercise.name}
+          size={56}
+        />
+        <div className="min-w-0 flex-1 space-y-1">
+          <div className="flex items-center gap-2">
+            <h3 className="text-h3 text-text-primary">{exercise.name}</h3>
+            {exercise.muscle_group && (
+              <span className="rounded-sm bg-surface-raised px-2 py-0.5 text-caption text-text-muted">
+                {exercise.muscle_group}
+              </span>
+            )}
+          </div>
+          {exercise.default_cue && (
+            <p className="text-caption italic text-text-muted">{exercise.default_cue}</p>
           )}
         </div>
-        {exercise.default_cue && (
-          <p className="text-caption italic text-text-muted">{exercise.default_cue}</p>
-        )}
       </div>
 
       <OverloadSparkline exerciseId={exercise.id} />
