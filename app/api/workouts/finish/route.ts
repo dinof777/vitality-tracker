@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { getSupabase } from '@/lib/supabase';
+import { getSql } from '@/lib/db';
 
 // POST /api/workouts/finish — stamp finished_at on a workout.
 export async function POST(req: Request) {
-  const supabase = getSupabase();
-  if (!supabase) {
-    return NextResponse.json({ error: 'Supabase not configured.' }, { status: 503 });
+  const sql = getSql();
+  if (!sql) {
+    return NextResponse.json({ error: 'Database not configured.' }, { status: 503 });
   }
 
   let workoutId: string | undefined;
@@ -19,16 +19,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'workoutId is required' }, { status: 400 });
   }
 
-  const { data, error } = await supabase
-    .from('workouts')
-    .update({ finished_at: new Date().toISOString() })
-    .eq('id', workoutId)
-    .select()
-    .single();
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  try {
+    const rows = await sql`
+      update workouts set finished_at = now() where id = ${workoutId} returning *
+    `;
+    return NextResponse.json({ workout: rows[0] ?? null });
+  } catch (e) {
+    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
   }
-
-  return NextResponse.json({ workout: data });
 }

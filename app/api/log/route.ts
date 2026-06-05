@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getSupabase } from '@/lib/supabase';
+import { getSql } from '@/lib/db';
 import type { SetType } from '@/lib/database.types';
 
 interface LogBody {
@@ -18,10 +18,10 @@ interface LogBody {
 // of a session, then inserts the log_entry. Returns the workoutId so the client
 // can attach subsequent sets to the same session.
 export async function POST(req: Request) {
-  const supabase = getSupabase();
-  if (!supabase) {
+  const sql = getSql();
+  if (!sql) {
     return NextResponse.json(
-      { error: 'Supabase not configured. Sets are kept on-device until .env.local is set.' },
+      { error: 'Database not configured. Sets are kept on-device until DATABASE_URL is set.' },
       { status: 503 },
     );
   }
@@ -37,39 +37,28 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'exerciseId and setNumber are required' }, { status: 400 });
   }
 
-  let workoutId = body.workoutId ?? null;
+  try {
+    let workoutId = body.workoutId ?? null;
 
-  // Start a workout on the first logged set.
-  if (!workoutId) {
-    const { data: workout, error: workoutErr } = await supabase
-      .from('workouts')
-      .insert({ routine_id: body.routineId ?? null })
-      .select('id')
-      .single();
-    if (workoutErr) {
-      return NextResponse.json({ error: workoutErr.message }, { status: 500 });
+    // Start a workout on the first logged set.
+    if (!workoutId) {
+      const rows = await sql`
+        insert into workouts (routine_id) values (${body.routineId ?? null}) returning id
+      `;
+      workoutId = rows[0].id as string;
     }
-    workoutId = workout.id as string;
+
+    const entry = await sql`
+      insert into log_entries
+        (workout_id, exercise_id, set_number, weight, reps, tempo, set_type, rpe)
+      values
+        (${workoutId}, ${body.exerciseId}, ${body.setNumber}, ${body.weight},
+         ${body.reps}, ${body.tempo}, ${body.setType}, ${body.rpe ?? null})
+      returning *
+    `;
+
+    return NextResponse.json({ workoutId, entry: entry[0] });
+  } catch (e) {
+    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
   }
-
-  const { data: entry, error: entryErr } = await supabase
-    .from('log_entries')
-    .insert({
-      workout_id: workoutId,
-      exercise_id: body.exerciseId,
-      set_number: body.setNumber,
-      weight: body.weight,
-      reps: body.reps,
-      tempo: body.tempo,
-      set_type: body.setType,
-      rpe: body.rpe ?? null,
-    })
-    .select()
-    .single();
-
-  if (entryErr) {
-    return NextResponse.json({ error: entryErr.message }, { status: 500 });
-  }
-
-  return NextResponse.json({ workoutId, entry });
 }
