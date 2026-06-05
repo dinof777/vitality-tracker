@@ -13,6 +13,7 @@ import {
 } from '@/lib/routines';
 import ExercisePicker from '@/components/workout/ExercisePicker';
 import ExerciseThumb from '@/components/workout/ExerciseThumb';
+import { syncrofitRunUrl } from '@/lib/syncrofit';
 
 export default function RoutineDetailPage() {
   const { routineId } = useParams<{ routineId: string }>();
@@ -72,6 +73,12 @@ export default function RoutineDetailPage() {
   };
 
   const remove = (index: number) => persist(rows.filter((_, i) => i !== index));
+
+  // Hand this routine to the SyncroFit interval-timer app as a timed circuit.
+  const sendToSyncrofit = () => {
+    if (!routine || rows.length === 0) return;
+    window.location.href = syncrofitRunUrl({ ...routine, exercises: rows });
+  };
 
   if (loading) {
     return (
@@ -171,6 +178,20 @@ export default function RoutineDetailPage() {
           + ADD EXERCISE
         </button>
       )}
+
+      {/* Send to SyncroFit as a timed interval circuit */}
+      {rows.length > 0 && (
+        <button
+          type="button"
+          onClick={sendToSyncrofit}
+          className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-md border border-border bg-surface text-label text-text-primary active:scale-[0.97] active:bg-surface-raised"
+        >
+          ⏱ SEND TO SYNCROFIT
+        </button>
+      )}
+      <p className="mt-2 px-1 text-caption text-text-faint">
+        Opens this routine as a timed circuit in the SyncroFit interval-timer app (iPhone).
+      </p>
 
       {/* Sticky Start Workout */}
       <div className="fixed inset-x-0 bottom-16 mx-auto max-w-md px-4 pt-2">
