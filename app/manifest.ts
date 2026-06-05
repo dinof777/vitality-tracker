@@ -8,8 +8,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: 'Workout tracker for the Live Elevated / Vitality training philosophy.',
     start_url: '/',
     display: 'standalone',
-    background_color: '#0B0B0C',
-    theme_color: '#0B0B0C',
+    background_color: '#121316',
+    theme_color: '#121316',
     orientation: 'portrait',
     icons: [
       { src: '/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },

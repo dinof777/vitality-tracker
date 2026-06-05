@@ -18,10 +18,10 @@ Dark-mode is the **default and only** theme. All tokens are CSS variables in
 
 | Token | Hex | Tailwind | Use |
 |---|---|---|---|
-| `background` | `#0B0B0C` | `bg-background` | App canvas (near-black) |
-| `surface` | `#161618` | `bg-surface` | Cards, sheets, input rows |
-| `surface-raised` | `#1F1F22` | `bg-surface-raised` | Elevated / pressed surfaces, popovers |
-| `border` | `#2A2A2E` | `border-border` | Hairlines, dividers, input borders |
+| `background` | `#121316` | `bg-background` | App canvas (carbon black) |
+| `surface` | `#1B1C20` | `bg-surface` | Cards, sheets, input rows |
+| `surface-raised` | `#25262B` | `bg-surface-raised` | Elevated / pressed surfaces, popovers |
+| `border` | `#2E3036` | `border-border` | Hairlines, dividers, input borders |
 | `accent` | `#A3E635` | `bg-accent` / `text-accent` | **Primary** — CTAs, active states, tempo badges, sparklines |
 | `accent-press` | `#84CC16` | `bg-accent-press` | Pressed/active state of accent elements |
 | `on-accent` | `#0B0B0C` | `text-on-accent` | Text/icons on top of accent fills (near-black) |
@@ -191,7 +191,7 @@ streak pill (top of list): bg-energy/15 text-energy rounded-full
 
 ## 8. PWA / native feel
 
-- `display: standalone`, `theme_color: #0B0B0C`, `background_color: #0B0B0C`.
+- `display: standalone`, `theme_color: #121316`, `background_color: #121316`.
 - App name **Vitality Tracker**, short name **Vitality**.
 - No light-mode flash: `<html>` is dark by default (`color-scheme: dark`).
 - Disable text-size-adjust and tap-highlight for native feel.
