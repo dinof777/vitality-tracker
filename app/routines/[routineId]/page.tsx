@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import type { Exercise } from '@/lib/database.types';
+import ExerciseDetailSheet from '@/components/workout/ExerciseDetailSheet';
 import {
   DAY_LABELS,
   fetchRoutine,
@@ -23,6 +24,17 @@ export default function RoutineDetailPage() {
   const [picking, setPicking] = useState(false);
   const [syncHint, setSyncHint] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [detail, setDetail] = useState<Exercise | null>(null);
+
+  const rowToExercise = (re: RoutineExerciseRow): Exercise => ({
+    id: re.exercise_id,
+    name: re.name,
+    muscle_group: re.muscle_group,
+    default_cue: re.default_cue,
+    equipment: re.equipment,
+    image_url: re.image_url,
+    created_at: '',
+  });
 
   useEffect(() => {
     fetchRoutine(routineId).then((r) => {
@@ -165,13 +177,19 @@ export default function RoutineDetailPage() {
                 ▼
               </button>
             </div>
-            <ExerciseThumb equipment={re.equipment} imageUrl={re.image_url} name={re.name} size={40} />
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-body font-semibold text-text-primary">{re.name}</p>
-              <p className="text-caption text-text-muted nums">
-                {re.default_sets} × {re.default_reps} · {re.default_tempo}
-              </p>
-            </div>
+            <button
+              type="button"
+              onClick={() => setDetail(rowToExercise(re))}
+              className="flex min-w-0 flex-1 items-center gap-3 text-left active:opacity-70"
+            >
+              <ExerciseThumb equipment={re.equipment} imageUrl={re.image_url} name={re.name} size={40} />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-body font-semibold text-text-primary">{re.name}</span>
+                <span className="block text-caption text-text-muted nums">
+                  {re.default_sets} × {re.default_reps} · {re.default_tempo}
+                </span>
+              </span>
+            </button>
             <button
               type="button"
               onClick={() => remove(i)}
@@ -195,6 +213,7 @@ export default function RoutineDetailPage() {
             excludeIds={rows.map((r) => r.exercise_id)}
             onPick={addExercise}
             onClose={() => setPicking(false)}
+            addLabel="Add to routine"
           />
         </div>
       ) : (
@@ -254,6 +273,8 @@ export default function RoutineDetailPage() {
           START WORKOUT
         </Link>
       </div>
+
+      {detail && <ExerciseDetailSheet exercise={detail} onClose={() => setDetail(null)} />}
     </main>
   );
 }

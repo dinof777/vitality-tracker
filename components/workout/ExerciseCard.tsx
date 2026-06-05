@@ -8,6 +8,7 @@ import SetLogRow from './SetLogRow';
 import RestTimer from './RestTimer';
 import OverloadSparkline from './OverloadSparkline';
 import ExerciseThumb from './ExerciseThumb';
+import ExerciseDetailSheet from './ExerciseDetailSheet';
 
 interface ExerciseCardProps {
   exercise: Exercise;
@@ -31,6 +32,7 @@ export default function ExerciseCard({ exercise, onLogSet }: ExerciseCardProps) 
   const [showTimer, setShowTimer] = useState(false);
   const [dbLast, setDbLast] = useState<LastSet | null>(null);
   const [lastLoaded, setLastLoaded] = useState(false);
+  const [showDetail, setShowDetail] = useState(false);
 
   // Fetch the most recent logged set so the first input is pre-filled.
   useEffect(() => {
@@ -62,27 +64,36 @@ export default function ExerciseCard({ exercise, onLogSet }: ExerciseCardProps) 
 
   return (
     <section className="space-y-3 rounded-lg border border-border bg-surface p-4">
-      <div className="flex items-start gap-3">
+      <button
+        type="button"
+        onClick={() => setShowDetail(true)}
+        className="flex w-full items-start gap-3 text-left active:opacity-70"
+      >
         <ExerciseThumb
           equipment={exercise.equipment}
           imageUrl={exercise.image_url}
           name={exercise.name}
           size={56}
         />
-        <div className="min-w-0 flex-1 space-y-1">
-          <div className="flex items-center gap-2">
-            <h3 className="text-h3 text-text-primary">{exercise.name}</h3>
+        <span className="min-w-0 flex-1 space-y-1">
+          <span className="flex items-center gap-2">
+            <span className="text-h3 text-text-primary">{exercise.name}</span>
             {exercise.muscle_group && (
               <span className="rounded-sm bg-surface-raised px-2 py-0.5 text-caption text-text-muted">
                 {exercise.muscle_group}
               </span>
             )}
-          </div>
+            <span className="ml-auto text-text-faint">ⓘ</span>
+          </span>
           {exercise.default_cue && (
-            <p className="text-caption italic text-text-muted">{exercise.default_cue}</p>
+            <span className="block text-caption italic text-text-muted">{exercise.default_cue}</span>
           )}
-        </div>
-      </div>
+        </span>
+      </button>
+
+      {showDetail && (
+        <ExerciseDetailSheet exercise={exercise} onClose={() => setShowDetail(false)} />
+      )}
 
       <OverloadSparkline exerciseId={exercise.id} />
 

@@ -4,12 +4,14 @@ import { useMemo, useState } from 'react';
 import type { Exercise } from '@/lib/database.types';
 import { EQUIPMENT_LABEL, EQUIPMENT_ORDER, SAMPLE_EXERCISES } from '@/lib/exercises';
 import ExerciseThumb from './ExerciseThumb';
+import ExerciseDetailSheet from './ExerciseDetailSheet';
 
 interface ExercisePickerProps {
   excludeIds?: string[];
   onPick: (exercise: Exercise) => void;
   onClose?: () => void;
   exercises?: Exercise[];
+  addLabel?: string;
 }
 
 // Searchable exercise list grouped by equipment. Scales to any library size.
@@ -18,8 +20,10 @@ export default function ExercisePicker({
   onPick,
   onClose,
   exercises = SAMPLE_EXERCISES,
+  addLabel = 'Add to workout',
 }: ExercisePickerProps) {
   const [query, setQuery] = useState('');
+  const [preview, setPreview] = useState<Exercise | null>(null);
 
   const groups = useMemo(() => {
     const q = query.toLowerCase();
@@ -52,7 +56,7 @@ export default function ExercisePicker({
                 <button
                   key={e.id}
                   type="button"
-                  onClick={() => onPick(e)}
+                  onClick={() => setPreview(e)}
                   className="flex w-full items-center gap-3 rounded-md px-2 py-2 text-left active:bg-surface-raised"
                 >
                   <ExerciseThumb
@@ -63,6 +67,7 @@ export default function ExercisePicker({
                   />
                   <span className="flex-1 text-body text-text-primary">{e.name}</span>
                   <span className="text-caption text-text-muted">{e.muscle_group}</span>
+                  <span className="text-text-faint">›</span>
                 </button>
               ))}
             </div>
@@ -80,6 +85,18 @@ export default function ExercisePicker({
         >
           Done
         </button>
+      )}
+
+      {preview && (
+        <ExerciseDetailSheet
+          exercise={preview}
+          onClose={() => setPreview(null)}
+          actionLabel={addLabel}
+          onAction={() => {
+            onPick(preview);
+            setPreview(null);
+          }}
+        />
       )}
     </div>
   );
