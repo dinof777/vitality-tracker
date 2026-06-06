@@ -8,7 +8,18 @@ export interface Profile {
   equipment: Equipment[];
   focus: string; // one of FOCUS_CHOICES value
   intensity: Intensity;
+  length?: number; // target workout length in minutes (drives exercise count)
 }
+
+// Map a target length (minutes) to a number of exercises (~6 min each).
+export function lengthToCount(minutes: number): number {
+  return Math.min(10, Math.max(3, Math.round(minutes / 6)));
+}
+
+export const LENGTH_MIN = 10;
+export const LENGTH_MAX = 60;
+export const LENGTH_STEP = 5;
+export const DEFAULT_LENGTH = 30;
 
 export const EQUIPMENT_CHOICES: { value: Equipment; label: string; hint: string; emoji: string }[] = [
   { value: 'dumbbell', label: 'Dumbbells', hint: 'Adjustable or fixed', emoji: '🏋️' },

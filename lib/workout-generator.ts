@@ -5,6 +5,7 @@ import { focusChoice, intensityParams, type Intensity, type Profile } from './pr
 interface GenerateOpts {
   focus?: string;
   intensity?: Intensity;
+  count?: number; // override the exercise count (e.g. from workout length)
 }
 
 // Build a workout from the profile: filter the library to the user's equipment
@@ -12,6 +13,7 @@ interface GenerateOpts {
 export function generateWorkout(profile: Profile, opts: GenerateOpts = {}): Exercise[] {
   const focus = focusChoice(opts.focus ?? profile.focus);
   const intensity = intensityParams(opts.intensity ?? profile.intensity);
+  const count = opts.count ?? intensity.count;
   const eq = new Set(profile.equipment);
 
   let pool = SAMPLE_EXERCISES.filter((e) => e.equipment && eq.has(e.equipment));
@@ -29,7 +31,7 @@ export function generateWorkout(profile: Profile, opts: GenerateOpts = {}): Exer
 
   // First pass: one per muscle group for variety.
   for (const e of shuffled) {
-    if (picked.length >= intensity.count) break;
+    if (picked.length >= count) break;
     const g = e.muscle_group ?? '';
     if (usedGroups.has(g)) continue;
     picked.push(e);
@@ -37,9 +39,9 @@ export function generateWorkout(profile: Profile, opts: GenerateOpts = {}): Exer
   }
   // Second pass: fill the remaining slots with anything left.
   for (const e of shuffled) {
-    if (picked.length >= intensity.count) break;
+    if (picked.length >= count) break;
     if (!picked.includes(e)) picked.push(e);
   }
 
-  return picked.slice(0, intensity.count);
+  return picked.slice(0, count);
 }
