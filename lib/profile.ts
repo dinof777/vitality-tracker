@@ -8,7 +8,35 @@ export interface Profile {
   equipment: Equipment[];
   focus: string; // one of FOCUS_CHOICES value
   intensity: Intensity;
-  length?: number; // target workout length in minutes (drives exercise count)
+  length?: number; // target workout length in minutes
+  // Optional manual overrides of the intensity preset (the "set up sets & reps").
+  sets?: number;
+  reps?: number;
+  restSec?: number; // rest between sets, seconds
+}
+
+// Resolved per-set prescription + timing inputs used to fit a workout to time.
+export interface WorkoutParams {
+  sets: number;
+  reps: number; // reps per set (strength)
+  restSec: number; // rest between sets
+  repSec: number; // seconds per rep (from tempo)
+  holdSec: number; // seconds per set for timed moves (isometric/stretch/jump rope)
+  setupSec: number; // transition time before each exercise
+  tempo: string;
+}
+
+export function workoutParams(profile: Profile): WorkoutParams {
+  const ip = intensityParams(profile.intensity);
+  return {
+    sets: profile.sets ?? ip.sets,
+    reps: profile.reps ?? ip.repsNum,
+    restSec: profile.restSec ?? ip.restSec,
+    repSec: ip.repSec,
+    holdSec: ip.holdSec,
+    setupSec: 25,
+    tempo: ip.tempo,
+  };
 }
 
 // Map a target length (minutes) to a number of exercises (~6 min each).
@@ -54,16 +82,20 @@ export interface IntensityChoice {
   value: Intensity;
   label: string;
   desc: string;
-  count: number; // exercises per workout
+  count: number; // fallback exercise count when no time budget
   sets: number;
-  reps: string;
+  reps: string; // display range
+  repsNum: number; // reps used for timing math
+  repSec: number; // seconds per rep (≈ tempo)
+  restSec: number; // rest between sets
+  holdSec: number; // seconds per set for timed moves
   tempo: string;
 }
 
 export const INTENSITY_CHOICES: IntensityChoice[] = [
-  { value: 'light', label: 'Light', desc: 'Easy pace · fewer sets', count: 4, sets: 2, reps: '10-12', tempo: '2-0-1' },
-  { value: 'moderate', label: 'Moderate', desc: 'Balanced training', count: 5, sets: 3, reps: '8-12', tempo: '3-1-1' },
-  { value: 'intense', label: 'Intense', desc: 'High volume · push hard', count: 6, sets: 4, reps: '6-10', tempo: '3-1-1' },
+  { value: 'light', label: 'Light', desc: 'Easy pace · fewer sets', count: 4, sets: 2, reps: '10-12', repsNum: 11, repSec: 3, restSec: 45, holdSec: 30, tempo: '2-0-1' },
+  { value: 'moderate', label: 'Moderate', desc: 'Balanced training', count: 5, sets: 3, reps: '8-12', repsNum: 10, repSec: 5, restSec: 60, holdSec: 40, tempo: '3-1-1' },
+  { value: 'intense', label: 'Intense', desc: 'High volume · push hard', count: 6, sets: 4, reps: '6-10', repsNum: 8, repSec: 5, restSec: 75, holdSec: 50, tempo: '3-1-1' },
 ];
 
 export function intensityParams(i: Intensity): IntensityChoice {

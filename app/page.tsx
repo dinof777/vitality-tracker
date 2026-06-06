@@ -12,13 +12,14 @@ import {
   INTENSITY_CHOICES,
   focusChoice,
   intensityParams,
-  lengthToCount,
   loadProfile,
   saveProfile,
+  workoutParams,
   type Intensity,
   type Profile,
 } from '@/lib/profile';
 import { generateWorkout } from '@/lib/workout-generator';
+import { plannedCount } from '@/lib/workout-timing';
 
 function greeting(hour: number): string {
   if (hour < 12) return 'Good morning';
@@ -63,12 +64,14 @@ export default function Home() {
       router.push('/setup');
       return;
     }
-    const ex = generateWorkout(profile, { focus, intensity, count: lengthToCount(length) });
+    const ex = generateWorkout(profile, { focus, intensity, targetSeconds: length * 60 });
     if (ex.length) router.push(`/workout/active?ex=${ex.map((e) => e.id).join(',')}`);
   };
 
   const fc = focusChoice(focus);
   const ip = intensityParams(intensity);
+  const params = profile ? workoutParams({ ...profile, intensity }) : null;
+  const estCount = params ? plannedCount(params, length * 60) : 0;
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col px-4 pb-28 pt-10">
@@ -126,7 +129,7 @@ export default function Home() {
               <span className="block text-caption text-text-muted">INTENSITY</span>
               <span className="block text-h3 text-text-primary">{ip.label}</span>
               <span className="block text-caption text-text-muted nums">
-                {lengthToCount(length)} exercises · {ip.sets} × {ip.reps}
+                ≈ {estCount} exercises · {params?.sets ?? ip.sets} × {params?.reps ?? ip.repsNum} · {params?.restSec ?? ip.restSec}s rest
               </span>
             </span>
             <span className="text-text-faint">Change ›</span>

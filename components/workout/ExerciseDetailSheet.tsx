@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import type { Exercise } from '@/lib/database.types';
 import { EQUIPMENT_LABEL } from '@/lib/exercises';
-import { intensityParams, loadProfile } from '@/lib/profile';
+import { loadProfile, workoutParams } from '@/lib/profile';
 import ExerciseThumb from './ExerciseThumb';
 import OverloadSparkline from './OverloadSparkline';
 
@@ -36,9 +36,16 @@ export default function ExerciseDetailSheet({
   // Recommended prescription from the saved profile's intensity (or moderate).
   const [recommend, setRecommend] = useState('');
   useEffect(() => {
-    const ip = intensityParams(loadProfile()?.intensity ?? 'moderate');
+    const p = loadProfile();
+    if (!p) {
+      setRecommend(timed ? '3 sets · hold for time' : '3 sets × 10 reps @ 3-1-1 tempo');
+      return;
+    }
+    const wp = workoutParams(p);
     setRecommend(
-      timed ? `${ip.sets} sets · hold for time` : `${ip.sets} sets × ${ip.reps} reps @ ${ip.tempo} tempo`,
+      timed
+        ? `${wp.sets} sets · ${wp.holdSec}s hold · ${wp.restSec}s rest`
+        : `${wp.sets} sets × ${wp.reps} reps @ ${wp.tempo} · ${wp.restSec}s rest`,
     );
   }, [timed]);
 
