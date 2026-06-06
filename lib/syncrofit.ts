@@ -1,3 +1,5 @@
+import type { Exercise } from './database.types';
+import type { WorkoutParams } from './profile';
 import type { RoutineWithExercises } from './routines';
 
 // Hand a Vitality routine to the SyncroFit interval-timer app as a timed
@@ -74,6 +76,40 @@ function toPreset(re: RoutineWithExercises['exercises'][number], groupId: string
     restTime: 0,
     betweenSetRest: 60,
   };
+}
+
+const TIMED_EQUIP = new Set(['isometric', 'stretch', 'jump_rope']);
+
+// Map a generated-workout exercise (uniform WorkoutParams) to a SyncroFit preset,
+// so the circuit timing matches Vitality's time model exactly: each set's action
+// time = reps × seconds-per-rep (lifts) or the hold seconds (timed moves), with
+// the chosen rest between sets.
+function presetFromExercise(ex: Exercise, p: WorkoutParams, groupId: string): SfPreset {
+  const timed = ex.equipment != null && TIMED_EQUIP.has(ex.equipment);
+  const prescription = timed ? `${p.sets} × ${p.holdSec}s hold` : `${p.sets} × ${p.reps} @ ${p.tempo}`;
+  const notes = [ex.default_cue, prescription].filter(Boolean).join(' · ');
+  const base = { id: newId(), name: ex.name, notes, sets: p.sets, volume: 0.8, speakUpDown: true, groupIDs: [groupId] };
+  if (timed) return { ...base, reps: 1, actionTime: p.holdSec, restTime: 0, betweenSetRest: p.restSec };
+  return { ...base, reps: p.reps, actionTime: p.repSec, restTime: 0, betweenSetRest: p.restSec };
+}
+
+// Build the intervaltimer://import-circuit link for an on-the-fly generated workout.
+export function syncrofitUrlFromWorkout(name: string, exercises: Exercise[], p: WorkoutParams): string {
+  const groupId = newId();
+  const presets = exercises.map((ex) => presetFromExercise(ex, p, groupId));
+  const payload = {
+    version: 2,
+    group: {
+      id: groupId,
+      name,
+      workoutDescription: 'Sent from Vitality Tracker',
+      presetOrder: presets.map((p) => p.id),
+      circuitBetweenSetRest: 30,
+      announceNextExercise: true,
+    },
+    presets,
+  };
+  return `intervaltimer://import-circuit?data=${toBase64Url(JSON.stringify(payload))}`;
 }
 
 // Build the intervaltimer://import-circuit link for a routine.

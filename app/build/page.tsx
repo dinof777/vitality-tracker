@@ -18,6 +18,7 @@ import { generateWorkout } from '@/lib/workout-generator';
 import { formatMinutes, totalSeconds } from '@/lib/workout-timing';
 import ExerciseThumb from '@/components/workout/ExerciseThumb';
 import ExerciseDetailSheet from '@/components/workout/ExerciseDetailSheet';
+import StartSheet from '@/components/workout/StartSheet';
 
 // Clamp helper for the prescription steppers.
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
@@ -34,6 +35,7 @@ export default function BuildPage() {
   const [restSec, setRestSec] = useState(60);
   const [workout, setWorkout] = useState<Exercise[]>([]);
   const [detail, setDetail] = useState<Exercise | null>(null);
+  const [showStart, setShowStart] = useState(false);
 
   useEffect(() => {
     const p = loadProfile();
@@ -69,9 +71,12 @@ export default function BuildPage() {
   };
 
   const start = () => {
-    if (workout.length === 0) return;
+    if (workout.length > 0) setShowStart(true);
+  };
+  const logInApp = () => {
     router.push(`/workout/active?ex=${workout.map((e) => e.id).join(',')}`);
   };
+  const focusLabel = FOCUS_CHOICES.find((f) => f.value === focus)?.label ?? 'Vitality';
 
   const est = totalSeconds(workout, params);
 
@@ -193,6 +198,15 @@ export default function BuildPage() {
       </div>
 
       {detail && <ExerciseDetailSheet exercise={detail} onClose={() => setDetail(null)} />}
+      {showStart && (
+        <StartSheet
+          exercises={workout}
+          params={params}
+          name={`${focusLabel} · ${length} min`}
+          onLogInApp={logInApp}
+          onClose={() => setShowStart(false)}
+        />
+      )}
     </main>
   );
 }

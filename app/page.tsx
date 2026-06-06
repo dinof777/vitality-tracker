@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import StreakBadge from '@/components/daily5/StreakBadge';
 import LengthDial from '@/components/home/LengthDial';
+import StartSheet from '@/components/workout/StartSheet';
+import type { Exercise } from '@/lib/database.types';
 import { computeStreak } from '@/lib/daily5';
 import {
   DEFAULT_LENGTH,
@@ -37,6 +39,7 @@ export default function Home() {
   const [focus, setFocus] = useState('full');
   const [intensity, setIntensity] = useState<Intensity>('moderate');
   const [sheet, setSheet] = useState<null | 'focus' | 'intensity'>(null);
+  const [pending, setPending] = useState<Exercise[] | null>(null);
 
   useEffect(() => {
     const now = new Date();
@@ -65,7 +68,11 @@ export default function Home() {
       return;
     }
     const ex = generateWorkout(profile, { focus, intensity, targetSeconds: length * 60 });
-    if (ex.length) router.push(`/workout/active?ex=${ex.map((e) => e.id).join(',')}`);
+    if (ex.length) setPending(ex);
+  };
+
+  const logInApp = () => {
+    if (pending) router.push(`/workout/active?ex=${pending.map((e) => e.id).join(',')}`);
   };
 
   const fc = focusChoice(focus);
@@ -207,6 +214,15 @@ export default function Home() {
             )}
           </div>
         </div>
+      )}
+      {pending && params && (
+        <StartSheet
+          exercises={pending}
+          params={params}
+          name={`${fc.label} · ${length} min`}
+          onLogInApp={logInApp}
+          onClose={() => setPending(null)}
+        />
       )}
     </main>
   );
