@@ -77,12 +77,15 @@ export default function SetupPage() {
                     on ? 'border-accent bg-accent/10' : 'border-border bg-surface'
                   }`}
                 >
-                  <span>
-                    <span className="block text-body font-semibold text-text-primary">{c.label}</span>
-                    <span className="block text-caption text-text-muted">{c.hint}</span>
+                  <span className="flex items-center gap-3">
+                    <span className="text-h2">{c.emoji}</span>
+                    <span>
+                      <span className="block text-body font-semibold text-text-primary">{c.label}</span>
+                      <span className="block text-caption text-text-muted">{c.hint}</span>
+                    </span>
                   </span>
                   <span
-                    className={`flex h-6 w-6 items-center justify-center rounded-md border-2 ${
+                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md border-2 ${
                       on ? 'border-accent bg-accent text-on-accent' : 'border-border'
                     }`}
                   >
@@ -108,11 +111,15 @@ export default function SetupPage() {
                 key={f.value}
                 type="button"
                 onClick={() => setFocus(f.value)}
-                className={`flex w-full items-center justify-between rounded-md border p-4 text-left transition-colors ${
+                className={`flex w-full items-center gap-3 rounded-md border p-4 text-left transition-colors ${
                   focus === f.value ? 'border-accent bg-accent/10' : 'border-border bg-surface'
                 }`}
               >
-                <span className="text-body font-semibold text-text-primary">{f.label}</span>
+                <span className="text-h2">{f.emoji}</span>
+                <span className="flex-1">
+                  <span className="block text-body font-semibold text-text-primary">{f.label}</span>
+                  <span className="block text-caption text-text-muted">{f.desc}</span>
+                </span>
                 {focus === f.value && <span className="text-accent">●</span>}
               </button>
             ))}

@@ -25,16 +25,18 @@ export const EQUIPMENT_CHOICES: { value: Equipment; label: string; hint: string;
 export interface FocusChoice {
   value: string;
   label: string;
+  emoji: string;
+  desc: string;
   groups: string[] | null; // null = all muscle groups
   mobility?: boolean; // match stretch/isometric instead of muscle group
 }
 
 export const FOCUS_CHOICES: FocusChoice[] = [
-  { value: 'full', label: 'Full Body', groups: null },
-  { value: 'upper', label: 'Upper Body', groups: ['Chest', 'Back', 'Shoulders', 'Arms', 'Rear Delts', 'Traps'] },
-  { value: 'lower', label: 'Lower Body', groups: ['Legs', 'Hamstrings', 'Glutes', 'Calves'] },
-  { value: 'core', label: 'Core & Abs', groups: ['Core'] },
-  { value: 'mobility', label: 'Mobility & Recovery', groups: null, mobility: true },
+  { value: 'full', label: 'Full Body', emoji: '🔥', desc: 'Hit everything in one session', groups: null },
+  { value: 'upper', label: 'Upper Body', emoji: '💪', desc: 'Chest, back, shoulders & arms', groups: ['Chest', 'Back', 'Shoulders', 'Arms', 'Rear Delts', 'Traps'] },
+  { value: 'lower', label: 'Lower Body', emoji: '🦵', desc: 'Legs, glutes & hamstrings', groups: ['Legs', 'Hamstrings', 'Glutes', 'Calves'] },
+  { value: 'core', label: 'Core & Abs', emoji: '🎯', desc: 'Midsection & stability', groups: ['Core'] },
+  { value: 'mobility', label: 'Mobility & Recovery', emoji: '🧘', desc: 'Stretch, holds & flexibility', groups: null, mobility: true },
 ];
 
 export interface IntensityChoice {

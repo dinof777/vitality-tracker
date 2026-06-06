@@ -62,45 +62,67 @@ export default function BuildPage() {
         </Link>
       </header>
 
-      {/* Focus selector */}
+      {/* Focus selector — rich cards */}
       <p className="mb-2 text-caption text-text-muted">FOCUS</p>
-      <div className="mb-4 flex flex-wrap gap-2">
-        {FOCUS_CHOICES.map((f) => (
-          <button
-            key={f.value}
-            type="button"
-            onClick={() => {
-              setFocus(f.value);
-              regenerate(f.value, intensity);
-            }}
-            className={`h-9 rounded-full px-3 text-caption font-semibold transition-colors ${
-              focus === f.value ? 'bg-accent text-on-accent' : 'bg-surface-raised text-text-muted'
-            }`}
-          >
-            {f.label}
-          </button>
-        ))}
+      <div className="mb-5 grid grid-cols-2 gap-2">
+        {FOCUS_CHOICES.map((f) => {
+          const on = focus === f.value;
+          return (
+            <button
+              key={f.value}
+              type="button"
+              onClick={() => {
+                setFocus(f.value);
+                regenerate(f.value, intensity);
+              }}
+              className={`rounded-lg border p-3 text-left transition-colors ${
+                on ? 'border-accent bg-accent/10' : 'border-border bg-surface'
+              }`}
+            >
+              <span className="text-h3">{f.emoji}</span>
+              <span className="mt-1 block text-body font-semibold text-text-primary">{f.label}</span>
+              <span className="block text-caption text-text-muted">{f.desc}</span>
+            </button>
+          );
+        })}
       </div>
 
-      {/* Intensity selector */}
+      {/* Intensity selector — rich cards */}
       <p className="mb-2 text-caption text-text-muted">INTENSITY</p>
-      <div className="mb-5 flex gap-2">
-        {INTENSITY_CHOICES.map((it) => (
-          <button
-            key={it.value}
-            type="button"
-            onClick={() => {
-              setIntensity(it.value);
-              regenerate(focus, it.value);
-            }}
-            className={`h-9 flex-1 rounded-full text-caption font-semibold transition-colors ${
-              intensity === it.value ? 'bg-accent text-on-accent' : 'bg-surface-raised text-text-muted'
-            }`}
-          >
-            {it.label}
-          </button>
-        ))}
+      <div className="mb-5 space-y-2">
+        {INTENSITY_CHOICES.map((it) => {
+          const on = intensity === it.value;
+          return (
+            <button
+              key={it.value}
+              type="button"
+              onClick={() => {
+                setIntensity(it.value);
+                regenerate(focus, it.value);
+              }}
+              className={`flex w-full items-center justify-between rounded-lg border p-3 text-left transition-colors ${
+                on ? 'border-accent bg-accent/10' : 'border-border bg-surface'
+              }`}
+            >
+              <span>
+                <span className="block text-body font-semibold text-text-primary">{it.label}</span>
+                <span className="block text-caption text-text-muted nums">
+                  {it.desc} · {it.count} exercises · {it.sets} × {it.reps}
+                </span>
+              </span>
+              <span
+                className={`flex h-6 w-6 items-center justify-center rounded-full border-2 ${
+                  on ? 'border-accent bg-accent text-on-accent' : 'border-border'
+                }`}
+              >
+                {on ? '✓' : ''}
+              </span>
+            </button>
+          );
+        })}
       </div>
+
+      <p className="mb-2 text-caption text-text-muted">YOUR WORKOUT</p>
 
       {/* Generated list */}
       {workout.length > 0 ? (
