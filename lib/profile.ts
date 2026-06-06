@@ -64,11 +64,12 @@ export function loadProfile(): Profile | null {
   try {
     const raw = window.localStorage.getItem(KEY);
     if (!raw) return null;
-    const p = JSON.parse(raw) as Profile & { equipment: string[] };
+    const p = JSON.parse(raw) as Profile;
     // Migrate the old single 'band' category → tube_band + loop_band.
-    if (p.equipment?.includes('band')) {
+    const eq = (p.equipment ?? []) as string[];
+    if (eq.includes('band')) {
       p.equipment = Array.from(
-        new Set(p.equipment.flatMap((e) => (e === 'band' ? ['tube_band', 'loop_band'] : [e]))),
+        new Set(eq.flatMap((e) => (e === 'band' ? ['tube_band', 'loop_band'] : [e]))),
       ) as Equipment[];
     }
     return p;
