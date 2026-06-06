@@ -124,14 +124,84 @@ export const SAMPLE_EXERCISES: Exercise[] = [
   E('d0000079-0000-4000-8000-000000000000', 'Butterfly Stretch', 'Hips', 'stretch', 'Soles together · let the knees fall open'),
   E('d0000080-0000-4000-8000-000000000000', 'Standing Quad Stretch', 'Quads', 'stretch', 'Heel to glute · knees together · stand tall'),
   E('d0000081-0000-4000-8000-000000000000', 'Lying Spinal Twist', 'Spine', 'stretch', 'Drop the knees across · shoulders down · breathe'),
+
+  // ===== Kettlebell (12) =====
+  E('d0000082-0000-4000-8000-000000000000', 'KB Swing', 'Hamstrings', 'kettlebell', 'Hike the bell back · snap the hips · float to chest height'),
+  E('d0000083-0000-4000-8000-000000000000', 'KB Goblet Squat', 'Legs', 'kettlebell', 'Bell at the chest · elbows inside knees · drive up'),
+  E('d0000084-0000-4000-8000-000000000000', 'KB Clean', 'Full Body', 'kettlebell', 'Hike · pull the elbow in · catch soft in the rack'),
+  E('d0000085-0000-4000-8000-000000000000', 'KB Clean & Press', 'Full Body', 'kettlebell', 'Clean to the rack · then press overhead to lockout'),
+  E('d0000086-0000-4000-8000-000000000000', 'KB Snatch', 'Full Body', 'kettlebell', 'One pull from the floor to overhead · punch through'),
+  E('d0000087-0000-4000-8000-000000000000', 'KB Turkish Get-Up', 'Full Body', 'kettlebell', 'Bell locked overhead · stand up step by step · reverse'),
+  E('d0000088-0000-4000-8000-000000000000', 'KB Halo', 'Shoulders', 'kettlebell', 'Circle the bell around the head · tight core · slow'),
+  E('d0000089-0000-4000-8000-000000000000', 'KB Single-Arm Row', 'Back', 'kettlebell', 'Hinge over · row the bell to the hip · flat back'),
+  E('d0000090-0000-4000-8000-000000000000', 'KB Front Rack Reverse Lunge', 'Legs', 'kettlebell', 'Bell in the rack · step back · drop the knee'),
+  E('d0000091-0000-4000-8000-000000000000', 'KB Romanian Deadlift', 'Hamstrings', 'kettlebell', 'Hinge at the hips · soft knees · feel the stretch'),
+  E('d0000092-0000-4000-8000-000000000000', 'KB Overhead Press', 'Shoulders', 'kettlebell', 'Bell in the rack · brace · press to full lockout'),
+  E('d0000093-0000-4000-8000-000000000000', 'KB Windmill', 'Core', 'kettlebell', 'Bell locked overhead · hinge to the side · eyes on the bell'),
+
+  // ===== Pull-up Bar (12) =====
+  E('d0000094-0000-4000-8000-000000000000', 'Pull-Up', 'Back', 'pullup_bar', 'Overhand grip · pull the chest to the bar · control down'),
+  E('d0000095-0000-4000-8000-000000000000', 'Chin-Up', 'Back', 'pullup_bar', 'Underhand grip · drive the elbows down · squeeze'),
+  E('d0000096-0000-4000-8000-000000000000', 'Neutral-Grip Pull-Up', 'Back', 'pullup_bar', 'Palms facing · pull to the bar · full hang at the bottom'),
+  E('d0000097-0000-4000-8000-000000000000', 'Wide-Grip Pull-Up', 'Back', 'pullup_bar', 'Wide overhand grip · lead with the chest'),
+  E('d0000098-0000-4000-8000-000000000000', 'Hanging Knee Raise', 'Core', 'pullup_bar', 'Dead hang · curl the knees to the chest · no swing'),
+  E('d0000099-0000-4000-8000-000000000000', 'Hanging Leg Raise', 'Core', 'pullup_bar', 'Dead hang · raise straight legs to parallel · control'),
+  E('d0000100-0000-4000-8000-000000000000', 'Toes-to-Bar', 'Core', 'pullup_bar', 'Hang · drive the toes up to touch the bar'),
+  E('d0000101-0000-4000-8000-000000000000', 'Scapular Pull-Up', 'Back', 'pullup_bar', 'Straight arms · pull the shoulders down · small range'),
+  E('d0000102-0000-4000-8000-000000000000', 'Negative Pull-Up', 'Back', 'pullup_bar', 'Start at the top · lower slowly under control'),
+  E('d0000103-0000-4000-8000-000000000000', 'Commando Pull-Up', 'Back', 'pullup_bar', 'Grip in line · pull to one side then the other'),
+  E('d0000104-0000-4000-8000-000000000000', 'Dead Hang', 'Grip', 'pullup_bar', 'Relax the shoulders · hang · log seconds held'),
+  E('d0000105-0000-4000-8000-000000000000', 'Active Hang', 'Shoulders', 'pullup_bar', 'Shoulders pulled down and back · hold · log seconds'),
+
+  // ===== Medicine Ball (12) =====
+  E('d0000106-0000-4000-8000-000000000000', 'Med Ball Slam', 'Full Body', 'medicine_ball', 'Reach tall · slam the ball down hard · catch the bounce'),
+  E('d0000107-0000-4000-8000-000000000000', 'Med Ball Chest Pass', 'Chest', 'medicine_ball', 'Explode the ball off the chest · catch and reset'),
+  E('d0000108-0000-4000-8000-000000000000', 'Med Ball Russian Twist', 'Core', 'medicine_ball', 'Lean back · rotate the ball side to side'),
+  E('d0000109-0000-4000-8000-000000000000', 'Med Ball V-Up', 'Core', 'medicine_ball', 'Ball overhead · lift legs and arms to meet · slow down'),
+  E('d0000110-0000-4000-8000-000000000000', 'Med Ball Squat to Press', 'Full Body', 'medicine_ball', 'Squat · drive up and press the ball overhead'),
+  E('d0000111-0000-4000-8000-000000000000', 'Med Ball Overhead Slam', 'Full Body', 'medicine_ball', 'Ball overhead · slam straight down · brace the core'),
+  E('d0000112-0000-4000-8000-000000000000', 'Med Ball Sit-Up Throw', 'Core', 'medicine_ball', 'Sit up and throw · catch on the way down'),
+  E('d0000113-0000-4000-8000-000000000000', 'Med Ball Lunge with Twist', 'Legs', 'medicine_ball', 'Lunge · rotate the ball over the front leg'),
+  E('d0000114-0000-4000-8000-000000000000', 'Med Ball Wood Chop', 'Core', 'medicine_ball', 'Chop the ball diagonally across the body'),
+  E('d0000115-0000-4000-8000-000000000000', 'Med Ball Push-Up', 'Chest', 'medicine_ball', 'One hand on the ball · lower under control · press up'),
+  E('d0000116-0000-4000-8000-000000000000', 'Med Ball Rotational Throw', 'Core', 'medicine_ball', 'Rotate and throw to the side · explosive'),
+  E('d0000117-0000-4000-8000-000000000000', 'Med Ball Dead Bug', 'Core', 'medicine_ball', 'Press the ball up · lower opposite arm and leg'),
+
+  // ===== Jump Rope (12) =====
+  E('d0000118-0000-4000-8000-000000000000', 'Basic Bounce', 'Conditioning', 'jump_rope', 'Light bounce on the balls of the feet · wrists turn the rope'),
+  E('d0000119-0000-4000-8000-000000000000', 'Alternate-Foot Step', 'Conditioning', 'jump_rope', 'Jog in place over the rope · stay light'),
+  E('d0000120-0000-4000-8000-000000000000', 'High Knees Skip', 'Conditioning', 'jump_rope', 'Drive the knees up with each turn · fast feet'),
+  E('d0000121-0000-4000-8000-000000000000', 'Boxer Skip', 'Conditioning', 'jump_rope', 'Shift weight side to side · easy rhythm'),
+  E('d0000122-0000-4000-8000-000000000000', 'Double-Unders', 'Conditioning', 'jump_rope', 'Two rope passes per jump · snap the wrists'),
+  E('d0000123-0000-4000-8000-000000000000', 'Single-Leg Hops', 'Conditioning', 'jump_rope', 'Hop on one foot · switch sides · stay controlled'),
+  E('d0000124-0000-4000-8000-000000000000', 'Criss-Cross', 'Conditioning', 'jump_rope', 'Cross the arms on the down-swing · open and repeat'),
+  E('d0000125-0000-4000-8000-000000000000', 'Side-to-Side', 'Conditioning', 'jump_rope', 'Small hops side to side over the rope'),
+  E('d0000126-0000-4000-8000-000000000000', 'Heel Taps', 'Conditioning', 'jump_rope', 'Tap alternating heels forward with each jump'),
+  E('d0000127-0000-4000-8000-000000000000', 'Speed Intervals', 'Conditioning', 'jump_rope', 'Fast as possible for the work window · then rest'),
+  E('d0000128-0000-4000-8000-000000000000', 'Backwards Jump', 'Conditioning', 'jump_rope', 'Turn the rope backward · stay relaxed'),
+  E('d0000129-0000-4000-8000-000000000000', 'Mummy Kicks', 'Conditioning', 'jump_rope', 'Alternate straight-leg kicks out front · light bounce'),
 ];
 
 // Display order + labels for grouping the picker.
-export const EQUIPMENT_ORDER: Equipment[] = ['dumbbell', 'tube_band', 'loop_band', 'isometric', 'stretch'];
+export const EQUIPMENT_ORDER: Equipment[] = [
+  'dumbbell',
+  'kettlebell',
+  'tube_band',
+  'loop_band',
+  'pullup_bar',
+  'medicine_ball',
+  'jump_rope',
+  'isometric',
+  'stretch',
+];
 export const EQUIPMENT_LABEL: Record<Equipment, string> = {
   dumbbell: 'Dumbbell',
+  kettlebell: 'Kettlebell',
   tube_band: 'Tube Band',
   loop_band: 'Loop Band',
+  pullup_bar: 'Pull-up Bar',
+  medicine_ball: 'Medicine Ball',
+  jump_rope: 'Jump Rope',
   isometric: 'Isometric Hold',
   stretch: 'Stretch',
 };

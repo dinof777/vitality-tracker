@@ -39,6 +39,38 @@ function EquipmentIcon({ equipment }: { equipment: Equipment | null }) {
           <ellipse cx="12" cy="12" rx="8" ry="5" />
         </svg>
       );
+    case 'kettlebell':
+      // Bell body + handle.
+      return (
+        <svg viewBox="0 0 24 24" className="h-1/2 w-1/2" {...common}>
+          <path d="M9 8a3 3 0 0 1 6 0" />
+          <circle cx="12" cy="15" r="6" />
+        </svg>
+      );
+    case 'pullup_bar':
+      // Bar + two arms + head.
+      return (
+        <svg viewBox="0 0 24 24" className="h-1/2 w-1/2" {...common}>
+          <path d="M4 5h16M9 5v6M15 5v6" />
+          <circle cx="12" cy="15" r="2.5" />
+        </svg>
+      );
+    case 'medicine_ball':
+      // Ball with a cross seam.
+      return (
+        <svg viewBox="0 0 24 24" className="h-1/2 w-1/2" {...common}>
+          <circle cx="12" cy="12" r="8" />
+          <path d="M4 12h16M12 4v16" />
+        </svg>
+      );
+    case 'jump_rope':
+      // Two handles + rope arc.
+      return (
+        <svg viewBox="0 0 24 24" className="h-1/2 w-1/2" {...common}>
+          <path d="M6 5v4M18 5v4" />
+          <path d="M6 9c0 9 12 9 12 0" />
+        </svg>
+      );
     case 'isometric':
       // Stopwatch — isometric work is timed holds.
       return (

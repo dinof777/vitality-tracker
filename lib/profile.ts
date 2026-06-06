@@ -10,12 +10,16 @@ export interface Profile {
   intensity: Intensity;
 }
 
-export const EQUIPMENT_CHOICES: { value: Equipment; label: string; hint: string }[] = [
-  { value: 'dumbbell', label: 'Dumbbells', hint: 'Adjustable or fixed' },
-  { value: 'tube_band', label: 'Tube Bands', hint: 'Long bands with handles' },
-  { value: 'loop_band', label: 'Loop Bands', hint: 'Mini / booty bands' },
-  { value: 'isometric', label: 'Bodyweight Holds', hint: 'Planks, wall sits, holds' },
-  { value: 'stretch', label: 'Stretching', hint: 'Mobility & recovery' },
+export const EQUIPMENT_CHOICES: { value: Equipment; label: string; hint: string; emoji: string }[] = [
+  { value: 'dumbbell', label: 'Dumbbells', hint: 'Adjustable or fixed', emoji: '🏋️' },
+  { value: 'kettlebell', label: 'Kettlebell', hint: 'Swings, cleans, get-ups', emoji: '🔔' },
+  { value: 'tube_band', label: 'Tube Bands', hint: 'Long bands with handles', emoji: '🎗️' },
+  { value: 'loop_band', label: 'Loop Bands', hint: 'Mini / booty bands', emoji: '⭕' },
+  { value: 'pullup_bar', label: 'Pull-up Bar', hint: 'Doorway or mounted', emoji: '🤸' },
+  { value: 'medicine_ball', label: 'Medicine Ball', hint: 'Slams, throws, twists', emoji: '🏐' },
+  { value: 'jump_rope', label: 'Jump Rope', hint: 'Conditioning & cardio', emoji: '🪢' },
+  { value: 'isometric', label: 'Bodyweight Holds', hint: 'Planks, wall sits, holds', emoji: '⏱️' },
+  { value: 'stretch', label: 'Stretching', hint: 'Mobility & recovery', emoji: '🧘' },
 ];
 
 export interface FocusChoice {

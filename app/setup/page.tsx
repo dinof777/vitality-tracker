@@ -22,6 +22,7 @@ export default function SetupPage() {
     'isometric',
     'stretch',
   ]);
+  // (kettlebell / pull-up bar / medicine ball / jump rope start unchecked — opt in.)
   const [focus, setFocus] = useState('full');
   const [intensity, setIntensity] = useState<Intensity>('moderate');
 
