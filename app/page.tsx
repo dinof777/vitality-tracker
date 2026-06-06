@@ -83,7 +83,9 @@ export default function Home() {
         <StreakBadge streak={streak} />
       </header>
 
-      {ready && !profile ? (
+      {!ready ? (
+        <div className="flex-1" />
+      ) : !profile ? (
         <>
           <Link href="/setup" className="mt-2 block rounded-lg border border-accent/40 bg-accent/10 p-5">
             <p className="text-h3 text-text-primary">⚡ Set up your profile</p>
