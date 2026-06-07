@@ -1,10 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Exercise } from '@/lib/database.types';
 import type { WorkoutParams } from '@/lib/profile';
-import { syncrofitUrlFromWorkout } from '@/lib/syncrofit';
+import { syncrofitRunUrl, syncrofitUrlFromWorkout } from '@/lib/syncrofit';
 import { formatMinutes, totalSeconds } from '@/lib/workout-timing';
+
+const V2_KEY = 'vitality_sf_v2';
 
 interface StartSheetProps {
   exercises: Exercise[];
@@ -18,10 +20,33 @@ interface StartSheetProps {
 // or hand it to the SyncroFit interval timer as a timed circuit.
 export default function StartSheet({ exercises, params, name, onLogInApp, onClose }: StartSheetProps) {
   const [sent, setSent] = useState(false);
+  const [useV2, setUseV2] = useState(false);
   const est = totalSeconds(exercises, params);
 
+  useEffect(() => {
+    try {
+      setUseV2(window.localStorage.getItem(V2_KEY) === '1');
+    } catch {
+      /* localStorage unavailable */
+    }
+  }, []);
+
+  const toggleV2 = () => {
+    setUseV2((prev) => {
+      const next = !prev;
+      try {
+        window.localStorage.setItem(V2_KEY, next ? '1' : '0');
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  };
+
   const sendToTimer = () => {
-    const url = syncrofitUrlFromWorkout(name, exercises, params);
+    const url = useV2
+      ? syncrofitRunUrl(name, exercises, params, window.location.origin)
+      : syncrofitUrlFromWorkout(name, exercises, params);
     try {
       void navigator.clipboard?.writeText(url);
     } catch {
@@ -56,13 +81,33 @@ export default function StartSheet({ exercises, params, name, onLogInApp, onClos
           ⏱ SEND TO INTERVAL TIMER
         </button>
 
+        <button
+          type="button"
+          onClick={toggleV2}
+          className="mt-3 flex w-full items-center justify-between rounded-md border border-border bg-surface p-3 text-left"
+        >
+          <span className="pr-3">
+            <span className="block text-caption font-semibold text-text-primary">Send exercise images</span>
+            <span className="block text-caption text-text-muted">Needs the updated SyncroFit build (new import)</span>
+          </span>
+          <span
+            className={`flex h-6 w-11 shrink-0 items-center rounded-full p-0.5 transition-colors ${
+              useV2 ? 'bg-accent' : 'bg-surface-raised'
+            }`}
+          >
+            <span className={`h-5 w-5 rounded-full bg-white transition-transform ${useV2 ? 'translate-x-5' : ''}`} />
+          </span>
+        </button>
+
         {sent ? (
           <p className="mt-3 text-caption text-text-muted">
             Opening SyncroFit… if nothing happens, the link is copied — open SyncroFit ▸ Import to paste it.
           </p>
         ) : (
           <p className="mt-3 text-caption text-text-muted">
-            Interval timer uses your sets, reps, hold &amp; rest for the circuit timing.
+            {useV2
+              ? 'New format: sends sets, reps, rest + exercise images (where available).'
+              : 'Classic format: sends sets, reps, hold & rest (no images on the old build).'}
           </p>
         )}
       </div>

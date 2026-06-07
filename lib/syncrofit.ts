@@ -112,6 +112,55 @@ export function syncrofitUrlFromWorkout(name: string, exercises: Exercise[], p: 
   return `intervaltimer://import-circuit?data=${toBase64Url(JSON.stringify(payload))}`;
 }
 
+const VITALITY_ORIGIN = 'https://vitality-tracker-mauve.vercel.app';
+
+// Turn a (possibly relative) image_url into an absolute HTTPS URL SyncroFit can
+// fetch. Returns undefined when there's no image, or when we can't form an
+// https URL (e.g. localhost) — the codec just shows the default background then.
+function absImageUrl(imageUrl: string | null, origin: string): string | undefined {
+  if (!imageUrl) return undefined;
+  if (imageUrl.startsWith('http')) return imageUrl.startsWith('https') ? imageUrl : undefined;
+  const base = origin.startsWith('https') ? origin : VITALITY_ORIGIN;
+  return `${base}${imageUrl}`;
+}
+
+// NEW image-capable format (SyncroFit IntegrationCodec, Format 2 inline JSON):
+//   syncrofit://run?circuit=<url-encoded PartnerJSONCircuit JSON>
+// Each exercise can carry actionImageURL (HTTPS) which SyncroFit downloads on
+// import and shows as the work-phase background. Requires the updated SyncroFit
+// build that registers the `syncrofit://run` handler.
+export function syncrofitRunUrl(
+  name: string,
+  exercises: Exercise[],
+  p: WorkoutParams,
+  origin = '',
+): string {
+  const exs = exercises.map((ex) => {
+    const timed = ex.equipment != null && TIMED_EQUIP.has(ex.equipment);
+    const prescription = timed ? `${p.sets} × ${p.holdSec}s hold` : `${p.sets} × ${p.reps} @ ${p.tempo}`;
+    const notes = [ex.default_cue, prescription].filter(Boolean).join(' · ');
+    const img = absImageUrl(ex.image_url, origin);
+    return {
+      name: ex.name,
+      notes,
+      sets: p.sets,
+      reps: timed ? 1 : p.reps,
+      actionTime: timed ? p.holdSec : p.repSec,
+      restTime: 0,
+      betweenSetRest: p.restSec,
+      ...(img ? { actionImageURL: img } : {}),
+    };
+  });
+  const payload = {
+    name,
+    description: 'Sent from Vitality Tracker',
+    from: { name: 'Vitality', organization: 'Live Elevated' },
+    restBetweenExercises: 30,
+    exercises: exs,
+  };
+  return `syncrofit://run?circuit=${encodeURIComponent(JSON.stringify(payload))}`;
+}
+
 // Build the intervaltimer://import-circuit link for a routine.
 export function syncrofitImportUrl(routine: RoutineWithExercises): string {
   const groupId = newId();
