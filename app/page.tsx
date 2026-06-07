@@ -151,7 +151,7 @@ export default function Home() {
             onClick={start}
             className="flex h-14 w-full items-center justify-center rounded-md bg-accent text-label text-on-accent transition-all duration-150 active:scale-[0.97] active:bg-accent-press"
           >
-            START WORKOUT
+            BUILD MY WORKOUT
           </button>
           <div className="mt-3 flex gap-3">
             <Link href="/routines" className="flex h-12 flex-1 items-center justify-center rounded-md border border-border text-label text-text-primary active:bg-surface">

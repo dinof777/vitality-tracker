@@ -5,6 +5,7 @@ import type { Exercise } from '@/lib/database.types';
 import type { WorkoutParams } from '@/lib/profile';
 import { syncrofitRunUrl, syncrofitUrlFromWorkout } from '@/lib/syncrofit';
 import { formatMinutes, totalSeconds } from '@/lib/workout-timing';
+import ExerciseThumb from './ExerciseThumb';
 
 const V2_KEY = 'vitality_sf_v2';
 
@@ -59,12 +60,26 @@ export default function StartSheet({ exercises, params, name, onLogInApp, onClos
   return (
     <div className="fixed inset-0 z-[70] flex items-end justify-center" role="dialog" aria-modal="true">
       <button className="absolute inset-0 bg-black/60" onClick={onClose} aria-label="Close" />
-      <div className="relative z-10 w-full max-w-md rounded-t-2xl border-t border-border bg-surface p-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+      <div className="relative z-10 flex max-h-[90dvh] w-full max-w-md flex-col rounded-t-2xl border-t border-border bg-surface p-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
         <span className="mx-auto mb-3 block h-1 w-10 rounded-full bg-border" />
-        <p className="text-h3 text-text-primary">Start your workout</p>
-        <p className="mb-4 text-caption text-text-muted nums">
+        <p className="text-h3 text-text-primary">Build my workout</p>
+        <p className="mb-3 text-caption text-text-muted nums">
           {exercises.length} moves · ~{formatMinutes(est)} · {params.sets} × {params.reps}
         </p>
+
+        {/* The exercises this session will run */}
+        <ul className="-mx-1 mb-4 max-h-[40dvh] space-y-1.5 overflow-y-auto px-1">
+          {exercises.map((ex, i) => (
+            <li key={ex.id} className="flex items-center gap-3 rounded-md bg-surface-raised p-2">
+              <span className="w-5 shrink-0 text-center text-caption text-text-faint nums">{i + 1}</span>
+              <ExerciseThumb equipment={ex.equipment} imageUrl={ex.image_url} name={ex.name} size={36} />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-body text-text-primary">{ex.name}</span>
+                <span className="block text-caption text-text-muted">{ex.muscle_group}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
 
         <button
           type="button"
