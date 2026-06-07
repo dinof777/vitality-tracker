@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import type { Exercise } from '@/lib/database.types';
 import { EQUIPMENT_LABEL, EQUIPMENT_ORDER, SAMPLE_EXERCISES } from '@/lib/exercises';
+import { TIER_LABEL, exerciseTier } from '@/lib/exercise-intensity';
 import ExerciseThumb from '@/components/workout/ExerciseThumb';
 import ExerciseDetailSheet from '@/components/workout/ExerciseDetailSheet';
 import AddToRoutineSheet from '@/components/workout/AddToRoutineSheet';
@@ -68,7 +69,9 @@ export default function ExercisesPage() {
                       <ExerciseThumb equipment={ex.equipment} imageUrl={ex.image_url} name={ex.name} size={44} />
                       <span className="min-w-0">
                         <span className="block truncate text-body font-semibold text-text-primary">{ex.name}</span>
-                        <span className="block text-caption text-text-muted">{ex.muscle_group}</span>
+                        <span className="block text-caption text-text-muted">
+                          {ex.muscle_group} · {TIER_LABEL[exerciseTier(ex)]}
+                        </span>
                       </span>
                     </button>
                     <button

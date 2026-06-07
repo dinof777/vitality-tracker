@@ -1,5 +1,6 @@
 import type { Exercise } from './database.types';
 import { SAMPLE_EXERCISES } from './exercises';
+import { exerciseTier, intensityPreferredTier } from './exercise-intensity';
 import { focusChoice, workoutParams, type Intensity, type Profile } from './profile';
 import { packToTime } from './workout-timing';
 
@@ -10,9 +11,12 @@ interface GenerateOpts {
   count?: number; // or just take this many exercises
 }
 
-// Order the focus/equipment pool for variety: one exercise per muscle group
-// first, then the remainder — so packing/slicing favors a balanced workout.
-function varietyOrdered(profile: Profile, focusValue: string): Exercise[] {
+// Order the focus/equipment pool for variety AND intensity-type: bias toward the
+// intensity's preferred difficulty tier (soft — a weighted shuffle, never a hard
+// filter, so the pool can't empty), then take one exercise per muscle group
+// first and the remainder after — so packing favors a balanced, tier-appropriate
+// workout.
+function varietyOrdered(profile: Profile, focusValue: string, preferTier: number): Exercise[] {
   const focus = focusChoice(focusValue);
   const eq = new Set(profile.equipment);
   let pool = SAMPLE_EXERCISES.filter((e) => e.equipment && eq.has(e.equipment));
@@ -21,7 +25,12 @@ function varietyOrdered(profile: Profile, focusValue: string): Exercise[] {
   } else if (focus.groups) {
     pool = pool.filter((e) => focus.groups!.includes(e.muscle_group ?? ''));
   }
-  const shuffled = [...pool].sort(() => Math.random() - 0.5);
+  // Lower key = earlier. Distance from the preferred tier dominates; a random
+  // term keeps each generation varied within a tier.
+  const shuffled = [...pool]
+    .map((e) => ({ e, key: Math.abs(exerciseTier(e) - preferTier) + Math.random() * 0.85 }))
+    .sort((a, b) => a.key - b.key)
+    .map((x) => x.e);
   const ordered: Exercise[] = [];
   const usedGroups = new Set<string>();
   for (const e of shuffled) {
@@ -37,10 +46,11 @@ function varietyOrdered(profile: Profile, focusValue: string): Exercise[] {
 // Build a workout from the profile. Prefers fitting `targetSeconds` using the
 // resolved sets/reps/rest/hold timing; falls back to a fixed `count`.
 export function generateWorkout(profile: Profile, opts: GenerateOpts = {}): Exercise[] {
-  const ordered = varietyOrdered(profile, opts.focus ?? profile.focus);
+  const intensity = opts.intensity ?? profile.intensity;
+  const ordered = varietyOrdered(profile, opts.focus ?? profile.focus, intensityPreferredTier(intensity));
   if (ordered.length === 0) return [];
 
-  const overridden = { ...profile, intensity: opts.intensity ?? profile.intensity };
+  const overridden = { ...profile, intensity };
   const params = workoutParams(overridden);
 
   if (opts.targetSeconds && opts.targetSeconds > 0) {

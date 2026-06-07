@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import type { Exercise } from '@/lib/database.types';
 import { EQUIPMENT_LABEL } from '@/lib/exercises';
+import { TIER_LABEL, exerciseTier } from '@/lib/exercise-intensity';
 import { loadProfile, workoutParams } from '@/lib/profile';
 import ExerciseThumb from './ExerciseThumb';
 import OverloadSparkline from './OverloadSparkline';
@@ -95,6 +96,9 @@ export default function ExerciseDetailSheet({
                   {EQUIPMENT_LABEL[exercise.equipment]}
                 </span>
               )}
+              <span className="rounded-sm bg-surface-raised px-2 py-1 text-caption text-text-muted">
+                {TIER_LABEL[exerciseTier(exercise)]}
+              </span>
             </div>
           </div>
 
