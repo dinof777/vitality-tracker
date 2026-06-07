@@ -6,10 +6,12 @@ import { useRouter } from 'next/navigation';
 import StreakBadge from '@/components/daily5/StreakBadge';
 import LengthDial from '@/components/home/LengthDial';
 import StartSheet from '@/components/workout/StartSheet';
-import type { Exercise } from '@/lib/database.types';
+import type { Equipment, Exercise } from '@/lib/database.types';
 import { computeStreak } from '@/lib/daily5';
+import { EQUIPMENT_LABEL } from '@/lib/exercises';
 import {
   DEFAULT_LENGTH,
+  EQUIPMENT_CHOICES,
   FOCUS_CHOICES,
   INTENSITY_CHOICES,
   focusChoice,
@@ -38,7 +40,7 @@ export default function Home() {
   const [length, setLength] = useState(DEFAULT_LENGTH);
   const [focus, setFocus] = useState('full');
   const [intensity, setIntensity] = useState<Intensity>('moderate');
-  const [sheet, setSheet] = useState<null | 'focus' | 'intensity'>(null);
+  const [sheet, setSheet] = useState<null | 'focus' | 'intensity' | 'equipment'>(null);
   const [pending, setPending] = useState<Exercise[] | null>(null);
 
   useEffect(() => {
@@ -79,6 +81,18 @@ export default function Home() {
   const ip = intensityParams(intensity);
   const params = profile ? workoutParams({ ...profile, intensity }) : null;
   const estCount = params ? plannedCount(params, length * 60) : 0;
+
+  const toggleEquipment = (val: Equipment) => {
+    if (!profile) return;
+    const has = profile.equipment.includes(val);
+    const next = has ? profile.equipment.filter((e) => e !== val) : [...profile.equipment, val];
+    if (next.length === 0) return; // always keep at least one
+    persist({ equipment: next });
+  };
+  const eqLabels = profile?.equipment.map((e) => EQUIPMENT_LABEL[e]) ?? [];
+  const eqSummary = eqLabels.length
+    ? `${eqLabels.slice(0, 2).join(', ')}${eqLabels.length > 2 ? ` +${eqLabels.length - 2}` : ''}`
+    : 'None selected';
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col px-4 pb-28 pt-10">
@@ -144,6 +158,18 @@ export default function Home() {
             <span className="text-text-faint">Change ›</span>
           </button>
 
+          <button
+            type="button"
+            onClick={() => setSheet('equipment')}
+            className="mb-4 flex w-full items-center justify-between rounded-lg border border-border bg-surface p-4 text-left active:bg-surface-raised"
+          >
+            <span>
+              <span className="block text-caption text-text-muted">EQUIPMENT</span>
+              <span className="block text-h3 text-text-primary">{eqSummary}</span>
+            </span>
+            <span className="text-text-faint">Change ›</span>
+          </button>
+
           <div className="flex-1" />
 
           <button
@@ -170,7 +196,7 @@ export default function Home() {
           <button className="absolute inset-0 bg-black/60" onClick={() => setSheet(null)} aria-label="Close" />
           <div className="relative z-10 max-h-[80dvh] w-full max-w-md overflow-y-auto rounded-t-2xl border-t border-border bg-surface p-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
             <p className="mb-3 text-h3 text-text-primary">
-              {sheet === 'focus' ? 'Choose a focus' : 'Choose intensity'}
+              {sheet === 'focus' ? 'Choose a focus' : sheet === 'intensity' ? 'Choose intensity' : 'Your equipment'}
             </p>
             {sheet === 'focus' && (
               <div className="grid grid-cols-2 gap-2">
@@ -211,6 +237,45 @@ export default function Home() {
                   );
                 })}
               </div>
+            )}
+            {sheet === 'equipment' && (
+              <>
+                <div className="space-y-2">
+                  {EQUIPMENT_CHOICES.map((c) => {
+                    const on = profile?.equipment.includes(c.value) ?? false;
+                    return (
+                      <button
+                        key={c.value}
+                        type="button"
+                        onClick={() => toggleEquipment(c.value)}
+                        className={`flex w-full items-center justify-between rounded-md border p-3 text-left transition-colors ${on ? 'border-accent bg-accent/10' : 'border-border bg-surface'}`}
+                      >
+                        <span className="flex items-center gap-3">
+                          <span className="text-h3">{c.emoji}</span>
+                          <span>
+                            <span className="block text-body font-semibold text-text-primary">{c.label}</span>
+                            <span className="block text-caption text-text-muted">{c.hint}</span>
+                          </span>
+                        </span>
+                        <span
+                          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md border-2 ${
+                            on ? 'border-accent bg-accent text-on-accent' : 'border-border'
+                          }`}
+                        >
+                          {on ? '✓' : ''}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSheet(null)}
+                  className="mt-3 flex h-12 w-full items-center justify-center rounded-md bg-accent text-label text-on-accent active:scale-[0.97]"
+                >
+                  DONE
+                </button>
+              </>
             )}
           </div>
         </div>
