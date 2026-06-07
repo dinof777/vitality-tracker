@@ -22,6 +22,7 @@ const TABS: Tab[] = [
   { href: '/routines', label: 'Routines', icon: I('M4 6h16|M4 12h16|M4 18h10') },
   { href: '/progress', label: 'Progress', icon: I('M3 17l5-5 4 4 8-9') },
   { href: '/daily5', label: 'Daily 5', icon: I('M20 6L9 17l-5-5') },
+  { href: '/settings', label: 'Profile', icon: I('M12 7a3.2 3.2 0 100 6.4 3.2 3.2 0 000-6.4|M5.5 20c0-3.6 3-5.6 6.5-5.6s6.5 2 6.5 5.6') },
 ];
 
 // Hidden on the focus screens (active workout) so logging is distraction-free.
