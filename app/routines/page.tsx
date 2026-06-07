@@ -44,8 +44,8 @@ export default function RoutinesPage() {
           <p className="text-label text-accent">TRAIN</p>
           <h1 className="text-h1 text-text-primary">Workouts</h1>
         </div>
-        <Link href="/progress" className="mt-1 text-caption text-text-muted underline">
-          Progress ›
+        <Link href="/exercises" className="mt-1 text-caption text-text-muted underline">
+          Exercises ›
         </Link>
       </header>
 
