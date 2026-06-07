@@ -39,12 +39,25 @@ export default function RoutinesPage() {
 
   return (
     <main className="mx-auto min-h-dvh max-w-md px-4 pb-28 pt-8">
-      <header className="mb-6">
-        <p className="text-label text-accent">BLUEPRINTS</p>
-        <h1 className="text-h1 text-text-primary">Routines</h1>
-        <p className="text-body text-text-muted">Pre-program your splits, then start in a tap.</p>
+      <header className="mb-5 flex items-start justify-between">
+        <div>
+          <p className="text-label text-accent">TRAIN</p>
+          <h1 className="text-h1 text-text-primary">Workouts</h1>
+        </div>
+        <Link href="/progress" className="mt-1 text-caption text-text-muted underline">
+          Progress ›
+        </Link>
       </header>
 
+      {/* Start a fresh, on-the-fly workout */}
+      <Link
+        href="/build"
+        className="mb-6 flex h-16 w-full items-center justify-center gap-2 rounded-lg bg-accent text-label text-on-accent transition-all active:scale-[0.98] active:bg-accent-press"
+      >
+        ⚡ START A WORKOUT
+      </Link>
+
+      <p className="mb-2 text-caption text-text-muted">YOUR ROUTINES</p>
       <div className="space-y-3">
         {routines.map((r) => (
           <Link

@@ -1,8 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { EMPTY_ACCOUNT, loadAccount, saveAccount, type Account, type Role } from '@/lib/account';
+import {
+  EMPTY_ACCOUNT,
+  loadAccount,
+  resizeToAvatar,
+  saveAccount,
+  type Account,
+  type Role,
+} from '@/lib/account';
 import {
   EQUIPMENT_LABEL,
 } from '@/lib/exercises';
@@ -40,6 +47,7 @@ export default function SettingsPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [history, setHistory] = useState<WorkoutRow[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setAccount(loadAccount());
@@ -59,6 +67,27 @@ export default function SettingsPage() {
     });
   };
 
+  const onPickPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // allow re-picking the same file
+    if (!file) return;
+    try {
+      const avatar = await resizeToAvatar(file);
+      update({ avatar });
+    } catch {
+      /* ignore unreadable images */
+    }
+  };
+
+  const initials =
+    account.name
+      .split(' ')
+      .map((p) => p[0])
+      .filter(Boolean)
+      .slice(0, 2)
+      .join('')
+      .toUpperCase() || '🙂';
+
   const fc = profile ? focusChoice(profile.focus) : null;
   const ip = profile ? intensityParams(profile.intensity) : null;
 
@@ -68,6 +97,44 @@ export default function SettingsPage() {
         <p className="text-label text-accent">LIVE ELEVATED</p>
         <h1 className="text-h1 text-text-primary">Profile</h1>
       </header>
+
+      {/* Avatar */}
+      <div className="mb-6 flex flex-col items-center">
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          className="relative h-24 w-24 overflow-hidden rounded-full border border-border bg-surface-raised active:scale-95"
+          aria-label="Change profile photo"
+        >
+          {account.avatar ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={account.avatar} alt="Profile" className="h-full w-full object-cover" />
+          ) : (
+            <span className="flex h-full w-full items-center justify-center text-h1 text-text-muted">
+              {initials}
+            </span>
+          )}
+          <span className="absolute inset-x-0 bottom-0 bg-black/55 py-1 text-center text-[0.625rem] font-semibold text-white">
+            EDIT
+          </span>
+        </button>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          onChange={onPickPhoto}
+          className="hidden"
+        />
+        {account.avatar && (
+          <button
+            type="button"
+            onClick={() => update({ avatar: undefined })}
+            className="mt-2 text-caption text-text-muted underline"
+          >
+            Remove photo
+          </button>
+        )}
+      </div>
 
       {/* You */}
       <p className="mb-2 text-caption text-text-muted">YOU</p>
