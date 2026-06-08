@@ -71,14 +71,19 @@ export interface FocusChoice {
   desc: string;
   groups: string[] | null; // null = all muscle groups
   mobility?: boolean; // match stretch/isometric instead of muscle group
+  pillars?: import('./pillars').Pillar[]; // pillar-based focus (overrides groups)
+  balanced?: boolean; // round-robin one exercise per pillar
 }
 
 export const FOCUS_CHOICES: FocusChoice[] = [
   { value: 'full', label: 'Full Body', emoji: '🔥', desc: 'Hit everything in one session', groups: null },
+  { value: 'balanced', label: 'Balanced', emoji: '⚖️', desc: 'A bit of all 4 pillars', groups: null, pillars: ['strength', 'cardio', 'balance', 'flexibility'], balanced: true },
   { value: 'upper', label: 'Upper Body', emoji: '💪', desc: 'Chest, back, shoulders & arms', groups: ['Chest', 'Back', 'Shoulders', 'Arms', 'Rear Delts', 'Traps'] },
   { value: 'lower', label: 'Lower Body', emoji: '🦵', desc: 'Legs, glutes & hamstrings', groups: ['Legs', 'Hamstrings', 'Glutes', 'Calves'] },
   { value: 'core', label: 'Core & Abs', emoji: '🎯', desc: 'Midsection & stability', groups: ['Core'] },
-  { value: 'mobility', label: 'Mobility & Recovery', emoji: '🧘', desc: 'Stretch, holds & flexibility', groups: null, mobility: true },
+  { value: 'cardio', label: 'Cardio', emoji: '🏃', desc: 'Heart-rate & conditioning', groups: null, pillars: ['cardio'] },
+  { value: 'balance', label: 'Balance', emoji: '🤸', desc: 'Single-leg & stability', groups: null, pillars: ['balance'] },
+  { value: 'mobility', label: 'Mobility', emoji: '🧘', desc: 'Stretch, holds & flexibility', groups: null, mobility: true },
 ];
 
 export interface IntensityChoice {

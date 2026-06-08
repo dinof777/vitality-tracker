@@ -1,8 +1,33 @@
 import type { Exercise } from './database.types';
 import { SAMPLE_EXERCISES } from './exercises';
 import { exerciseTier, intensityPreferredTier } from './exercise-intensity';
+import { hasPillar, type Pillar } from './pillars';
 import { focusChoice, workoutParams, type Intensity, type Profile } from './profile';
 import { packToTime } from './workout-timing';
+
+const ALL_PILLARS: Pillar[] = ['strength', 'cardio', 'balance', 'flexibility'];
+
+// Interleave a list so each pillar appears in rotation (strength, cardio,
+// balance, flexibility, …) — used for the "Balanced" focus so packing draws
+// from every pillar.
+function balancedOrder(list: Exercise[]): Exercise[] {
+  const ordered: Exercise[] = [];
+  const used = new Set<string>();
+  let added = true;
+  while (added && ordered.length < list.length) {
+    added = false;
+    for (const p of ALL_PILLARS) {
+      const e = list.find((x) => !used.has(x.id) && hasPillar(x, p));
+      if (e) {
+        ordered.push(e);
+        used.add(e.id);
+        added = true;
+      }
+    }
+  }
+  for (const e of list) if (!used.has(e.id)) ordered.push(e);
+  return ordered;
+}
 
 interface GenerateOpts {
   focus?: string;
@@ -22,6 +47,8 @@ function varietyOrdered(profile: Profile, focusValue: string, preferTier: number
   let pool = SAMPLE_EXERCISES.filter((e) => e.equipment && eq.has(e.equipment));
   if (focus.mobility) {
     pool = pool.filter((e) => e.equipment === 'stretch' || e.equipment === 'isometric');
+  } else if (focus.pillars && !focus.balanced) {
+    pool = pool.filter((e) => focus.pillars!.some((p) => hasPillar(e, p)));
   } else if (focus.groups) {
     pool = pool.filter((e) => focus.groups!.includes(e.muscle_group ?? ''));
   }
@@ -31,6 +58,8 @@ function varietyOrdered(profile: Profile, focusValue: string, preferTier: number
     .map((e) => ({ e, key: Math.abs(exerciseTier(e) - preferTier) + Math.random() * 0.85 }))
     .sort((a, b) => a.key - b.key)
     .map((x) => x.e);
+  // Balanced focus: rotate through pillars instead of muscle-group variety.
+  if (focus.balanced) return balancedOrder(shuffled);
   const ordered: Exercise[] = [];
   const usedGroups = new Set<string>();
   for (const e of shuffled) {
