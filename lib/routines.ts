@@ -72,6 +72,11 @@ export async function clearWeeklyPlan(): Promise<void> {
   await fetch('/api/routines', { method: 'DELETE' });
 }
 
+// Permanently delete a routine (cascades its exercises).
+export async function deleteRoutine(id: string): Promise<void> {
+  await fetch(`/api/routines/${id}`, { method: 'DELETE' });
+}
+
 // Favorite / unfavorite a routine (shows on Profile › My Routines).
 export async function setRoutineFavorite(id: string, favorite: boolean): Promise<void> {
   await fetch(`/api/routines/${id}`, {

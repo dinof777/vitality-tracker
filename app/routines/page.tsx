@@ -5,6 +5,7 @@ import Link from 'next/link';
 import {
   DAY_LABELS,
   createRoutine,
+  deleteRoutine,
   fetchRoutines,
   setRoutineFavorite,
   type RoutineWithExercises,
@@ -45,6 +46,12 @@ export default function RoutinesPage() {
     void setRoutineFavorite(r.id, next);
   };
 
+  const remove = (r: RoutineWithExercises) => {
+    if (!window.confirm(`Delete “${r.name}”? This can’t be undone.`)) return;
+    setRoutines((prev) => prev.filter((x) => x.id !== r.id));
+    void deleteRoutine(r.id);
+  };
+
   return (
     <main className="mx-auto min-h-dvh max-w-md px-4 pb-28 pt-8">
       <header className="mb-5 flex items-start justify-between">
@@ -83,6 +90,14 @@ export default function RoutinesPage() {
               }`}
             >
               {r.favorite ? '★' : '☆'}
+            </button>
+            <button
+              type="button"
+              onClick={() => remove(r)}
+              aria-label={`Delete ${r.name}`}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-lg text-text-faint active:text-red-500"
+            >
+              🗑
             </button>
           </div>
         ))}
