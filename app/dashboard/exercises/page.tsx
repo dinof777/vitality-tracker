@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { EQUIPMENT_CHOICES } from '@/lib/profile';
+import { SAMPLE_EXERCISES } from '@/lib/exercises';
 
 interface CustomExercise {
   id: string;
@@ -21,6 +22,9 @@ export default function CustomExercises() {
   const [cue, setCue] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [aliases, setAliases] = useState<Record<string, string>>({});
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const [aliasQuery, setAliasQuery] = useState('');
 
   const load = () =>
     fetch('/api/tenant/exercises')
@@ -31,7 +35,32 @@ export default function CustomExercises() {
 
   useEffect(() => {
     load();
+    fetch('/api/tenant/aliases')
+      .then((r) => (r.ok ? r.json() : { aliases: {} }))
+      .then((d) => setAliases(d.aliases ?? {}))
+      .catch(() => {});
   }, []);
+
+  const draftFor = (id: string) => drafts[id] ?? aliases[id] ?? '';
+
+  const saveAlias = async (exId: string) => {
+    const name = (drafts[exId] ?? aliases[exId] ?? '').trim();
+    setAliases((prev) => {
+      const next = { ...prev };
+      if (name) next[exId] = name;
+      else delete next[exId];
+      return next;
+    });
+    await fetch('/api/tenant/aliases', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ exerciseId: exId, name }),
+    });
+  };
+
+  const aliasMatches = aliasQuery.trim()
+    ? SAMPLE_EXERCISES.filter((ex) => ex.name.toLowerCase().includes(aliasQuery.trim().toLowerCase())).slice(0, 8)
+    : [];
 
   const add = async () => {
     if (!name.trim()) return setError('Name is required.');
@@ -149,6 +178,50 @@ export default function CustomExercises() {
             ))}
           </ul>
         )}
+
+        {/* Rename library moves (per-tenant aliases) */}
+        <div className="mt-8">
+          <p className="mb-1 text-label text-accent">RENAME A MOVE</p>
+          <p className="mb-3 text-caption text-text-muted">
+            Call a library move whatever your gym calls it — changes the name only for you.
+          </p>
+          <input
+            value={aliasQuery}
+            onChange={(e) => setAliasQuery(e.target.value)}
+            placeholder="Search the 168-move library…"
+            className="h-11 w-full rounded-md border border-border bg-surface px-3 text-body text-text-primary placeholder:text-text-faint"
+          />
+          {aliasQuery.trim() && (
+            <ul className="mt-2 space-y-2">
+              {aliasMatches.map((ex) => (
+                <li key={ex.id} className="rounded-md border border-border bg-surface p-3">
+                  <p className="text-caption text-text-muted">{ex.name}</p>
+                  <div className="mt-1 flex gap-2">
+                    <input
+                      value={draftFor(ex.id)}
+                      onChange={(e) => setDrafts((d) => ({ ...d, [ex.id]: e.target.value }))}
+                      placeholder={`Keep “${ex.name}”`}
+                      className="h-10 flex-1 rounded-md border border-border bg-background px-3 text-body text-text-primary placeholder:text-text-faint"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => saveAlias(ex.id)}
+                      className="h-10 shrink-0 rounded-md bg-accent px-4 text-caption font-semibold text-on-accent"
+                    >
+                      Save
+                    </button>
+                  </div>
+                  {aliases[ex.id] && (
+                    <p className="mt-1 text-caption text-accent">Shows as “{aliases[ex.id]}” for your gym</p>
+                  )}
+                </li>
+              ))}
+              {aliasMatches.length === 0 && (
+                <li className="px-1 text-caption text-text-faint">No library moves match “{aliasQuery}”.</li>
+              )}
+            </ul>
+          )}
+        </div>
       </main>
     </div>
   );
