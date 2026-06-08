@@ -133,6 +133,7 @@ export function syncrofitRunUrl(
   exercises: Exercise[],
   p: WorkoutParams,
   origin = '',
+  circuitId?: string,
 ): string {
   const exs = exercises.map((ex) => {
     const timed = isTimed(ex);
@@ -153,6 +154,7 @@ export function syncrofitRunUrl(
     };
   });
   const payload = {
+    id: circuitId ?? newId(),
     name,
     description: 'Sent from Vitality Tracker',
     from: { name: 'Vitality', organization: 'Live Elevated' },
@@ -162,9 +164,11 @@ export function syncrofitRunUrl(
   return `syncrofit://run?circuit=${encodeURIComponent(JSON.stringify(payload))}`;
 }
 
-// Build the intervaltimer://import-circuit link for a routine.
+// Build the intervaltimer://import-circuit link for a routine. The circuit id IS
+// the routine's id, so SyncroFit's import/completion feedback (circuit.id)
+// correlates straight back to this routine. See app/api/syncrofit/events.
 export function syncrofitImportUrl(routine: RoutineWithExercises): string {
-  const groupId = newId();
+  const groupId = routine.id;
   const presets = routine.exercises.map((re) => toPreset(re, groupId));
   const payload = {
     version: 2,

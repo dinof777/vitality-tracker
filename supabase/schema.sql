@@ -84,9 +84,29 @@ create table if not exists mobility_logs (
   created_at      timestamptz not null default now()
 );
 
+-- syncrofit_events: inbound feedback from the SyncroFit interval-timer app when a
+-- creator's circuit is imported or completed. POSTed to /api/syncrofit/events.
+-- circuit_id correlates to the id we put on the circuit we hand off (a routine id).
+create table if not exists syncrofit_events (
+  id               uuid primary key default gen_random_uuid(),
+  event            text not null check (event in ('circuit.imported', 'circuit.completed')),
+  circuit_id       text,
+  circuit_name     text,
+  user_scoped_id   text,
+  user_display_name text,
+  started_at       timestamptz,
+  completed_at     timestamptz,
+  duration_seconds integer,
+  event_ts         timestamptz,            -- the event's own timestamp from SyncroFit
+  received_at      timestamptz not null default now(),
+  raw              jsonb not null          -- the full payload as received
+);
+
 -- -----------------------------------------------------------------------------
 -- Indexes on the hot foreign-key / lookup columns.
 -- -----------------------------------------------------------------------------
+create index if not exists idx_sf_events_circuit on syncrofit_events (circuit_id, received_at desc);
+create index if not exists idx_sf_events_event   on syncrofit_events (event, received_at desc);
 create index if not exists idx_routine_exercises_routine_id on routine_exercises (routine_id);
 create index if not exists idx_routine_exercises_exercise_id on routine_exercises (exercise_id);
 create index if not exists idx_workouts_routine_id          on workouts (routine_id);
