@@ -59,6 +59,21 @@ export async function recordSyncrofitEvent(e: SyncrofitEventInput): Promise<void
   `;
 }
 
+// The most recent events for one circuit (newest first) — feeds the activity feed.
+export async function recentCircuitEvents(circuitId: string, limit = 12): Promise<SyncrofitEventRow[]> {
+  const sql = getSql();
+  if (!sql) return [];
+  const rows = await sql`
+    select id, event, circuit_id, circuit_name, user_scoped_id, user_display_name,
+           started_at, completed_at, duration_seconds, event_ts, received_at
+    from syncrofit_events
+    where circuit_id = ${circuitId}
+    order by coalesce(event_ts, received_at) desc
+    limit ${Math.min(Math.max(1, limit), 50)}
+  `;
+  return rows as SyncrofitEventRow[];
+}
+
 // Engagement summary for one circuit (imports, completions, last activity).
 export async function circuitEngagement(circuitId: string) {
   const sql = getSql();
