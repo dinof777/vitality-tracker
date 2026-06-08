@@ -26,6 +26,7 @@ create table if not exists routines (
   name        text not null,
   day_of_week int check (day_of_week between 1 and 7),
   sort_order  int not null default 0,
+  from_plan   boolean not null default false, -- part of the single weekly plan
   created_at  timestamptz not null default now()
 );
 

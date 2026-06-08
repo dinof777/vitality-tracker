@@ -67,7 +67,7 @@ export default function Home() {
       setLength(p.length ?? DEFAULT_LENGTH);
       const dow = todayDow();
       fetchRoutines()
-        .then((rs) => setToday(rs.filter((r) => r.day_of_week === dow && r.exercises.length > 0)))
+        .then((rs) => setToday(rs.filter((r) => r.from_plan && r.day_of_week === dow && r.exercises.length > 0)))
         .catch(() => setToday([]));
     }
   }, []);

@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 
 // Routines with their ordered exercises (joined to the exercise library).
 const ROUTINES_SELECT = (sql: NonNullable<ReturnType<typeof getSql>>) => sql`
-  select r.id, r.name, r.day_of_week, r.sort_order,
+  select r.id, r.name, r.day_of_week, r.sort_order, r.from_plan,
     coalesce(
       json_agg(
         json_build_object(
@@ -47,7 +47,7 @@ export async function GET() {
 export async function POST(req: Request) {
   const sql = getSql();
   if (!sql) return NextResponse.json({ error: 'Database not configured' }, { status: 503 });
-  let body: { name?: string; dayOfWeek?: number | null };
+  let body: { name?: string; dayOfWeek?: number | null; fromPlan?: boolean };
   try {
     body = await req.json();
   } catch {
@@ -58,11 +58,24 @@ export async function POST(req: Request) {
   }
   try {
     const rows = await sql`
-      insert into routines (name, day_of_week)
-      values (${body.name.trim()}, ${body.dayOfWeek ?? null})
-      returning id, name, day_of_week, sort_order
+      insert into routines (name, day_of_week, from_plan)
+      values (${body.name.trim()}, ${body.dayOfWeek ?? null}, ${body.fromPlan ?? false})
+      returning id, name, day_of_week, sort_order, from_plan
     `;
     return NextResponse.json({ routine: { ...rows[0], exercises: [] } });
+  } catch (e) {
+    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
+  }
+}
+
+// DELETE /api/routines — clear the current weekly plan (all from_plan routines).
+// Used to overwrite the plan: there is only ever one plan at a time.
+export async function DELETE() {
+  const sql = getSql();
+  if (!sql) return NextResponse.json({ error: 'Database not configured' }, { status: 503 });
+  try {
+    await sql`delete from routines where from_plan = true`;
+    return NextResponse.json({ ok: true });
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 500 });
   }

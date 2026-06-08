@@ -14,7 +14,7 @@ import {
 import { generateWeek, type DayPlan } from '@/lib/plan-generator';
 import { loadProfile, saveProfile, workoutParams, type Profile } from '@/lib/profile';
 import { formatMinutes, totalSeconds } from '@/lib/workout-timing';
-import { createRoutine, saveRoutineExercises } from '@/lib/routines';
+import { clearWeeklyPlan, createRoutine, saveRoutineExercises } from '@/lib/routines';
 
 export default function PlanPage() {
   const router = useRouter();
@@ -59,9 +59,11 @@ export default function PlanPage() {
   const savePlan = async () => {
     if (saving) return;
     setSaving(true);
+    // Only one weekly plan at a time — replace any existing plan routines.
+    await clearWeeklyPlan();
     const training = week.filter((d) => d.exercises.length > 0);
     for (const d of training) {
-      const r = await createRoutine(`${DAY_NAMES[d.day]} · ${DAY_KIND[d.kind].label}`, d.day);
+      const r = await createRoutine(`${DAY_NAMES[d.day]} · ${DAY_KIND[d.kind].label}`, d.day, true);
       if (r) {
         await saveRoutineExercises(
           r.id,

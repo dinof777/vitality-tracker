@@ -20,6 +20,7 @@ export interface RoutineWithExercises {
   name: string;
   day_of_week: number | null;
   sort_order: number;
+  from_plan: boolean; // true = part of the (single) weekly plan
   exercises: RoutineExerciseRow[];
 }
 
@@ -52,15 +53,22 @@ export async function fetchRoutine(id: string): Promise<RoutineWithExercises | n
 export async function createRoutine(
   name: string,
   dayOfWeek: number | null,
+  fromPlan = false,
 ): Promise<RoutineWithExercises | null> {
   const res = await fetch('/api/routines', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, dayOfWeek }),
+    body: JSON.stringify({ name, dayOfWeek, fromPlan }),
   });
   if (!res.ok) return null;
   const data = await res.json();
   return data.routine ?? null;
+}
+
+// Delete the current weekly plan (all from_plan routines) — so a new plan
+// replaces it rather than stacking up.
+export async function clearWeeklyPlan(): Promise<void> {
+  await fetch('/api/routines', { method: 'DELETE' });
 }
 
 export async function saveRoutineExercises(
