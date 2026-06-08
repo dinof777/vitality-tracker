@@ -13,6 +13,9 @@ export interface Profile {
   sets?: number;
   reps?: number;
   restSec?: number; // rest between sets, seconds
+  // Weekly-plan preferences.
+  goal?: import('./pillars').Goal;
+  daysPerWeek?: number;
 }
 
 // Resolved per-set prescription + timing inputs used to fit a workout to time.

@@ -52,9 +52,15 @@ export default function RoutinesPage() {
       {/* Start a fresh, on-the-fly workout */}
       <Link
         href="/build"
-        className="mb-6 flex h-16 w-full items-center justify-center gap-2 rounded-lg bg-accent text-label text-on-accent transition-all active:scale-[0.98] active:bg-accent-press"
+        className="mb-2 flex h-16 w-full items-center justify-center gap-2 rounded-lg bg-accent text-label text-on-accent transition-all active:scale-[0.98] active:bg-accent-press"
       >
         ⚡ START A WORKOUT
+      </Link>
+      <Link
+        href="/plan"
+        className="mb-6 flex h-14 w-full items-center justify-center gap-2 rounded-lg border border-border bg-surface text-label text-text-primary transition-all active:scale-[0.98] active:bg-surface-raised"
+      >
+        📅 PLAN MY WEEK
       </Link>
 
       <p className="mb-2 text-caption text-text-muted">YOUR ROUTINES</p>
