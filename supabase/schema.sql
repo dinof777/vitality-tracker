@@ -14,6 +14,7 @@ create table if not exists tenants (
   name          text not null,
   branding      jsonb not null default '{}'::jsonb,
   custom_domain text unique,
+  clerk_org_id  text unique,   -- links the tenant to its Clerk Organization
   plan          text not null default 'free',
   created_at    timestamptz not null default now()
 );
