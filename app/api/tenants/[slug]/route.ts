@@ -1,0 +1,48 @@
+import { NextResponse } from 'next/server';
+import { getSql } from '@/lib/db';
+import type { Branding } from '@/lib/tenant';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+// NOTE: writes are unauthenticated for now (Phase-0 branch, pre-Clerk). Once
+// Clerk lands, gate PATCH so only a member of this tenant's org can edit it.
+
+export async function GET(_req: Request, { params }: { params: { slug: string } }) {
+  const sql = getSql();
+  if (!sql) return NextResponse.json({ error: 'No database' }, { status: 500 });
+  const rows = await sql`select slug, name, branding, plan from tenants where slug = ${params.slug} limit 1`;
+  if (!rows[0]) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  return NextResponse.json(rows[0]);
+}
+
+const ALLOWED: (keyof Branding)[] = ['brandName', 'logoUrl', 'accent', 'accentPress', 'onAccent', 'background', 'surface'];
+
+export async function PATCH(req: Request, { params }: { params: { slug: string } }) {
+  const sql = getSql();
+  if (!sql) return NextResponse.json({ error: 'No database' }, { status: 500 });
+
+  let body: { branding?: Record<string, unknown>; name?: string };
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+  }
+
+  // Whitelist branding keys; coerce to strings, drop empties.
+  const branding: Record<string, string> = {};
+  for (const key of ALLOWED) {
+    const v = body.branding?.[key];
+    if (typeof v === 'string' && v.trim()) branding[key] = v.trim().slice(0, 2048);
+  }
+
+  const rows = await sql`
+    update tenants
+       set branding = ${JSON.stringify(branding)}::jsonb,
+           name = coalesce(${body.name ?? null}, name)
+     where slug = ${params.slug}
+     returning slug, name, branding, plan
+  `;
+  if (!rows[0]) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  return NextResponse.json(rows[0]);
+}

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { accentFromLogo } from '@/lib/brand-color';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -51,6 +52,17 @@ function linkHref(html: string, relTest: RegExp): string | null {
   return null;
 }
 
+function decodeEntities(s: string): string {
+  return s
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#0?39;|&apos;/g, "'")
+    .replace(/&#0?38;/g, '&')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>');
+}
+
 function normalizeHex(c: string): string | null {
   const v = c.trim().replace(/^#/, '');
   return /^[0-9a-f]{3}$|^[0-9a-f]{6}$|^[0-9a-f]{8}$/i.test(v) ? `#${v.toLowerCase()}` : null;
@@ -93,7 +105,7 @@ export async function GET(req: Request) {
     metaContent(html, 'application-name') ||
     html.match(/<title>([^<]+)<\/title>/i)?.[1] ||
     target.hostname.replace(/^www\./, '');
-  const brandName = rawName.replace(/\s+/g, ' ').trim().split(/\s[-|–—·:]\s/)[0].slice(0, 60);
+  const brandName = decodeEntities(rawName).replace(/\s+/g, ' ').trim().split(/\s[-|–—·:]\s/)[0].slice(0, 60);
 
   // Prefer square icons (cleaner logos) over the wide social og:image.
   const logoUrl =
@@ -102,15 +114,21 @@ export async function GET(req: Request) {
     abs(metaContent(html, 'og:image')) ||
     abs('/favicon.ico');
 
-  const accent = metaContent(html, 'theme-color') ? normalizeHex(metaContent(html, 'theme-color')!) : null;
+  // Accent: prefer the logo's dominant saturated color (real brand color);
+  // fall back to theme-color (often just the bg) only if the logo yields nothing.
+  const themeColor = metaContent(html, 'theme-color');
+  const fromTheme = themeColor ? normalizeHex(themeColor) : null;
+  const fromLogo = logoUrl ? await accentFromLogo(logoUrl, isBlockedHost) : null;
+  const accent = fromLogo ?? fromTheme;
 
   return NextResponse.json({
     source: target.toString(),
     branding: {
       brandName,
       logoUrl,
-      accent, // null when the site has no theme-color — trainer picks
+      accent, // null when neither the logo nor theme-color give a color — trainer picks
     },
+    accentSource: fromLogo ? 'logo' : fromTheme ? 'theme-color' : 'none',
     note: 'Best-effort draft — review before saving.',
   });
 }
