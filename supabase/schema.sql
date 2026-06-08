@@ -5,6 +5,19 @@
 -- Postgres 15 (Supabase) — uses gen_random_uuid() from the built-in pgcrypto.
 -- =============================================================================
 
+-- tenants: white-label orgs (gyms / trainers). Phase 0 multi-tenancy.
+-- branding jsonb overrides the default theme tokens (accent, logo, brand name…).
+-- Resolved path-based at /g/<slug>; subdomains/custom domains added later.
+create table if not exists tenants (
+  id            uuid primary key default gen_random_uuid(),
+  slug          text unique not null,
+  name          text not null,
+  branding      jsonb not null default '{}'::jsonb,
+  custom_domain text unique,
+  plan          text not null default 'free',
+  created_at    timestamptz not null default now()
+);
+
 -- exercises: the master library of movements you can log.
 -- default_cue holds Brian Pruett's form reminder (e.g. "3s negative, squeeze top").
 -- equipment is constrained to the Vitality kit: dumbbells, bands, isometric
