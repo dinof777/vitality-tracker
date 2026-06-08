@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import type { Exercise } from '@/lib/database.types';
+import { exerciseMode, isPerSide, modeWorkLabel } from '@/lib/exercise-mode';
+import { loadProfile, workoutParams } from '@/lib/profile';
 import type { LoggedSet } from '@/lib/workout-types';
 import { SET_TYPES } from '@/lib/workout-types';
 import SetLogRow from './SetLogRow';
@@ -33,6 +35,15 @@ export default function ExerciseCard({ exercise, onLogSet }: ExerciseCardProps) 
   const [dbLast, setDbLast] = useState<LastSet | null>(null);
   const [lastLoaded, setLastLoaded] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
+  // Recommended hold seconds, used as the first-set default for timed moves.
+  const [holdDefault] = useState(() => {
+    const p = loadProfile();
+    return p ? workoutParams(p).holdSec : 40;
+  });
+
+  const mode = exerciseMode(exercise);
+  const perSide = isPerSide(exercise);
+  const timed = mode !== 'reps';
 
   // Fetch the most recent logged set so the first input is pre-filled.
   useEffect(() => {
@@ -61,6 +72,11 @@ export default function ExerciseCard({ exercise, onLogSet }: ExerciseCardProps) 
   const prefill: LastSet | null = prevSet
     ? { weight: prevSet.weight, reps: prevSet.reps, tempo: prevSet.tempo }
     : dbLast;
+  // Alternate L → R → L for unilateral moves.
+  const lastSide = sets.length ? sets[sets.length - 1].side ?? null : null;
+  const nextSide: 'L' | 'R' = perSide && lastSide === 'L' ? 'R' : 'L';
+  // First-set default: previous reps/seconds, or the recommended hold for timed moves.
+  const defaultReps = timed ? (prefill?.reps ?? holdDefault) : (prefill?.reps ?? null);
 
   return (
     <section className="space-y-3 rounded-lg border border-border bg-surface p-4">
@@ -107,14 +123,15 @@ export default function ExerciseCard({ exercise, onLogSet }: ExerciseCardProps) 
             >
               <span className="text-text-muted">
                 <span className="nums text-text-primary">Set {s.setNumber}</span>
+                {s.side && <span className="text-text-faint"> · {s.side}</span>}
                 {'  '}
                 <span className="nums font-semibold text-text-primary">
-                  {s.weight ?? '—'} × {s.reps ?? '—'}
+                  {timed ? `${s.reps ?? '—'}s ${modeWorkLabel(mode)}` : `${s.weight ?? '—'} × ${s.reps ?? '—'}`}
                 </span>
               </span>
               <span className="flex items-center gap-2 text-caption">
-                <span className="nums text-accent">{s.tempo}</span>
-                {s.setType !== 'normal' && (
+                {!timed && <span className="nums text-accent">{s.tempo}</span>}
+                {!timed && s.setType !== 'normal' && (
                   <span className={s.setType === 'amrap' ? 'text-energy' : 'text-text-muted'}>
                     {setTypeLabel(s.setType)}
                   </span>
@@ -132,8 +149,11 @@ export default function ExerciseCard({ exercise, onLogSet }: ExerciseCardProps) 
           key={`row-${sets.length}`}
           exerciseId={exercise.id}
           setNumber={sets.length + 1}
+          mode={mode}
+          perSide={perSide}
+          defaultSide={nextSide}
           defaultWeight={prefill?.weight ?? null}
-          defaultReps={prefill?.reps ?? null}
+          defaultReps={defaultReps}
           defaultTempo={prefill?.tempo ?? '3-1-1'}
           onLogSet={handleLogSet}
         />

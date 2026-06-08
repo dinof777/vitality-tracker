@@ -24,11 +24,13 @@ export const SET_TYPE_INFO: Record<SetType, string> = {
 export const LAST_INFO = 'Your most recent logged set for this exercise — pre-filled below so you can beat it.';
 
 // What SetLogRow hands back to its parent when a set is logged.
+// For timed moves (hold/cardio/carry) the seconds are stored in `reps`.
 export interface LoggedSet {
   exerciseId: string;
   setNumber: number;
   weight: number | null;
-  reps: number | null;
+  reps: number | null; // reps, OR seconds held for timed moves
   tempo: string;
   setType: SetType;
+  side?: 'L' | 'R' | null; // unilateral moves logged per side
 }

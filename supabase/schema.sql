@@ -68,6 +68,7 @@ create table if not exists log_entries (
   set_type    text not null default 'normal'
                 check (set_type in ('normal', 'amrap', 'dropset', 'half_rep')),
   rpe         int check (rpe between 1 and 10),
+  side        text check (side in ('L', 'R')), -- unilateral moves logged per side
   created_at  timestamptz not null default now()
 );
 

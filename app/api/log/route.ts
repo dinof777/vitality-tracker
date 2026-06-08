@@ -12,6 +12,7 @@ interface LogBody {
   tempo: string;
   setType: SetType;
   rpe?: number | null;
+  side?: 'L' | 'R' | null;
 }
 
 // POST /api/log — persist one set. Creates the parent workout on the first set
@@ -50,10 +51,10 @@ export async function POST(req: Request) {
 
     const entry = await sql`
       insert into log_entries
-        (workout_id, exercise_id, set_number, weight, reps, tempo, set_type, rpe)
+        (workout_id, exercise_id, set_number, weight, reps, tempo, set_type, rpe, side)
       values
         (${workoutId}, ${body.exerciseId}, ${body.setNumber}, ${body.weight},
-         ${body.reps}, ${body.tempo}, ${body.setType}, ${body.rpe ?? null})
+         ${body.reps}, ${body.tempo}, ${body.setType}, ${body.rpe ?? null}, ${body.side ?? null})
       returning *
     `;
 

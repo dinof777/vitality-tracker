@@ -32,3 +32,11 @@ export function isTimed(ex: ExerciseLike): boolean {
 export function modeWorkLabel(mode: ExerciseMode): string {
   return mode === 'cardio' ? 'work' : mode === 'carry' ? 'carry' : 'hold';
 }
+
+// Unilateral moves where you train one side then switch — logged per side (L/R).
+const PER_SIDE =
+  /single-leg|single arm|single-arm|one-arm|side plank|windmill|hip flexor|pigeon|90\/90|clamshell|fire hydrant|donkey|standing hip abduction|seated hip abduction|curtsy|split squat|cossack|suitcase/;
+
+export function isPerSide(ex: ExerciseLike): boolean {
+  return PER_SIDE.test(ex.name.toLowerCase());
+}
