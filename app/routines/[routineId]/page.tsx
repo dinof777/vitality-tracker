@@ -16,6 +16,35 @@ import ExercisePicker from '@/components/workout/ExercisePicker';
 import ExerciseThumb from '@/components/workout/ExerciseThumb';
 import { syncrofitImportUrl } from '@/lib/syncrofit';
 
+interface SfRecent {
+  id: string;
+  event: string;
+  user_display_name: string | null;
+  duration_seconds: number | null;
+  event_ts: string | null;
+  received_at: string;
+}
+interface Engagement {
+  summary: { imports: number; completions: number; uniqueUsers: number; lastActivity: string | null };
+  recent: SfRecent[];
+}
+
+function fmtDur(s: number): string {
+  const m = Math.round(s / 60);
+  return m >= 1 ? `${m}m` : `${s}s`;
+}
+function timeAgo(iso: string | null): string {
+  if (!iso) return '';
+  const d = Date.parse(iso);
+  if (Number.isNaN(d)) return '';
+  const mins = Math.floor((Date.now() - d) / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
+
 export default function RoutineDetailPage() {
   const { routineId } = useParams<{ routineId: string }>();
   const [routine, setRoutine] = useState<RoutineWithExercises | null>(null);
@@ -25,6 +54,7 @@ export default function RoutineDetailPage() {
   const [syncHint, setSyncHint] = useState(false);
   const [copied, setCopied] = useState(false);
   const [detail, setDetail] = useState<Exercise | null>(null);
+  const [engagement, setEngagement] = useState<Engagement | null>(null);
 
   const rowToExercise = (re: RoutineExerciseRow): Exercise => ({
     id: re.exercise_id,
@@ -42,6 +72,14 @@ export default function RoutineDetailPage() {
       setRows(r?.exercises ?? []);
       setLoading(false);
     });
+  }, [routineId]);
+
+  // SyncroFit engagement for this routine (circuit_id === routine id).
+  useEffect(() => {
+    fetch(`/api/routines/${routineId}/engagement`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: Engagement | null) => setEngagement(d))
+      .catch(() => {});
   }, [routineId]);
 
   // Persist the current order/contents to the DB.
@@ -263,6 +301,48 @@ export default function RoutineDetailPage() {
           Sends this routine to SyncroFit as a timed circuit (needs the SyncroFit app on your iPhone).
         </p>
       )}
+
+      {/* SyncroFit engagement — how this circuit is being used */}
+      {engagement && (engagement.summary.imports > 0 || engagement.summary.completions > 0) ? (
+        <section className="mt-6">
+          <p className="mb-2 text-label text-accent">SYNCROFIT ACTIVITY</p>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { n: engagement.summary.imports, label: 'Imports' },
+              { n: engagement.summary.completions, label: 'Completions' },
+              { n: engagement.summary.uniqueUsers, label: 'Athletes' },
+            ].map((s) => (
+              <div key={s.label} className="rounded-md border border-border bg-surface p-3 text-center">
+                <div className="text-h2 font-bold text-text-primary nums">{s.n}</div>
+                <div className="text-caption text-text-muted">{s.label}</div>
+              </div>
+            ))}
+          </div>
+          {engagement.recent.length > 0 && (
+            <ul className="mt-3 space-y-1.5">
+              {engagement.recent.slice(0, 6).map((e) => (
+                <li
+                  key={e.id}
+                  className="flex items-center justify-between gap-2 rounded-md border border-border bg-surface px-3 py-2"
+                >
+                  <span className="min-w-0 truncate text-caption text-text-primary">
+                    {e.event === 'circuit.completed' ? '✓ Completed' : '↓ Imported'}
+                    {e.user_display_name ? ` · ${e.user_display_name}` : ''}
+                  </span>
+                  <span className="shrink-0 text-caption text-text-faint nums">
+                    {e.event === 'circuit.completed' && e.duration_seconds ? `${fmtDur(e.duration_seconds)} · ` : ''}
+                    {timeAgo(e.event_ts ?? e.received_at)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      ) : engagement ? (
+        <p className="mt-6 px-1 text-caption text-text-faint">
+          No SyncroFit activity yet — when someone imports or completes this circuit in SyncroFit, it shows up here.
+        </p>
+      ) : null}
 
       {/* Sticky Start Workout */}
       <div className="fixed inset-x-0 bottom-16 mx-auto max-w-md px-4 pt-2">

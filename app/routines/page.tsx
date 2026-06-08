@@ -18,6 +18,7 @@ export default function RoutinesPage() {
   const [name, setName] = useState('');
   const [day, setDay] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
+  const [engagement, setEngagement] = useState<Record<string, { imports: number; completions: number }>>({});
 
   const load = () =>
     fetchRoutines().then((r) => {
@@ -27,6 +28,10 @@ export default function RoutinesPage() {
 
   useEffect(() => {
     load();
+    fetch('/api/syncrofit/engagement')
+      .then((r) => (r.ok ? r.json() : {}))
+      .then((m) => setEngagement(m ?? {}))
+      .catch(() => {});
   }, []);
 
   const add = async () => {
@@ -78,6 +83,11 @@ export default function RoutinesPage() {
                   {r.exercises.length} exercise{r.exercises.length === 1 ? '' : 's'}
                   {r.day_of_week ? ` · ${DAY_LABELS[r.day_of_week]}` : ''}
                 </p>
+                {engagement[r.id] && (engagement[r.id].imports > 0 || engagement[r.id].completions > 0) && (
+                  <p className="mt-0.5 text-caption text-accent nums">
+                    ↓ {engagement[r.id].imports} import{engagement[r.id].imports === 1 ? '' : 's'} · ✓ {engagement[r.id].completions} done
+                  </p>
+                )}
               </div>
             </Link>
             <button
