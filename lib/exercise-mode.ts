@@ -18,8 +18,8 @@ export function exerciseMode(ex: ExerciseLike): ExerciseMode {
   const n = ex.name.toLowerCase();
   if (n.includes('carry')) return 'carry';
   if (ex.equipment === 'jump_rope') return 'cardio';
-  if (ex.equipment === 'isometric' || ex.equipment === 'stretch') return 'hold';
-  if (HOLD_NAME.test(n)) return 'hold';
+  if (ex.equipment === 'stretch') return 'hold';
+  if (HOLD_NAME.test(n)) return 'hold'; // planks/wall sits/holds/poses (bodyweight)
   return 'reps';
 }
 

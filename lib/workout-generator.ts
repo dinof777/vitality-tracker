@@ -1,6 +1,7 @@
 import type { Exercise } from './database.types';
 import { SAMPLE_EXERCISES } from './exercises';
 import { exerciseTier, intensityPreferredTier } from './exercise-intensity';
+import { exerciseMode } from './exercise-mode';
 import { hasPillar, type Pillar } from './pillars';
 import { focusChoice, workoutParams, type Intensity, type Profile } from './profile';
 import { packToTime } from './workout-timing';
@@ -46,7 +47,8 @@ function varietyOrdered(profile: Profile, focusValue: string, preferTier: number
   const eq = new Set(profile.equipment);
   let pool = SAMPLE_EXERCISES.filter((e) => e.equipment && eq.has(e.equipment));
   if (focus.mobility) {
-    pool = pool.filter((e) => e.equipment === 'stretch' || e.equipment === 'isometric');
+    // Mobility = stretches + holds (any bodyweight hold), by tracking mode.
+    pool = pool.filter((e) => exerciseMode(e) === 'hold');
   } else if (focus.pillars && !focus.balanced) {
     pool = pool.filter((e) => focus.pillars!.some((p) => hasPillar(e, p)));
   } else if (focus.groups) {

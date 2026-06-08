@@ -47,6 +47,14 @@ function EquipmentIcon({ equipment }: { equipment: Equipment | null }) {
           <circle cx="12" cy="15" r="6" />
         </svg>
       );
+    case 'calisthenics':
+      // Bodyweight stick figure (jumping-jack).
+      return (
+        <svg viewBox="0 0 24 24" className="h-1/2 w-1/2" {...common}>
+          <circle cx="12" cy="5" r="2" />
+          <path d="M12 7v6M12 9l-4-2M12 9l4-2M12 13l-3 5M12 13l3 5" />
+        </svg>
+      );
     case 'pullup_bar':
       // Bar + two arms + head.
       return (
@@ -69,14 +77,6 @@ function EquipmentIcon({ equipment }: { equipment: Equipment | null }) {
         <svg viewBox="0 0 24 24" className="h-1/2 w-1/2" {...common}>
           <path d="M6 5v4M18 5v4" />
           <path d="M6 9c0 9 12 9 12 0" />
-        </svg>
-      );
-    case 'isometric':
-      // Stopwatch — isometric work is timed holds.
-      return (
-        <svg viewBox="0 0 24 24" className="h-1/2 w-1/2" {...common}>
-          <circle cx="12" cy="14" r="7" />
-          <path d="M12 14V10M10 3h4M19 7l-1.5 1.5" />
         </svg>
       );
     case 'stretch':

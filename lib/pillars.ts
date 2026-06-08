@@ -21,11 +21,11 @@ const BALANCE_NAME =
 const STRENGTH_EQUIP: Equipment[] = [
   'dumbbell',
   'kettlebell',
+  'calisthenics',
   'tube_band',
   'loop_band',
   'pullup_bar',
   'medicine_ball',
-  'isometric',
 ];
 
 // Which pillar(s) a single exercise contributes to. Most belong to 1–2.

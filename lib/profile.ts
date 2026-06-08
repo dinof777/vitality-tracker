@@ -55,12 +55,12 @@ export const DEFAULT_LENGTH = 30;
 export const EQUIPMENT_CHOICES: { value: Equipment; label: string; hint: string; emoji: string }[] = [
   { value: 'dumbbell', label: 'Dumbbells', hint: 'Adjustable or fixed', emoji: '🏋️' },
   { value: 'kettlebell', label: 'Kettlebell', hint: 'Swings, cleans, get-ups', emoji: '🔔' },
+  { value: 'calisthenics', label: 'Calisthenics', hint: 'Bodyweight — reps, holds & planks', emoji: '💪' },
   { value: 'tube_band', label: 'Tube Bands', hint: 'Long bands with handles', emoji: '🎗️' },
   { value: 'loop_band', label: 'Loop Bands', hint: 'Mini / booty bands', emoji: '⭕' },
   { value: 'pullup_bar', label: 'Pull-up Bar', hint: 'Doorway or mounted', emoji: '🤸' },
   { value: 'medicine_ball', label: 'Medicine Ball', hint: 'Slams, throws, twists', emoji: '🏐' },
   { value: 'jump_rope', label: 'Jump Rope', hint: 'Conditioning & cardio', emoji: '🪢' },
-  { value: 'isometric', label: 'Bodyweight Holds', hint: 'Planks, wall sits, holds', emoji: '⏱️' },
   { value: 'stretch', label: 'Stretching', hint: 'Mobility & recovery', emoji: '🧘' },
 ];
 
@@ -123,11 +123,13 @@ export function loadProfile(): Profile | null {
     if (!raw) return null;
     const p = JSON.parse(raw) as Profile;
     // Migrate the old single 'band' category → tube_band + loop_band.
-    const eq = (p.equipment ?? []) as string[];
-    if (eq.includes('band')) {
-      p.equipment = Array.from(
-        new Set(eq.flatMap((e) => (e === 'band' ? ['tube_band', 'loop_band'] : [e]))),
-      ) as Equipment[];
+    let eq = (p.equipment ?? []) as string[];
+    // Legacy 'band' → tube + loop; 'isometric' merged into 'calisthenics'.
+    if (eq.includes('band') || eq.includes('isometric')) {
+      eq = eq.flatMap((e) =>
+        e === 'band' ? ['tube_band', 'loop_band'] : e === 'isometric' ? ['calisthenics'] : [e],
+      );
+      p.equipment = Array.from(new Set(eq)) as Equipment[];
     }
     return p;
   } catch {

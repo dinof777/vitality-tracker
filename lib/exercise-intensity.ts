@@ -28,7 +28,6 @@ export function exerciseTier(ex: Exercise): Tier {
     case 'kettlebell':
     case 'pullup_bar':
       return 3;
-    case 'isometric':
     case 'medicine_ball':
     case 'jump_rope':
     default:

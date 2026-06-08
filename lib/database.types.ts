@@ -7,12 +7,12 @@ export type SetType = 'normal' | 'amrap' | 'dropset' | 'half_rep';
 export type Equipment =
   | 'dumbbell'
   | 'kettlebell'
+  | 'calisthenics'
   | 'tube_band'
   | 'loop_band'
   | 'pullup_bar'
   | 'medicine_ball'
   | 'jump_rope'
-  | 'isometric'
   | 'stretch';
 
 export interface Exercise {

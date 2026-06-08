@@ -17,9 +17,9 @@ export default function SetupPage() {
   const [step, setStep] = useState(0);
   const [equipment, setEquipment] = useState<Equipment[]>([
     'dumbbell',
+    'calisthenics',
     'tube_band',
     'loop_band',
-    'isometric',
     'stretch',
   ]);
   // (kettlebell / pull-up bar / medicine ball / jump rope start unchecked — opt in.)
