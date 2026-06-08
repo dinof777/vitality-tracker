@@ -23,6 +23,8 @@ create table if not exists tenants (
 -- default_cue holds Brian Pruett's form reminder (e.g. "3s negative, squeeze top").
 -- equipment is constrained to the Vitality kit: dumbbells, bands, isometric
 -- holds, and stretches (no barbells/machines).
+-- is_global rows are the shared 168-move library (tenant_id null); a gym's own
+-- custom moves carry their tenant_id and is_global=false.
 create table if not exists exercises (
   id           uuid primary key default gen_random_uuid(),
   name         text not null,
@@ -30,7 +32,20 @@ create table if not exists exercises (
   default_cue  text,
   equipment    text check (equipment in ('dumbbell', 'kettlebell', 'calisthenics', 'tube_band', 'loop_band', 'pullup_bar', 'medicine_ball', 'jump_rope', 'stretch')),
   image_url    text,
+  tenant_id    uuid references tenants(id) on delete cascade,
+  is_global    boolean not null default false,
   created_at   timestamptz not null default now()
+);
+
+-- exercise_aliases: a per-tenant LOCAL display-name override for an exercise
+-- (gyms call the same move different things). Never changes it globally.
+create table if not exists exercise_aliases (
+  id          uuid primary key default gen_random_uuid(),
+  tenant_id   uuid not null references tenants(id)   on delete cascade,
+  exercise_id uuid not null references exercises(id) on delete cascade,
+  name        text not null,
+  created_at  timestamptz not null default now(),
+  unique (tenant_id, exercise_id)
 );
 
 -- routines: a named training day / blueprint (e.g. "Upper Pump — Week 1").

@@ -39,6 +39,17 @@ export default async function Dashboard() {
             CREATE MY GYM
           </Link>
         </div>
+
+        <Link
+          href="/dashboard/exercises"
+          className="mt-3 flex items-center justify-between rounded-xl border border-border bg-surface p-4 active:bg-surface-raised"
+        >
+          <span>
+            <span className="block text-body font-semibold text-text-primary">Your exercises</span>
+            <span className="block text-caption text-text-muted">Add custom moves to your library</span>
+          </span>
+          <span className="text-text-faint">›</span>
+        </Link>
       </main>
     </div>
   );

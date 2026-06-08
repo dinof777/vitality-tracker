@@ -1,0 +1,155 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { EQUIPMENT_CHOICES } from '@/lib/profile';
+
+interface CustomExercise {
+  id: string;
+  name: string;
+  muscle_group: string | null;
+  equipment: string | null;
+  default_cue: string | null;
+}
+
+export default function CustomExercises() {
+  const [list, setList] = useState<CustomExercise[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [name, setName] = useState('');
+  const [muscle, setMuscle] = useState('');
+  const [equipment, setEquipment] = useState<string>(EQUIPMENT_CHOICES[0]?.value ?? 'dumbbell');
+  const [cue, setCue] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = () =>
+    fetch('/api/tenant/exercises')
+      .then((r) => (r.ok ? r.json() : { custom: [] }))
+      .then((d) => setList(d.custom ?? []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const add = async () => {
+    if (!name.trim()) return setError('Name is required.');
+    setSaving(true);
+    setError(null);
+    try {
+      const r = await fetch('/api/tenant/exercises', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name.trim(), muscle_group: muscle.trim(), equipment, default_cue: cue.trim() }),
+      });
+      const j = await r.json();
+      if (!r.ok) {
+        setError(j.error ?? 'Could not add.');
+        return;
+      }
+      setName('');
+      setMuscle('');
+      setCue('');
+      setList((prev) => [j.exercise, ...prev]);
+    } catch {
+      setError('Network error.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const remove = async (ex: CustomExercise) => {
+    if (!window.confirm(`Delete “${ex.name}”?`)) return;
+    setList((prev) => prev.filter((x) => x.id !== ex.id));
+    await fetch(`/api/tenant/exercises?id=${ex.id}`, { method: 'DELETE' });
+  };
+
+  return (
+    <div className="min-h-dvh bg-background text-text-primary">
+      <main className="mx-auto max-w-md px-5 pb-20 pt-10">
+        <Link href="/dashboard" className="text-caption text-text-muted">
+          ← Dashboard
+        </Link>
+        <h1 className="mb-1 mt-2 text-h1 text-text-primary">Your exercises</h1>
+        <p className="mb-6 text-body text-text-muted">
+          Add moves we don’t have. They join the 168-move library only for your gym.
+        </p>
+
+        {/* Add form */}
+        <div className="mb-6 space-y-3 rounded-xl border border-border bg-surface p-4">
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Exercise name"
+            className="h-11 w-full rounded-md border border-border bg-background px-3 text-body text-text-primary placeholder:text-text-faint"
+          />
+          <div className="flex gap-2">
+            <input
+              value={muscle}
+              onChange={(e) => setMuscle(e.target.value)}
+              placeholder="Muscle group"
+              className="h-11 flex-1 rounded-md border border-border bg-background px-3 text-body text-text-primary placeholder:text-text-faint"
+            />
+            <select
+              value={equipment}
+              onChange={(e) => setEquipment(e.target.value)}
+              className="h-11 flex-1 rounded-md border border-border bg-background px-2 text-body text-text-primary"
+            >
+              {EQUIPMENT_CHOICES.map((c) => (
+                <option key={c.value} value={c.value}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <input
+            value={cue}
+            onChange={(e) => setCue(e.target.value)}
+            placeholder="Form cue (optional)"
+            className="h-11 w-full rounded-md border border-border bg-background px-3 text-body text-text-primary placeholder:text-text-faint"
+          />
+          <button
+            type="button"
+            onClick={add}
+            disabled={saving || !name.trim()}
+            className="h-12 w-full rounded-md bg-accent text-label text-on-accent disabled:opacity-50"
+          >
+            {saving ? 'ADDING…' : '+ ADD EXERCISE'}
+          </button>
+          {error && <p className="text-center text-caption text-destructive">{error}</p>}
+        </div>
+
+        {/* List */}
+        {loading ? (
+          <div className="h-16 animate-pulse rounded-lg bg-surface" />
+        ) : list.length === 0 ? (
+          <p className="rounded-lg border border-dashed border-border p-6 text-center text-body text-text-muted">
+            No custom exercises yet.
+          </p>
+        ) : (
+          <ul className="space-y-2">
+            {list.map((ex) => (
+              <li key={ex.id} className="flex items-center justify-between gap-2 rounded-lg border border-border bg-surface p-3">
+                <div className="min-w-0">
+                  <p className="truncate text-body font-semibold text-text-primary">{ex.name}</p>
+                  <p className="truncate text-caption text-text-muted">
+                    {[ex.muscle_group, ex.equipment].filter(Boolean).join(' · ')}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => remove(ex)}
+                  aria-label={`Delete ${ex.name}`}
+                  className="shrink-0 text-caption text-destructive"
+                >
+                  Delete
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </main>
+    </div>
+  );
+}

@@ -23,6 +23,10 @@ export interface Exercise {
   equipment: Equipment | null;
   image_url: string | null;
   created_at: string;
+  // Multi-tenant: global library rows are is_global=true / tenant_id=null;
+  // a gym's own custom moves carry their tenant_id.
+  tenant_id?: string | null;
+  is_global?: boolean;
 }
 
 export interface Routine {
