@@ -1,4 +1,5 @@
 import type { Exercise } from './database.types';
+import { exerciseMode, isTimed, modeWorkLabel } from './exercise-mode';
 import type { WorkoutParams } from './profile';
 import type { RoutineWithExercises } from './routines';
 
@@ -62,13 +63,11 @@ function toPreset(re: RoutineWithExercises['exercises'][number], groupId: string
   const notes = [re.default_cue, prescription].filter(Boolean).join(' · ');
   const base = { id: newId(), name: re.name, notes, sets, volume: 0.8, speakUpDown: true, groupIDs: [groupId] };
 
-  if (re.equipment === 'isometric') {
-    return { ...base, reps: 1, actionTime: holdSeconds(re.default_reps, 40), restTime: 0, betweenSetRest: 20 };
+  if (isTimed(re)) {
+    const fallback = re.equipment === 'stretch' ? 45 : 40;
+    return { ...base, reps: 1, actionTime: holdSeconds(re.default_reps, fallback), restTime: 0, betweenSetRest: 20 };
   }
-  if (re.equipment === 'stretch') {
-    return { ...base, reps: 1, actionTime: holdSeconds(re.default_reps, 45), restTime: 0, betweenSetRest: 10 };
-  }
-  // Dumbbell / band: time the tempo across the rep target.
+  // Rep-based: time the tempo across the rep target.
   return {
     ...base,
     reps: repsMid(re.default_reps) ?? 10,
@@ -78,15 +77,15 @@ function toPreset(re: RoutineWithExercises['exercises'][number], groupId: string
   };
 }
 
-const TIMED_EQUIP = new Set(['isometric', 'stretch', 'jump_rope']);
-
 // Map a generated-workout exercise (uniform WorkoutParams) to a SyncroFit preset,
 // so the circuit timing matches Vitality's time model exactly: each set's action
 // time = reps × seconds-per-rep (lifts) or the hold seconds (timed moves), with
 // the chosen rest between sets.
 function presetFromExercise(ex: Exercise, p: WorkoutParams, groupId: string): SfPreset {
-  const timed = ex.equipment != null && TIMED_EQUIP.has(ex.equipment);
-  const prescription = timed ? `${p.sets} × ${p.holdSec}s hold` : `${p.sets} × ${p.reps} @ ${p.tempo}`;
+  const timed = isTimed(ex);
+  const prescription = timed
+    ? `${p.sets} × ${p.holdSec}s ${modeWorkLabel(exerciseMode(ex))}`
+    : `${p.sets} × ${p.reps} @ ${p.tempo}`;
   const notes = [ex.default_cue, prescription].filter(Boolean).join(' · ');
   const base = { id: newId(), name: ex.name, notes, sets: p.sets, volume: 0.8, speakUpDown: true, groupIDs: [groupId] };
   if (timed) return { ...base, reps: 1, actionTime: p.holdSec, restTime: 0, betweenSetRest: p.restSec };
@@ -136,8 +135,10 @@ export function syncrofitRunUrl(
   origin = '',
 ): string {
   const exs = exercises.map((ex) => {
-    const timed = ex.equipment != null && TIMED_EQUIP.has(ex.equipment);
-    const prescription = timed ? `${p.sets} × ${p.holdSec}s hold` : `${p.sets} × ${p.reps} @ ${p.tempo}`;
+    const timed = isTimed(ex);
+    const prescription = timed
+      ? `${p.sets} × ${p.holdSec}s ${modeWorkLabel(exerciseMode(ex))}`
+      : `${p.sets} × ${p.reps} @ ${p.tempo}`;
     const notes = [ex.default_cue, prescription].filter(Boolean).join(' · ');
     const img = absImageUrl(ex.image_url, origin);
     return {

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import type { Exercise } from '@/lib/database.types';
 import { EQUIPMENT_LABEL } from '@/lib/exercises';
 import { TIER_LABEL, exerciseTier } from '@/lib/exercise-intensity';
+import { exerciseMode, modeWorkLabel } from '@/lib/exercise-mode';
 import { loadProfile, workoutParams } from '@/lib/profile';
 import ExerciseThumb from './ExerciseThumb';
 import OverloadSparkline from './OverloadSparkline';
@@ -32,23 +33,23 @@ export default function ExerciseDetailSheet({
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
-  const timed = exercise.equipment === 'isometric' || exercise.equipment === 'stretch';
+  const mode = exerciseMode(exercise);
+  const timed = mode !== 'reps';
+  const unit = mode === 'cardio' ? 'rounds' : 'sets';
 
   // Recommended prescription from the saved profile's intensity (or moderate).
   const [recommend, setRecommend] = useState('');
   useEffect(() => {
     const p = loadProfile();
-    if (!p) {
-      setRecommend(timed ? '3 sets · hold for time' : '3 sets × 10 reps @ 3-1-1 tempo');
-      return;
-    }
-    const wp = workoutParams(p);
+    const wp = p
+      ? workoutParams(p)
+      : { sets: 3, reps: 10, restSec: 60, holdSec: 40, tempo: '3-1-1', repSec: 5, setupSec: 25 };
     setRecommend(
       timed
-        ? `${wp.sets} sets · ${wp.holdSec}s hold · ${wp.restSec}s rest`
+        ? `${wp.sets} ${unit} · ${wp.holdSec}s ${modeWorkLabel(mode)} · ${wp.restSec}s rest`
         : `${wp.sets} sets × ${wp.reps} reps @ ${wp.tempo} · ${wp.restSec}s rest`,
     );
-  }, [timed]);
+  }, [timed, mode, unit]);
 
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center" role="dialog" aria-modal="true">
@@ -123,7 +124,7 @@ export default function ExerciseDetailSheet({
             <p className="mb-1 text-caption text-text-muted">HOW TO LOG</p>
             <p className="text-caption text-text-muted">
               {timed
-                ? 'Log the seconds held in the reps field; weight stays at bodyweight (0) unless you add band/dumbbell load.'
+                ? `Log the seconds of ${modeWorkLabel(mode)} in the reps field; weight stays at bodyweight (0) unless you add load.`
                 : 'Log the weight and reps for each set. Tap a tempo badge and set type as you go.'}
             </p>
           </div>

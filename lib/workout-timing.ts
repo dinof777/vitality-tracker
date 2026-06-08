@@ -1,11 +1,8 @@
 import type { Exercise } from './database.types';
+import { isTimed } from './exercise-mode';
 import type { WorkoutParams } from './profile';
 
-const TIMED = new Set(['isometric', 'stretch', 'jump_rope']);
-
-export function isTimed(ex: Exercise): boolean {
-  return ex.equipment != null && TIMED.has(ex.equipment);
-}
+export { isTimed };
 
 // Estimated seconds to complete one exercise: setup + work across all sets +
 // rest between sets. Timed moves (holds / conditioning) use holdSec per set;
