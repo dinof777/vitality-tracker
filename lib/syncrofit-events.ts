@@ -74,6 +74,26 @@ export async function recentCircuitEvents(circuitId: string, limit = 12): Promis
   return rows as SyncrofitEventRow[];
 }
 
+// Compact engagement for ALL circuits at once → { [circuitId]: { imports, completions } }.
+// Feeds the routines-list badges in one query (no N+1).
+export async function allCircuitEngagement(): Promise<Record<string, { imports: number; completions: number }>> {
+  const sql = getSql();
+  if (!sql) return {};
+  const rows = await sql`
+    select circuit_id,
+      count(*) filter (where event = 'circuit.imported')  as imports,
+      count(*) filter (where event = 'circuit.completed') as completions
+    from syncrofit_events
+    where circuit_id is not null
+    group by circuit_id
+  `;
+  const map: Record<string, { imports: number; completions: number }> = {};
+  for (const r of rows as Array<{ circuit_id: string; imports: string; completions: string }>) {
+    map[r.circuit_id] = { imports: Number(r.imports), completions: Number(r.completions) };
+  }
+  return map;
+}
+
 // Engagement summary for one circuit (imports, completions, last activity).
 export async function circuitEngagement(circuitId: string) {
   const sql = getSql();
