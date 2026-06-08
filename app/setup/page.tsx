@@ -41,7 +41,7 @@ export default function SetupPage() {
 
   const finish = () => {
     saveProfile({ equipment, focus, intensity });
-    router.push('/build');
+    router.push('/');
   };
 
   const canNext = step === 0 ? equipment.length > 0 : true;

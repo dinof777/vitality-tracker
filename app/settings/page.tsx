@@ -224,8 +224,8 @@ export default function SettingsPage() {
         <Link href="/routines" className="flex h-12 flex-1 items-center justify-center rounded-md border border-border text-label text-text-primary active:bg-surface">
           MY WORKOUTS
         </Link>
-        <Link href="/build" className="flex h-12 flex-1 items-center justify-center rounded-md border border-border text-label text-text-primary active:bg-surface">
-          BUILD
+        <Link href="/plan" className="flex h-12 flex-1 items-center justify-center rounded-md border border-border text-label text-text-primary active:bg-surface">
+          PLAN MY WEEK
         </Link>
       </div>
 

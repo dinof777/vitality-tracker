@@ -49,18 +49,18 @@ export default function RoutinesPage() {
         </Link>
       </header>
 
-      {/* Start a fresh, on-the-fly workout */}
-      <Link
-        href="/build"
-        className="mb-2 flex h-16 w-full items-center justify-center gap-2 rounded-lg bg-accent text-label text-on-accent transition-all active:scale-[0.98] active:bg-accent-press"
-      >
-        ⚡ START A WORKOUT
-      </Link>
+      {/* Plan a balanced week (saved as the day-tagged routines below) */}
       <Link
         href="/plan"
-        className="mb-6 flex h-14 w-full items-center justify-center gap-2 rounded-lg border border-border bg-surface text-label text-text-primary transition-all active:scale-[0.98] active:bg-surface-raised"
+        className="mb-2 flex h-16 w-full items-center justify-center gap-2 rounded-lg bg-accent text-label text-on-accent transition-all active:scale-[0.98] active:bg-accent-press"
       >
         📅 PLAN MY WEEK
+      </Link>
+      <Link
+        href="/"
+        className="mb-6 flex h-14 w-full items-center justify-center gap-2 rounded-lg border border-border bg-surface text-label text-text-primary transition-all active:scale-[0.98] active:bg-surface-raised"
+      >
+        ⚡ QUICK WORKOUT
       </Link>
 
       <p className="mb-2 text-caption text-text-muted">YOUR ROUTINES</p>
