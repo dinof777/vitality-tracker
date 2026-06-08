@@ -20,6 +20,7 @@ import {
   loadProfile,
   type Profile,
 } from '@/lib/profile';
+import { DAY_LABELS, fetchRoutines, type RoutineWithExercises } from '@/lib/routines';
 
 interface WorkoutRow {
   id: string;
@@ -47,6 +48,7 @@ export default function SettingsPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [history, setHistory] = useState<WorkoutRow[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
+  const [favorites, setFavorites] = useState<RoutineWithExercises[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -57,6 +59,9 @@ export default function SettingsPage() {
       .then((d) => setHistory(Array.isArray(d.workouts) ? d.workouts : []))
       .catch(() => setHistory([]))
       .finally(() => setLoadingHistory(false));
+    fetchRoutines()
+      .then((rs) => setFavorites(rs.filter((r) => r.favorite)))
+      .catch(() => setFavorites([]));
   }, []);
 
   const update = (patch: Partial<Account>) => {
@@ -219,15 +224,42 @@ export default function SettingsPage() {
         </Link>
       )}
 
-      {/* My workouts */}
-      <div className="mb-5 flex gap-2">
-        <Link href="/routines" className="flex h-12 flex-1 items-center justify-center rounded-md border border-border text-label text-text-primary active:bg-surface">
-          MY WORKOUTS
-        </Link>
-        <Link href="/plan" className="flex h-12 flex-1 items-center justify-center rounded-md border border-border text-label text-text-primary active:bg-surface">
-          PLAN MY WEEK
-        </Link>
+      {/* My routines — favorited routines pinned here */}
+      <div className="mb-2 flex items-baseline justify-between">
+        <p className="text-caption text-text-muted">MY ROUTINES</p>
+        <Link href="/routines" className="text-caption text-text-muted underline">All routines ›</Link>
       </div>
+      {favorites.length === 0 ? (
+        <p className="mb-3 rounded-md border border-dashed border-border p-4 text-center text-caption text-text-muted">
+          Tap ☆ on a routine to pin it here.
+        </p>
+      ) : (
+        <ul className="mb-3 space-y-2">
+          {favorites.map((r) => (
+            <li key={r.id}>
+              <Link
+                href={`/routines/${r.id}`}
+                className="flex items-center justify-between rounded-md border border-border bg-surface p-3 active:bg-surface-raised"
+              >
+                <span className="min-w-0">
+                  <span className="block truncate text-body font-semibold text-text-primary">★ {r.name}</span>
+                  <span className="block text-caption text-text-muted nums">
+                    {r.exercises.length} exercise{r.exercises.length === 1 ? '' : 's'}
+                    {r.day_of_week ? ` · ${DAY_LABELS[r.day_of_week]}` : ''}
+                  </span>
+                </span>
+                <span className="text-text-faint">›</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+      <Link
+        href="/plan"
+        className="mb-5 flex h-12 w-full items-center justify-center rounded-md border border-border text-label text-text-primary active:bg-surface"
+      >
+        📅 PLAN MY WEEK
+      </Link>
 
       {/* History */}
       <p className="mb-2 text-caption text-text-muted">WORKOUT HISTORY</p>

@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 
 // Routines with their ordered exercises (joined to the exercise library).
 const ROUTINES_SELECT = (sql: NonNullable<ReturnType<typeof getSql>>) => sql`
-  select r.id, r.name, r.day_of_week, r.sort_order, r.from_plan,
+  select r.id, r.name, r.day_of_week, r.sort_order, r.from_plan, r.favorite,
     coalesce(
       json_agg(
         json_build_object(

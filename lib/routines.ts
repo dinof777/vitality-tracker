@@ -21,6 +21,7 @@ export interface RoutineWithExercises {
   day_of_week: number | null;
   sort_order: number;
   from_plan: boolean; // true = part of the (single) weekly plan
+  favorite: boolean; // pinned to Profile › My Routines
   exercises: RoutineExerciseRow[];
 }
 
@@ -69,6 +70,15 @@ export async function createRoutine(
 // replaces it rather than stacking up.
 export async function clearWeeklyPlan(): Promise<void> {
   await fetch('/api/routines', { method: 'DELETE' });
+}
+
+// Favorite / unfavorite a routine (shows on Profile › My Routines).
+export async function setRoutineFavorite(id: string, favorite: boolean): Promise<void> {
+  await fetch(`/api/routines/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ favorite }),
+  });
 }
 
 export async function saveRoutineExercises(

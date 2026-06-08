@@ -12,7 +12,7 @@ export async function GET(
   if (!sql) return NextResponse.json({ error: 'Database not configured', routine: null }, { status: 503 });
   try {
     const rows = await sql`
-      select r.id, r.name, r.day_of_week, r.sort_order,
+      select r.id, r.name, r.day_of_week, r.sort_order, r.from_plan, r.favorite,
         coalesce(
           json_agg(
             json_build_object(
@@ -36,6 +36,31 @@ export async function GET(
       left join exercises e on e.id = re.exercise_id
       where r.id = ${params.routineId}
       group by r.id
+    `;
+    return NextResponse.json({ routine: rows[0] ?? null });
+  } catch (e) {
+    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
+  }
+}
+
+// PATCH /api/routines/[routineId] — update routine flags (currently `favorite`).
+export async function PATCH(
+  req: Request,
+  { params }: { params: { routineId: string } },
+) {
+  const sql = getSql();
+  if (!sql) return NextResponse.json({ error: 'Database not configured' }, { status: 503 });
+  let body: { favorite?: boolean };
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+  try {
+    const rows = await sql`
+      update routines set favorite = ${body.favorite ?? false}
+      where id = ${params.routineId}
+      returning id, favorite
     `;
     return NextResponse.json({ routine: rows[0] ?? null });
   } catch (e) {

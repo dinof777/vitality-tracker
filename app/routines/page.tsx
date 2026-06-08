@@ -6,6 +6,7 @@ import {
   DAY_LABELS,
   createRoutine,
   fetchRoutines,
+  setRoutineFavorite,
   type RoutineWithExercises,
 } from '@/lib/routines';
 
@@ -17,10 +18,11 @@ export default function RoutinesPage() {
   const [day, setDay] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const load = () => fetchRoutines().then((r) => {
-    setRoutines(r);
-    setLoading(false);
-  });
+  const load = () =>
+    fetchRoutines().then((r) => {
+      setRoutines(r);
+      setLoading(false);
+    });
 
   useEffect(() => {
     load();
@@ -37,54 +39,57 @@ export default function RoutinesPage() {
     load();
   };
 
+  const toggleFav = (r: RoutineWithExercises) => {
+    const next = !r.favorite;
+    setRoutines((prev) => prev.map((x) => (x.id === r.id ? { ...x, favorite: next } : x)));
+    void setRoutineFavorite(r.id, next);
+  };
+
   return (
     <main className="mx-auto min-h-dvh max-w-md px-4 pb-28 pt-8">
       <header className="mb-5 flex items-start justify-between">
         <div>
-          <p className="text-label text-accent">TRAIN</p>
-          <h1 className="text-h1 text-text-primary">Workouts</h1>
+          <p className="text-label text-accent">BLUEPRINTS</p>
+          <h1 className="text-h1 text-text-primary">Routines</h1>
+          <p className="text-body text-text-muted">★ a routine to pin it to your Profile.</p>
         </div>
-        <Link href="/exercises" className="mt-1 text-caption text-text-muted underline">
-          Exercises ›
+        <Link href="/exercises" className="mt-1 shrink-0 text-caption text-text-muted underline">
+          Build from exercises ›
         </Link>
       </header>
 
-      {/* Plan a balanced week (saved as the day-tagged routines below) */}
-      <Link
-        href="/plan"
-        className="mb-2 flex h-16 w-full items-center justify-center gap-2 rounded-lg bg-accent text-label text-on-accent transition-all active:scale-[0.98] active:bg-accent-press"
-      >
-        📅 PLAN MY WEEK
-      </Link>
-      <Link
-        href="/"
-        className="mb-6 flex h-14 w-full items-center justify-center gap-2 rounded-lg border border-border bg-surface text-label text-text-primary transition-all active:scale-[0.98] active:bg-surface-raised"
-      >
-        ⚡ QUICK WORKOUT
-      </Link>
-
-      <p className="mb-2 text-caption text-text-muted">YOUR ROUTINES</p>
       <div className="space-y-3">
         {routines.map((r) => (
-          <Link
+          <div
             key={r.id}
-            href={`/routines/${r.id}`}
-            className="flex items-center justify-between rounded-lg border border-border bg-surface p-4 transition-transform active:scale-[0.99]"
+            className="flex items-center gap-2 rounded-lg border border-border bg-surface p-2 pr-3"
           >
-            <div>
-              <p className="text-h3 text-text-primary">{r.name}</p>
-              <p className="text-caption text-text-muted nums">
-                {r.exercises.length} exercise{r.exercises.length === 1 ? '' : 's'}
-                {r.day_of_week ? ` · ${DAY_LABELS[r.day_of_week]}` : ''}
-              </p>
-            </div>
-            <span className="text-text-faint">›</span>
-          </Link>
+            <Link href={`/routines/${r.id}`} className="flex min-w-0 flex-1 items-center justify-between p-2 active:opacity-70">
+              <div className="min-w-0">
+                <p className="truncate text-h3 text-text-primary">{r.name}</p>
+                <p className="text-caption text-text-muted nums">
+                  {r.exercises.length} exercise{r.exercises.length === 1 ? '' : 's'}
+                  {r.day_of_week ? ` · ${DAY_LABELS[r.day_of_week]}` : ''}
+                </p>
+              </div>
+            </Link>
+            <button
+              type="button"
+              onClick={() => toggleFav(r)}
+              aria-label={r.favorite ? 'Unfavorite' : 'Favorite'}
+              aria-pressed={r.favorite}
+              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-2xl ${
+                r.favorite ? 'text-accent' : 'text-text-faint'
+              }`}
+            >
+              {r.favorite ? '★' : '☆'}
+            </button>
+          </div>
         ))}
 
         {!loading && routines.length === 0 && !adding && (
           <p className="rounded-lg border border-dashed border-border p-6 text-center text-body text-text-muted">
-            No routines yet. Build your first blueprint.
+            No routines yet. Build one from the Exercises tab, or start fresh below.
           </p>
         )}
         {loading && (

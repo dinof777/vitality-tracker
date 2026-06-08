@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import Link from 'next/link';
 import type { Exercise } from '@/lib/database.types';
 import { EQUIPMENT_LABEL, EQUIPMENT_ORDER, SAMPLE_EXERCISES } from '@/lib/exercises';
 import { TIER_LABEL, exerciseTier } from '@/lib/exercise-intensity';
@@ -31,10 +32,15 @@ export default function ExercisesPage() {
 
   return (
     <main className="mx-auto min-h-dvh max-w-md px-4 pb-28 pt-8">
-      <header className="mb-4">
-        <p className="text-label text-accent">LIBRARY</p>
-        <h1 className="text-h1 text-text-primary">Exercises</h1>
-        <p className="text-body text-text-muted">Tap for detail, or + to add to a routine.</p>
+      <header className="mb-4 flex items-start justify-between">
+        <div>
+          <p className="text-label text-accent">LIBRARY</p>
+          <h1 className="text-h1 text-text-primary">Exercises</h1>
+          <p className="text-body text-text-muted">Tap for detail, or + to add to a routine.</p>
+        </div>
+        <Link href="/routines" className="mt-1 shrink-0 text-caption text-text-muted underline">
+          Routines ›
+        </Link>
       </header>
 
       <input

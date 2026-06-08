@@ -19,7 +19,7 @@ const I = (path: string) => (
 
 const TABS: Tab[] = [
   { href: '/', label: 'Home', icon: I('M3 11l9-8 9 8|M5 10v10h14V10') },
-  { href: '/routines', label: 'Workouts', icon: I('M2 12h20|M5 8v8|M8 6v12|M16 6v12|M19 8v8') },
+  { href: '/exercises', label: 'Exercises', icon: I('M2 12h20|M5 8v8|M8 6v12|M16 6v12|M19 8v8') },
   { href: '/daily5', label: 'Daily 5', icon: I('M20 6L9 17l-5-5') },
   { href: '/settings', label: 'Profile', icon: I('M12 7a3.2 3.2 0 100 6.4 3.2 3.2 0 000-6.4|M5.5 20c0-3.6 3-5.6 6.5-5.6s6.5 2 6.5 5.6') },
 ];
