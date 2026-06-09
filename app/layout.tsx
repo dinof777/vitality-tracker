@@ -38,14 +38,23 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
+  const tree = (
+    <html lang="en" className="dark">
+      <body className={`${inter.variable} font-sans antialiased`}>
+        {children}
+        <BottomNav />
+      </body>
+    </html>
+  );
+
+  // Fail-safe: only mount Clerk when its publishable key is present. If it's ever
+  // missing in an environment, the core app + public /g/ pages still render
+  // (only the trainer auth pages degrade) instead of white-screening.
+  return process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ? (
     <ClerkProvider signInUrl="/sign-in" signUpUrl="/sign-up">
-      <html lang="en" className="dark">
-        <body className={`${inter.variable} font-sans antialiased`}>
-          {children}
-          <BottomNav />
-        </body>
-      </html>
+      {tree}
     </ClerkProvider>
+  ) : (
+    tree
   );
 }
