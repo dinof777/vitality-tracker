@@ -121,7 +121,7 @@ const SYNCROFIT_WEBHOOK = `${VITALITY_ORIGIN}/api/syncrofit/events`;
 // Map our equipment enum → SyncroFit's canonical taxonomy (IntervalPreset.allEquipment)
 // so a sent workout filters correctly in SyncroFit's /workouts browser. null =
 // bodyweight (no required gear → no filter gate).
-const SF_EQUIPMENT: Record<string, string | null> = {
+export const SF_EQUIPMENT: Record<string, string | null> = {
   dumbbell: 'Dumbbells',
   kettlebell: 'Kettlebell',
   calisthenics: null,

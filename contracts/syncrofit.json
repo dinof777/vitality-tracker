@@ -1,0 +1,82 @@
+{
+  "$comment": "CANONICAL SOURCE OF TRUTH for SyncroFit's third-party integration. Partner apps (e.g. Vitality Tracker) validate against this file. When you change IntegrationCodec.swift or PartnerWebhook.swift, update this file AND bump `version`, then run scripts/verify-contract.mjs. See INTEGRATION.md.",
+  "name": "SyncroFit Partner Integration Contract",
+  "version": 1,
+  "updated": "2026-06-08",
+  "derivedFrom": ["IntegrationCodec.swift", "PartnerWebhook.swift", "IntervalPreset.swift"],
+  "outbound": {
+    "description": "Links a partner opens to hand a workout to SyncroFit. All forms resolve to the same parser.",
+    "urlFormats": [
+      { "id": "run-scheme-json", "template": "syncrofit://run?circuit=<urlencoded PartnerJSONCircuit>", "preferred": true },
+      { "id": "run-universal-json", "template": "https://www.mysyncrofit.com/run?circuit=<urlencoded PartnerJSONCircuit>", "preferred": true },
+      { "id": "run-inline-params", "template": "syncrofit://run?name=&action=&rest=&sets=&reps=&actionImage=&coachVoice=&id=&webhook=", "note": "minimal, no JSON" },
+      { "id": "run-remote", "template": "syncrofit://run?from=https://partner.example/circuit.json", "note": "SyncroFit fetches the PartnerJSONCircuit from this URL" },
+      { "id": "legacy-import", "template": "intervaltimer://import-circuit?data=<base64 GroupShareCodec>", "deprecated": true, "note": "app-to-app share; does NOT carry a webhook — no feedback. Prefer run-scheme-json." }
+    ],
+    "circuit": {
+      "required": ["name", "exercises"],
+      "stronglyRecommended": ["id", "webhook"],
+      "fields": {
+        "id": "string? — the partner's OWN circuit id. Echoed back verbatim as circuit.id on every webhook event. Send your share token / routine id so feedback correlates.",
+        "name": "string",
+        "description": "string?",
+        "from": "{ name: string, organization: string }? — creator attribution",
+        "restBetweenExercises": "int? — seconds between exercises",
+        "webhook": "string? HTTPS — SyncroFit POSTs import/completion events to THIS url. Per-circuit, not global. REQUIRED for any feedback to flow. Gated by the user's Share-with-partners consent.",
+        "mode": "string? — intervals | forTime | amrap | emom (default: intervals)",
+        "amrapMinutes": "int? — AMRAP cap, default 12, clamped 1..60 (only when mode=amrap)",
+        "emomMinutes": "int? — EMOM cap, default 12, clamped 1..60 (only when mode=emom)",
+        "exercises": "PartnerJSONExercise[]"
+      },
+      "exercise": {
+        "required": ["name", "sets", "reps", "actionTime", "restTime"],
+        "fields": {
+          "name": "string",
+          "notes": "string?",
+          "sets": "int",
+          "reps": "int",
+          "actionTime": "int — seconds of work per rep",
+          "restTime": "int — seconds rest between reps within a set (ignored when reps==1)",
+          "betweenSetRest": "int? — extra rest after each set (default 0)",
+          "actionImageURL": "string? HTTPS jpg/png/gif — work-phase background, downloaded on import, <=10MB",
+          "restImageURL": "string? HTTPS — rest/between-set background",
+          "coachVoiceURL": "string? HTTPS m4a/mp3 — plays when the exercise becomes active, <=10MB",
+          "requiredEquipment": "string[]? — gates SyncroFit's /workouts equipment filter. Use equipmentTaxonomy values.",
+          "optionalEquipment": "string[]? — nice-to-have; surfaced but never gates the filter",
+          "mode": "string? — per-exercise mode override (default: intervals)"
+        }
+      }
+    }
+  },
+  "webhook": {
+    "description": "SyncroFit POSTs JSON to circuit.webhook. Opt-in (user enables Settings > Privacy & Safety > Share with third-party app makers). HTTPS only. 5s timeout, fire-and-forget. User identity is a per-partner SHA256 hash (no cross-app correlation).",
+    "method": "POST",
+    "headers": {
+      "Content-Type": "application/json",
+      "X-SyncroFit-Event-Type": "circuit.imported | circuit.completed",
+      "User-Agent": "SyncroFit/1.0 (iOS Webhook)"
+    },
+    "events": ["circuit.imported", "circuit.completed"],
+    "payload": {
+      "common": {
+        "event": "circuit.imported | circuit.completed",
+        "circuit": "{ id: string (the partner id you sent), name: string }",
+        "user": "{ scopedId?: string (16-hex per-partner hash), displayName?: string (opt-in) }",
+        "timestamp": "ISO8601",
+        "schemaVersion": 1
+      },
+      "completedOnly": {
+        "startedAt": "ISO8601",
+        "completedAt": "ISO8601",
+        "durationSeconds": "int — top-level, kept for back-compat",
+        "result": "{ mode: string, durationSeconds: int, amrapRounds?: int (mode=amrap), emomMinutesCompleted?: int (mode=emom) }"
+      }
+    }
+  },
+  "equipmentTaxonomy": [
+    "No equipment", "Dumbbells", "Kettlebell", "Barbell", "Resistance bands",
+    "Pull-up bar", "Yoga mat", "Bench", "Stability ball", "Medicine ball",
+    "Jump rope", "Foam roller", "TRX / suspension", "Boxing gloves",
+    "Treadmill", "Stationary bike", "Rowing machine"
+  ]
+}

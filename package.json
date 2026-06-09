@@ -4,11 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "vitest run",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "sync:syncrofit": "node scripts/sync-syncrofit-contract.mjs"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.39.5",
