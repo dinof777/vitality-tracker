@@ -73,8 +73,12 @@ export default function ExercisePicker({
                     name={e.name}
                     size={40}
                   />
-                  <span className="flex-1 text-body text-text-primary">{e.name}</span>
-                  <span className="text-caption text-text-muted">{e.muscle_group}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-body text-text-primary">{e.name}</span>
+                    <span className="block text-caption text-text-faint">
+                      {[e.muscle_group, e.equipment && EQUIPMENT_LABEL[e.equipment]].filter(Boolean).join(' · ')}
+                    </span>
+                  </span>
                   <span className="text-text-faint">›</span>
                 </button>
               ))}

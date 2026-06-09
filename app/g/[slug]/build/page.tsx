@@ -7,7 +7,7 @@ import { brandingToCssVars, fetchTenantBySlug } from '@/lib/tenant';
 import { tenantLibrary } from '@/lib/tenant-library';
 import { generateWorkout } from '@/lib/workout-generator';
 import { workoutParams, FOCUS_CHOICES, type Profile } from '@/lib/profile';
-import { EQUIPMENT_ORDER } from '@/lib/exercises';
+import { EQUIPMENT_ORDER, EQUIPMENT_LABEL } from '@/lib/exercises';
 import { isTimed, exerciseMode, modeWorkLabel } from '@/lib/exercise-mode';
 import { syncrofitRunUrl } from '@/lib/syncrofit';
 import { hashString, seededRng } from '@/lib/seed';
@@ -153,7 +153,9 @@ export default async function TenantBuild({
                         </span>
                       )}
                     </span>
-                    <span className="block text-caption text-text-muted nums">{presc}</span>
+                    <span className="block text-caption text-text-muted">
+                      {[ex.equipment && EQUIPMENT_LABEL[ex.equipment], presc].filter(Boolean).join(' · ')}
+                    </span>
                   </span>
                 </li>
               );

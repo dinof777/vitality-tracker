@@ -76,7 +76,9 @@ export default function ExercisesPage() {
                       <span className="min-w-0">
                         <span className="block truncate text-body font-semibold text-text-primary">{ex.name}</span>
                         <span className="block text-caption text-text-muted">
-                          {ex.muscle_group} · {TIER_LABEL[exerciseTier(ex)]}
+                          {[ex.muscle_group, ex.equipment && EQUIPMENT_LABEL[ex.equipment], TIER_LABEL[exerciseTier(ex)]]
+                            .filter(Boolean)
+                            .join(' · ')}
                         </span>
                       </span>
                     </button>

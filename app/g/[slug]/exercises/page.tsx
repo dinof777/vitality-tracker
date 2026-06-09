@@ -43,7 +43,9 @@ export default async function TenantExercises({ params }: { params: { slug: stri
                   <ExerciseThumb equipment={ex.equipment} imageUrl={ex.image_url} name={ex.name} size={40} />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-body font-semibold text-text-primary">{ex.name}</span>
-                    {ex.muscle_group && <span className="block text-caption text-text-muted">{ex.muscle_group}</span>}
+                    <span className="block text-caption text-text-muted">
+                      {[ex.muscle_group, ex.equipment && EQUIPMENT_LABEL[ex.equipment]].filter(Boolean).join(' · ')}
+                    </span>
                   </span>
                   {ex.is_custom && (
                     <span className="shrink-0 rounded-full bg-accent/15 px-2 py-0.5 text-caption font-semibold text-accent">

@@ -15,6 +15,7 @@ import {
 import ExercisePicker from '@/components/workout/ExercisePicker';
 import ExerciseThumb from '@/components/workout/ExerciseThumb';
 import { syncrofitImportUrl } from '@/lib/syncrofit';
+import { EQUIPMENT_LABEL } from '@/lib/exercises';
 
 interface SfRecent {
   id: string;
@@ -223,8 +224,10 @@ export default function RoutineDetailPage() {
               <ExerciseThumb equipment={re.equipment} imageUrl={re.image_url} name={re.name} size={40} />
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-body font-semibold text-text-primary">{re.name}</span>
-                <span className="block text-caption text-text-muted nums">
-                  {re.default_sets} × {re.default_reps} · {re.default_tempo}
+                <span className="block text-caption text-text-muted">
+                  {[re.equipment && EQUIPMENT_LABEL[re.equipment], `${re.default_sets} × ${re.default_reps} · ${re.default_tempo}`]
+                    .filter(Boolean)
+                    .join(' · ')}
                 </span>
               </span>
             </button>
