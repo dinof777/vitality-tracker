@@ -113,6 +113,31 @@ export function syncrofitUrlFromWorkout(name: string, exercises: Exercise[], p: 
 
 const VITALITY_ORIGIN = 'https://vitality-tracker-mauve.vercel.app';
 
+// SyncroFit POSTs import/completion feedback to the `webhook` URL embedded in the
+// circuit we send (per-circuit, not a global partner URL) — so it MUST be present
+// for the feedback loop + analytics to work.
+const SYNCROFIT_WEBHOOK = `${VITALITY_ORIGIN}/api/syncrofit/events`;
+
+// Map our equipment enum → SyncroFit's canonical taxonomy (IntervalPreset.allEquipment)
+// so a sent workout filters correctly in SyncroFit's /workouts browser. null =
+// bodyweight (no required gear → no filter gate).
+const SF_EQUIPMENT: Record<string, string | null> = {
+  dumbbell: 'Dumbbells',
+  kettlebell: 'Kettlebell',
+  calisthenics: null,
+  tube_band: 'Resistance bands',
+  loop_band: 'Resistance bands',
+  pullup_bar: 'Pull-up bar',
+  medicine_ball: 'Medicine ball',
+  jump_rope: 'Jump rope',
+  stretch: null,
+};
+function requiredEquipment(equipment: string | null): string[] | undefined {
+  if (!equipment) return undefined;
+  const sf = SF_EQUIPMENT[equipment];
+  return sf ? [sf] : undefined;
+}
+
 // Turn a (possibly relative) image_url into an absolute HTTPS URL SyncroFit can
 // fetch. Returns undefined when there's no image, or when we can't form an
 // https URL (e.g. localhost) — the codec just shows the default background then.
@@ -142,6 +167,7 @@ export function syncrofitRunUrl(
       : `${p.sets} × ${p.reps} @ ${p.tempo}`;
     const notes = [ex.default_cue, prescription].filter(Boolean).join(' · ');
     const img = absImageUrl(ex.image_url, origin);
+    const reqEquip = requiredEquipment(ex.equipment);
     return {
       name: ex.name,
       notes,
@@ -151,6 +177,7 @@ export function syncrofitRunUrl(
       restTime: 0,
       betweenSetRest: p.restSec,
       ...(img ? { actionImageURL: img } : {}),
+      ...(reqEquip ? { requiredEquipment: reqEquip } : {}),
     };
   });
   const payload = {
@@ -159,6 +186,44 @@ export function syncrofitRunUrl(
     description: 'Sent from Vitality Tracker',
     from: { name: 'Vitality', organization: 'Live Elevated' },
     restBetweenExercises: 30,
+    webhook: SYNCROFIT_WEBHOOK,
+    exercises: exs,
+  };
+  return `syncrofit://run?circuit=${encodeURIComponent(JSON.stringify(payload))}`;
+}
+
+// NEW-format routine hand-off (syncrofit://run) — carries the webhook + the
+// routine id, so SyncroFit's import/completion feedback flows back and lands on
+// the routine's SyncroFit Activity card. Preferred over the legacy import URL.
+export function syncrofitRunUrlFromRoutine(routine: RoutineWithExercises): string {
+  const exs = routine.exercises.map((re) => {
+    const timed = isTimed(re);
+    const sets = re.default_sets && re.default_sets > 0 ? re.default_sets : 3;
+    const prescription = [re.default_reps, re.default_tempo].filter(Boolean).join(' @ ');
+    const notes = [re.default_cue, prescription].filter(Boolean).join(' · ');
+    const img = absImageUrl(re.image_url, '');
+    const reqEquip = requiredEquipment(re.equipment);
+    const base = {
+      name: re.name,
+      notes,
+      sets,
+      restTime: 0,
+      ...(img ? { actionImageURL: img } : {}),
+      ...(reqEquip ? { requiredEquipment: reqEquip } : {}),
+    };
+    if (timed) {
+      const fallback = re.equipment === 'stretch' ? 45 : 40;
+      return { ...base, reps: 1, actionTime: holdSeconds(re.default_reps, fallback), betweenSetRest: 20 };
+    }
+    return { ...base, reps: repsMid(re.default_reps) ?? 10, actionTime: tempoSeconds(re.default_tempo) ?? 4, betweenSetRest: 60 };
+  });
+  const payload = {
+    id: routine.id,
+    name: routine.name,
+    description: 'Sent from Vitality Tracker',
+    from: { name: 'Vitality', organization: 'Live Elevated' },
+    restBetweenExercises: 30,
+    webhook: SYNCROFIT_WEBHOOK,
     exercises: exs,
   };
   return `syncrofit://run?circuit=${encodeURIComponent(JSON.stringify(payload))}`;

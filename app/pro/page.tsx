@@ -192,8 +192,22 @@ export default function ProLanding() {
           <p className="mb-2 text-label text-accent">⏱️ SYNCROFIT, CONNECTED</p>
           <h2 className="mx-auto max-w-2xl text-h2 font-bold">Hand a workout to the timer in one tap — and get told when your client finished it.</h2>
           <p className="mx-auto mt-3 max-w-xl text-body text-text-muted">
-            Every routine you share carries an ID, so imports and completions flow back into your dashboard as real engagement — durations included.
+            Every workout you share carries your gym’s ID, so imports and completions flow back into your dashboard as real engagement — durations included.
           </p>
+          <div className="mx-auto mt-6 grid max-w-2xl gap-3 text-left sm:grid-cols-3">
+            <div className="rounded-lg border border-border bg-background p-3">
+              <p className="text-body font-semibold text-text-primary">Equipment-aware</p>
+              <p className="text-caption text-text-muted">Each move’s gear tags through, so your workouts filter correctly in SyncroFit’s browser.</p>
+            </div>
+            <div className="rounded-lg border border-border bg-background p-3">
+              <p className="text-body font-semibold text-text-primary">Your cues travel</p>
+              <p className="text-caption text-text-muted">Per-move images &amp; coaching notes ride along into the timer.</p>
+            </div>
+            <div className="rounded-lg border border-border bg-background p-3">
+              <p className="text-body font-semibold text-text-primary">Real results back</p>
+              <p className="text-caption text-text-muted">Imports &amp; completions — with time &amp; rounds — land on the client.</p>
+            </div>
+          </div>
         </Reveal>
       </section>
 

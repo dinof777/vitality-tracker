@@ -14,7 +14,7 @@ import {
 } from '@/lib/routines';
 import ExercisePicker from '@/components/workout/ExercisePicker';
 import ExerciseThumb from '@/components/workout/ExerciseThumb';
-import { syncrofitImportUrl } from '@/lib/syncrofit';
+import { syncrofitRunUrlFromRoutine } from '@/lib/syncrofit';
 import { EQUIPMENT_LABEL } from '@/lib/exercises';
 
 interface SfRecent {
@@ -132,7 +132,7 @@ export default function RoutineDetailPage() {
   // (so a build with onOpenURL auto-imports). Needs SyncroFit on the iPhone.
   const sendToSyncrofit = async () => {
     if (!routine || rows.length === 0) return;
-    const url = syncrofitImportUrl({ ...routine, exercises: rows });
+    const url = syncrofitRunUrlFromRoutine({ ...routine, exercises: rows });
     setSyncHint(true);
     try {
       await navigator.clipboard.writeText(url);
@@ -151,7 +151,7 @@ export default function RoutineDetailPage() {
   const copySyncLink = async () => {
     if (!routine) return;
     try {
-      await navigator.clipboard.writeText(syncrofitImportUrl({ ...routine, exercises: rows }));
+      await navigator.clipboard.writeText(syncrofitRunUrlFromRoutine({ ...routine, exercises: rows }));
       setCopied(true);
       setTimeout(() => setCopied(false), 2500);
     } catch {
