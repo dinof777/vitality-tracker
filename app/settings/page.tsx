@@ -261,6 +261,28 @@ export default function SettingsPage() {
         📅 PLAN MY WEEK
       </Link>
 
+      {/* Vitality Pro — entry point into the white-label trainer platform */}
+      <div className="mb-5 rounded-lg border border-accent/40 bg-accent/10 p-4">
+        <p className="text-label text-accent">VITALITY PRO</p>
+        <p className="mt-1 text-caption text-text-muted">
+          Run a branded training app for your gym or clients — your logo, your URL, share by QR.
+        </p>
+        <div className="mt-3 flex gap-2">
+          <Link
+            href="/dashboard"
+            className="flex h-10 flex-1 items-center justify-center rounded-md bg-accent text-caption font-semibold text-on-accent"
+          >
+            Trainer dashboard
+          </Link>
+          <Link
+            href="/pro"
+            className="flex h-10 flex-1 items-center justify-center rounded-md border border-border text-caption text-text-primary active:bg-surface"
+          >
+            Learn more
+          </Link>
+        </div>
+      </div>
+
       {/* History */}
       <p className="mb-2 text-caption text-text-muted">WORKOUT HISTORY</p>
       {loadingHistory ? (
