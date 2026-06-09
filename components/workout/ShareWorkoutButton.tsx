@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ShareExercise, ShareParams } from '@/lib/share';
 
 interface Props {
@@ -8,13 +8,28 @@ interface Props {
   exercises: ShareExercise[];
   params: ShareParams;
 }
+interface Client {
+  id: string;
+  name: string;
+}
 
 // Trainer-only: turns the current generated workout into a stable /s/<token>
 // share link (the API is tenant-gated, so a public visitor gets a sign-in hint).
+// Optionally assigns the share to a client so its engagement rolls up to them.
 export default function ShareWorkoutButton({ name, exercises, params }: Props) {
   const [state, setState] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
   const [url, setUrl] = useState('');
   const [copied, setCopied] = useState(false);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [clientId, setClientId] = useState('');
+
+  // Pull the gym's clients (silently no-ops for public visitors → 403).
+  useEffect(() => {
+    fetch('/api/tenant/clients')
+      .then((r) => (r.ok ? r.json() : { clients: [] }))
+      .then((d) => setClients(d.clients ?? []))
+      .catch(() => {});
+  }, []);
 
   const create = async () => {
     setState('loading');
@@ -22,7 +37,7 @@ export default function ShareWorkoutButton({ name, exercises, params }: Props) {
       const r = await fetch('/api/share', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, exercises, params }),
+        body: JSON.stringify({ name, exercises, params, clientId: clientId || undefined }),
       });
       const j = await r.json();
       if (!r.ok) {
@@ -70,6 +85,20 @@ export default function ShareWorkoutButton({ name, exercises, params }: Props) {
 
   return (
     <div className="print:hidden">
+      {clients.length > 0 && (
+        <select
+          value={clientId}
+          onChange={(e) => setClientId(e.target.value)}
+          className="mt-3 h-11 w-full rounded-md border border-border bg-surface px-2 text-body text-text-primary"
+        >
+          <option value="">Share with… (no client)</option>
+          {clients.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+      )}
       <button
         type="button"
         onClick={create}

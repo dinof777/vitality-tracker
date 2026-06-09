@@ -37,11 +37,19 @@ export function newShareToken(): string {
   return randomBytes(9).toString('base64url').slice(0, 12);
 }
 
-export async function createShare(tenantId: string, name: string, payload: SharePayload): Promise<string> {
+export async function createShare(
+  tenantId: string,
+  name: string,
+  payload: SharePayload,
+  clientId?: string | null,
+): Promise<string> {
   const sql = getSql();
   if (!sql) throw new Error('No database');
   const token = newShareToken();
-  await sql`insert into share_links (token, tenant_id, name, payload) values (${token}, ${tenantId}, ${name}, ${JSON.stringify(payload)}::jsonb)`;
+  await sql`
+    insert into share_links (token, tenant_id, name, payload, client_id)
+    values (${token}, ${tenantId}, ${name}, ${JSON.stringify(payload)}::jsonb, ${clientId ?? null})
+  `;
   return token;
 }
 
