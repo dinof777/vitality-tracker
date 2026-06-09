@@ -37,6 +37,29 @@ create table if not exists exercises (
   created_at   timestamptz not null default now()
 );
 
+-- equipment_catalog: the global, deduped equipment taxonomy. 9 'core' rows are
+-- the canonical set; gyms propose new pieces as 'pending' → admin moderation
+-- approves/rejects/merges (status). normalized is the dedup key.
+create table if not exists equipment_catalog (
+  id          uuid primary key default gen_random_uuid(),
+  name        text not null,
+  normalized  text not null unique,
+  status      text not null default 'pending'
+                check (status in ('core', 'approved', 'pending', 'rejected', 'merged')),
+  merged_into uuid references equipment_catalog(id) on delete set null,
+  created_by_tenant_id uuid references tenants(id) on delete set null,
+  created_at  timestamptz not null default now()
+);
+
+-- tenant_equipment: which catalog pieces a given gym uses (on top of the core 9).
+create table if not exists tenant_equipment (
+  id         uuid primary key default gen_random_uuid(),
+  tenant_id  uuid not null references tenants(id) on delete cascade,
+  catalog_id uuid not null references equipment_catalog(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  unique (tenant_id, catalog_id)
+);
+
 -- exercise_aliases: a per-tenant LOCAL display-name override for an exercise
 -- (gyms call the same move different things). Never changes it globally.
 create table if not exists exercise_aliases (

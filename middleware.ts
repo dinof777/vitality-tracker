@@ -4,7 +4,7 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 // Only the trainer admin area needs a login. The single-user app, the public
 // white-label tenant pages (/g/<slug>) and public APIs stay open — clients
 // never sign in.
-const isProtected = createRouteMatcher(['/dashboard(.*)', '/onboarding(.*)', '/g/(.*)/branding']);
+const isProtected = createRouteMatcher(['/dashboard(.*)', '/onboarding(.*)', '/admin(.*)', '/g/(.*)/branding']);
 
 // Fail-safe: without a Clerk secret key, pass everything through rather than
 // throwing (keeps production up if the key is ever missing).
