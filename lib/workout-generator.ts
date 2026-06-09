@@ -36,6 +36,7 @@ interface GenerateOpts {
   targetSeconds?: number; // fit the workout to this much time
   count?: number; // or just take this many exercises
   pool?: Exercise[]; // draw from this library instead of the global one (e.g. a gym's)
+  rng?: () => number; // seeded RNG for reproducible (shareable / QR-able) workouts
 }
 
 // Order the focus/equipment pool for variety AND intensity-type: bias toward the
@@ -48,6 +49,7 @@ function varietyOrdered(
   focusValue: string,
   preferTier: number,
   source: Exercise[] = SAMPLE_EXERCISES,
+  rng: () => number = Math.random,
 ): Exercise[] {
   const focus = focusChoice(focusValue);
   const eq = new Set(profile.equipment);
@@ -63,7 +65,7 @@ function varietyOrdered(
   // Lower key = earlier. Distance from the preferred tier dominates; a random
   // term keeps each generation varied within a tier.
   const shuffled = [...pool]
-    .map((e) => ({ e, key: Math.abs(exerciseTier(e) - preferTier) + Math.random() * 0.85 }))
+    .map((e) => ({ e, key: Math.abs(exerciseTier(e) - preferTier) + rng() * 0.85 }))
     .sort((a, b) => a.key - b.key)
     .map((x) => x.e);
   // Balanced focus: rotate through pillars instead of muscle-group variety.
@@ -84,7 +86,7 @@ function varietyOrdered(
 // resolved sets/reps/rest/hold timing; falls back to a fixed `count`.
 export function generateWorkout(profile: Profile, opts: GenerateOpts = {}): Exercise[] {
   const intensity = opts.intensity ?? profile.intensity;
-  const ordered = varietyOrdered(profile, opts.focus ?? profile.focus, intensityPreferredTier(intensity), opts.pool);
+  const ordered = varietyOrdered(profile, opts.focus ?? profile.focus, intensityPreferredTier(intensity), opts.pool, opts.rng);
   if (ordered.length === 0) return [];
 
   const overridden = { ...profile, intensity };

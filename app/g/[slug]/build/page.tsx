@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { headers } from 'next/headers';
+import QRCode from 'qrcode';
 import type { Exercise } from '@/lib/database.types';
 import { brandingToCssVars, fetchTenantBySlug } from '@/lib/tenant';
 import { tenantLibrary } from '@/lib/tenant-library';
@@ -8,7 +10,9 @@ import { workoutParams, FOCUS_CHOICES, type Profile } from '@/lib/profile';
 import { EQUIPMENT_ORDER } from '@/lib/exercises';
 import { isTimed, exerciseMode, modeWorkLabel } from '@/lib/exercise-mode';
 import { syncrofitRunUrl } from '@/lib/syncrofit';
+import { hashString, seededRng } from '@/lib/seed';
 import ExerciseThumb from '@/components/workout/ExerciseThumb';
+import PrintButton from '@/components/PrintButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,7 +28,7 @@ export default async function TenantBuild({
   searchParams,
 }: {
   params: { slug: string };
-  searchParams: { focus?: string; len?: string };
+  searchParams: { focus?: string; len?: string; v?: string };
 }) {
   const tenant = await fetchTenantBySlug(params.slug);
   if (!tenant) notFound();
@@ -33,7 +37,12 @@ export default async function TenantBuild({
 
   const focusVal = FOCI.includes(searchParams.focus as (typeof FOCI)[number]) ? (searchParams.focus as string) : 'full';
   const count = LENGTHS.includes(Number(searchParams.len) as (typeof LENGTHS)[number]) ? Number(searchParams.len) : 6;
+  const variant = Math.max(1, Math.min(999, Number(searchParams.v) || 1));
   const focusLabel = FOCUS_CHOICES.find((f) => f.value === focusVal)?.label ?? 'Full Body';
+
+  // Deterministic seed → the same URL always yields the same workout, so a
+  // printed QR reproduces it exactly when scanned. Shuffle bumps `v`.
+  const rng = seededRng(hashString(`${tenant.slug}|${focusVal}|${count}|${variant}`));
 
   // Classify on the REAL name (so timing is right), display the gym's alias.
   const byId = new Map(library.map((e) => [e.id, e]));
@@ -48,7 +57,7 @@ export default async function TenantBuild({
   }));
 
   const profile: Profile = { equipment: EQUIPMENT_ORDER, focus: focusVal, intensity: 'moderate' };
-  const workout = generateWorkout(profile, { focus: focusVal, count, pool });
+  const workout = generateWorkout(profile, { focus: focusVal, count, pool, rng });
   const wp = workoutParams(profile);
 
   // SyncroFit shows the gym's names; circuit id is tenant-scoped so feedback maps back.
@@ -57,19 +66,30 @@ export default async function TenantBuild({
     ? syncrofitRunUrl(`${name} — ${focusLabel}`, displayExercises, wp, '', `${tenant.slug}-build`)
     : '#';
 
-  const qs = (f: string, l: number) => `?focus=${f}&len=${l}`;
+  const qs = (f: string, l: number, v = variant) => `?focus=${f}&len=${l}&v=${v}`;
+
+  // Absolute URL of THIS exact workout → encode it in a QR to scan/print.
+  const h = headers();
+  const host = h.get('host') ?? 'vitality-tracker-mauve.vercel.app';
+  const proto = h.get('x-forwarded-proto') ?? (host.includes('localhost') ? 'http' : 'https');
+  const shareUrl = `${proto}://${host}/g/${tenant.slug}/build${qs(focusVal, count)}`;
+  const qrSvg = await QRCode.toString(shareUrl, {
+    type: 'svg',
+    margin: 1,
+    color: { dark: '#0b0b0c', light: '#ffffff' },
+  });
 
   return (
     <div style={brandingToCssVars(tenant.branding)} className="min-h-dvh bg-background text-text-primary">
       <main className="mx-auto max-w-md px-5 pb-16 pt-10">
-        <Link href={`/g/${tenant.slug}`} className="text-caption text-text-muted">
+        <Link href={`/g/${tenant.slug}`} className="text-caption text-text-muted print:hidden">
           ← {name}
         </Link>
         <h1 className="mb-1 mt-2 text-h1 text-text-primary">Build a workout</h1>
         <p className="mb-5 text-body text-text-muted">From {name}’s library, ready for SyncroFit.</p>
 
         {/* Focus */}
-        <div className="mb-2 flex flex-wrap gap-2">
+        <div className="mb-2 flex flex-wrap gap-2 print:hidden">
           {FOCI.map((f) => (
             <Link
               key={f}
@@ -82,8 +102,8 @@ export default async function TenantBuild({
             </Link>
           ))}
         </div>
-        {/* Length */}
-        <div className="mb-6 flex gap-2">
+        {/* Length + shuffle */}
+        <div className="mb-6 flex items-center gap-2 print:hidden">
           {LENGTHS.map((l) => (
             <Link
               key={l}
@@ -95,6 +115,17 @@ export default async function TenantBuild({
               {l} moves
             </Link>
           ))}
+          <Link
+            href={qs(focusVal, count, variant + 1)}
+            className="ml-auto rounded-full border border-border px-3 py-1.5 text-caption font-semibold text-text-muted"
+          >
+            🔀 Shuffle
+          </Link>
+        </div>
+
+        {/* Print-only header */}
+        <div className="mb-4 hidden print:block">
+          <p className="text-label text-text-muted">{focusLabel.toUpperCase()} · {count} MOVES</p>
         </div>
 
         {workout.length === 0 ? (
@@ -133,10 +164,27 @@ export default async function TenantBuild({
         {workout.length > 0 && (
           <a
             href={sfUrl}
-            className="mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-md bg-accent text-label text-on-accent active:scale-[0.97] active:bg-accent-press"
+            className="mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-md bg-accent text-label text-on-accent active:scale-[0.97] active:bg-accent-press print:hidden"
           >
             ⏱ SEND TO SYNCROFIT
           </a>
+        )}
+
+        {/* QR — print it on the gym wall; scanning opens this exact workout */}
+        {workout.length > 0 && (
+          <div className="mt-6 flex flex-col items-center rounded-xl border border-border bg-surface p-5 print:border-0 print:bg-transparent">
+            <div
+              className="h-40 w-40 rounded-lg bg-white p-2 [&>svg]:h-full [&>svg]:w-full"
+              // eslint-disable-next-line react/no-danger
+              dangerouslySetInnerHTML={{ __html: qrSvg }}
+            />
+            <p className="mt-3 text-center text-caption text-text-muted">
+              Scan to open this workout & run it in SyncroFit
+            </p>
+            <div className="mt-4 flex gap-2 print:hidden">
+              <PrintButton className="h-10 rounded-md border border-border px-4 text-caption font-semibold text-text-primary active:bg-surface-raised" />
+            </div>
+          </div>
         )}
 
         <p className="mt-8 text-center text-caption text-text-faint">Powered by Vitality</p>
