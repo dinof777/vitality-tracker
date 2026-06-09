@@ -34,6 +34,7 @@ create table if not exists exercises (
   image_url    text,
   tenant_id    uuid references tenants(id) on delete cascade,
   is_global    boolean not null default false,
+  equipment_catalog_id uuid references equipment_catalog(id) on delete set null, -- custom-equipment moves (equipment null then)
   created_at   timestamptz not null default now()
 );
 

@@ -10,6 +10,7 @@ export interface LibraryExercise {
   real_name: string;
   muscle_group: string | null;
   equipment: Equipment | null;
+  custom_equip_name: string | null; // when the move uses the gym's own equipment
   image_url: string | null;
   is_custom: boolean;
 }
@@ -24,11 +25,14 @@ export async function tenantLibrary(tenantId: string): Promise<LibraryExercise[]
       e.name                   as real_name,
       e.muscle_group,
       e.equipment,
+      ec.name                  as custom_equip_name,
       e.image_url,
       (e.tenant_id is not null) as is_custom
     from exercises e
     left join exercise_aliases a
       on a.exercise_id = e.id and a.tenant_id = ${tenantId}
+    left join equipment_catalog ec
+      on ec.id = e.equipment_catalog_id
     where e.is_global or e.tenant_id = ${tenantId}
     order by coalesce(a.name, e.name)
   `;

@@ -17,11 +17,22 @@ export default async function TenantExercises({ params }: { params: { slug: stri
   const name = tenant.branding.brandName ?? tenant.name;
   const customCount = exercises.filter((e) => e.is_custom).length;
 
-  // Group by equipment in the library's canonical order.
-  const groups = EQUIPMENT_ORDER.map((eq) => ({
-    eq,
+  // Core equipment groups (canonical order) + any custom-equipment groups (the
+  // gym's own gear) appended after.
+  const coreGroups = EQUIPMENT_ORDER.map((eq) => ({
+    label: EQUIPMENT_LABEL[eq as Equipment],
     items: exercises.filter((e) => e.equipment === eq),
   })).filter((g) => g.items.length > 0);
+  const customByName = new Map<string, typeof exercises>();
+  for (const e of exercises) {
+    if (!e.equipment && e.custom_equip_name) {
+      const arr = customByName.get(e.custom_equip_name) ?? [];
+      arr.push(e);
+      customByName.set(e.custom_equip_name, arr);
+    }
+  }
+  const customGroups = Array.from(customByName.entries()).map(([label, items]) => ({ label, items }));
+  const groups = [...coreGroups, ...customGroups];
 
   return (
     <div style={brandingToCssVars(tenant.branding)} className="min-h-dvh bg-background text-text-primary">
@@ -35,8 +46,8 @@ export default async function TenantExercises({ params }: { params: { slug: stri
         </p>
 
         {groups.map((g) => (
-          <section key={g.eq} className="mb-6">
-            <p className="mb-2 text-label text-accent">{EQUIPMENT_LABEL[g.eq as Equipment].toUpperCase()}</p>
+          <section key={g.label} className="mb-6">
+            <p className="mb-2 text-label text-accent">{g.label.toUpperCase()}</p>
             <ul className="space-y-2">
               {g.items.map((ex) => (
                 <li key={ex.id} className="flex items-center gap-3 rounded-lg border border-border bg-surface p-3">
@@ -44,7 +55,9 @@ export default async function TenantExercises({ params }: { params: { slug: stri
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-body font-semibold text-text-primary">{ex.name}</span>
                     <span className="block text-caption text-text-muted">
-                      {[ex.muscle_group, ex.equipment && EQUIPMENT_LABEL[ex.equipment]].filter(Boolean).join(' · ')}
+                      {[ex.muscle_group, ex.custom_equip_name ?? (ex.equipment && EQUIPMENT_LABEL[ex.equipment])]
+                        .filter(Boolean)
+                        .join(' · ')}
                     </span>
                   </span>
                   {ex.is_custom && (

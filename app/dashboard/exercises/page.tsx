@@ -3,14 +3,21 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { EQUIPMENT_CHOICES } from '@/lib/profile';
-import { SAMPLE_EXERCISES } from '@/lib/exercises';
+import { SAMPLE_EXERCISES, EQUIPMENT_LABEL } from '@/lib/exercises';
+import type { Equipment } from '@/lib/database.types';
 
 interface CustomExercise {
   id: string;
   name: string;
   muscle_group: string | null;
   equipment: string | null;
+  custom_equip_name?: string | null;
   default_cue: string | null;
+}
+interface CustomEquip {
+  id: string;
+  name: string;
+  is_core: boolean;
 }
 
 export default function CustomExercises() {
@@ -25,6 +32,7 @@ export default function CustomExercises() {
   const [aliases, setAliases] = useState<Record<string, string>>({});
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [aliasQuery, setAliasQuery] = useState('');
+  const [customEquip, setCustomEquip] = useState<CustomEquip[]>([]);
 
   const load = () =>
     fetch('/api/tenant/exercises')
@@ -32,6 +40,17 @@ export default function CustomExercises() {
       .then((d) => setList(d.custom ?? []))
       .catch(() => {})
       .finally(() => setLoading(false));
+
+  // The gym's own (non-core) equipment, to offer in the exercise's equipment picker.
+  useEffect(() => {
+    fetch('/api/tenant/equipment')
+      .then((r) => (r.ok ? r.json() : { equipment: [] }))
+      .then((d) => setCustomEquip((d.equipment ?? []).filter((e: CustomEquip) => !e.is_core)))
+      .catch(() => {});
+  }, []);
+
+  const equipLabel = (ex: CustomExercise) =>
+    ex.custom_equip_name ?? (ex.equipment ? EQUIPMENT_LABEL[ex.equipment as Equipment] : '');
 
   useEffect(() => {
     load();
@@ -130,6 +149,15 @@ export default function CustomExercises() {
                   {c.label}
                 </option>
               ))}
+              {customEquip.length > 0 && (
+                <optgroup label="Your equipment">
+                  {customEquip.map((e) => (
+                    <option key={e.id} value={`cat:${e.id}`}>
+                      {e.name}
+                    </option>
+                  ))}
+                </optgroup>
+              )}
             </select>
           </div>
           <input
@@ -163,7 +191,7 @@ export default function CustomExercises() {
                 <div className="min-w-0">
                   <p className="truncate text-body font-semibold text-text-primary">{ex.name}</p>
                   <p className="truncate text-caption text-text-muted">
-                    {[ex.muscle_group, ex.equipment].filter(Boolean).join(' · ')}
+                    {[ex.muscle_group, equipLabel(ex)].filter(Boolean).join(' · ')}
                   </p>
                 </div>
                 <button
