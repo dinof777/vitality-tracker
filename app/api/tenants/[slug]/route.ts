@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import { getSql } from '@/lib/db';
+import { currentTenant } from '@/lib/current-tenant';
+import { isAdmin } from '@/lib/is-admin';
 import type { Branding } from '@/lib/tenant';
 
 export const runtime = 'nodejs';
@@ -20,17 +21,11 @@ export async function PATCH(req: Request, { params }: { params: { slug: string }
   const sql = getSql();
   if (!sql) return NextResponse.json({ error: 'No database' }, { status: 500 });
 
-  // Must be signed in; if the tenant is linked to a Clerk org, the caller's
-  // active org must be that gym (so a trainer can only edit their own gym).
-  const { userId, orgId } = await auth();
-  if (!userId) return NextResponse.json({ error: 'Not signed in' }, { status: 401 });
-  const owner = await sql`select clerk_org_id from tenants where slug = ${params.slug} limit 1`;
-  if (!owner[0]) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  // Block only a definite cross-gym mismatch (caller is actively in a *different*
-  // gym's org). When the caller has no active org yet (just onboarded), allow.
-  // TODO: tighten to a full org-membership check once active-org is reliably set.
-  const ownerOrg = owner[0].clerk_org_id as string | null;
-  if (ownerOrg && orgId && orgId !== ownerOrg) {
+  // Only the gym's own trainer can edit it — resolved via Clerk org membership
+  // (robust even right after onboarding). Org-less seed/demo tenants: admins only.
+  const me = await currentTenant();
+  const isOwner = !!me && me.slug === params.slug;
+  if (!isOwner && !(await isAdmin())) {
     return NextResponse.json({ error: 'Not your gym.' }, { status: 403 });
   }
 
