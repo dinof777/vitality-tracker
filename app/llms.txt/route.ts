@@ -27,6 +27,7 @@ export async function GET(): Promise<Response> {
     `- [Profile](${u('/settings')}): Trainer/trainee details, saved routines, and workout history.`,
     '',
     '## Vitality Pro — white-label for gyms & trainers',
+    `- [Vitality Pro (marketing)](${u('/pro')}): What the white-label platform is and who it's for — features, how it works, pricing.`,
     `- [Sign up](${u('/sign-up')}): Create a trainer account.`,
     `- [Create your gym](${u('/onboarding')}): Name your gym and claim a URL — your branded app at /g/<your-gym>.`,
     `- [Trainer dashboard](${u('/dashboard')}): Manage your gym — branding, custom exercises, and equipment.`,
