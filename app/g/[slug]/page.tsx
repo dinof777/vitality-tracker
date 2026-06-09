@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { brandingToCssVars, fetchTenantBySlug } from '@/lib/tenant';
 
@@ -43,6 +44,12 @@ export default async function TenantHome({ params }: { params: { slug: string } 
         >
           START TODAY’S WORKOUT
         </button>
+        <Link
+          href={`/g/${tenant.slug}/exercises`}
+          className="mb-10 -mt-7 flex h-12 w-full items-center justify-center rounded-md border border-border text-label text-text-primary active:bg-surface"
+        >
+          BROWSE THE LIBRARY
+        </Link>
 
         {/* Sample workout card — shows the accent + surface theming */}
         <p className="mb-2 text-caption text-text-muted">TODAY · FULL BODY</p>
