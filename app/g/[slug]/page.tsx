@@ -38,15 +38,15 @@ export default async function TenantHome({ params }: { params: { slug: string } 
         <p className="mb-6 text-body text-text-muted">
           Your coach’s workouts, on your phone — built around your gear and time, ready to run with a tap.
         </p>
-        <button
-          type="button"
-          className="mb-10 flex h-14 w-full items-center justify-center rounded-md bg-accent text-label text-on-accent transition-all active:scale-[0.97] active:bg-accent-press"
+        <Link
+          href={`/g/${tenant.slug}/build`}
+          className="flex h-14 w-full items-center justify-center rounded-md bg-accent text-label text-on-accent transition-all active:scale-[0.97] active:bg-accent-press"
         >
-          START TODAY’S WORKOUT
-        </button>
+          BUILD A WORKOUT
+        </Link>
         <Link
           href={`/g/${tenant.slug}/exercises`}
-          className="mb-10 -mt-7 flex h-12 w-full items-center justify-center rounded-md border border-border text-label text-text-primary active:bg-surface"
+          className="mb-10 mt-3 flex h-12 w-full items-center justify-center rounded-md border border-border text-label text-text-primary active:bg-surface"
         >
           BROWSE THE LIBRARY
         </Link>

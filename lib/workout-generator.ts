@@ -35,6 +35,7 @@ interface GenerateOpts {
   intensity?: Intensity;
   targetSeconds?: number; // fit the workout to this much time
   count?: number; // or just take this many exercises
+  pool?: Exercise[]; // draw from this library instead of the global one (e.g. a gym's)
 }
 
 // Order the focus/equipment pool for variety AND intensity-type: bias toward the
@@ -42,10 +43,15 @@ interface GenerateOpts {
 // filter, so the pool can't empty), then take one exercise per muscle group
 // first and the remainder after — so packing favors a balanced, tier-appropriate
 // workout.
-function varietyOrdered(profile: Profile, focusValue: string, preferTier: number): Exercise[] {
+function varietyOrdered(
+  profile: Profile,
+  focusValue: string,
+  preferTier: number,
+  source: Exercise[] = SAMPLE_EXERCISES,
+): Exercise[] {
   const focus = focusChoice(focusValue);
   const eq = new Set(profile.equipment);
-  let pool = SAMPLE_EXERCISES.filter((e) => e.equipment && eq.has(e.equipment));
+  let pool = source.filter((e) => e.equipment && eq.has(e.equipment));
   if (focus.mobility) {
     // Mobility = stretches + holds (any bodyweight hold), by tracking mode.
     pool = pool.filter((e) => exerciseMode(e) === 'hold');
@@ -78,7 +84,7 @@ function varietyOrdered(profile: Profile, focusValue: string, preferTier: number
 // resolved sets/reps/rest/hold timing; falls back to a fixed `count`.
 export function generateWorkout(profile: Profile, opts: GenerateOpts = {}): Exercise[] {
   const intensity = opts.intensity ?? profile.intensity;
-  const ordered = varietyOrdered(profile, opts.focus ?? profile.focus, intensityPreferredTier(intensity));
+  const ordered = varietyOrdered(profile, opts.focus ?? profile.focus, intensityPreferredTier(intensity), opts.pool);
   if (ordered.length === 0) return [];
 
   const overridden = { ...profile, intensity };
