@@ -42,13 +42,14 @@ export async function createShare(
   name: string,
   payload: SharePayload,
   clientId?: string | null,
+  ownerUserId?: string | null,
 ): Promise<string> {
   const sql = getSql();
   if (!sql) throw new Error('No database');
   const token = newShareToken();
   await sql`
-    insert into share_links (token, tenant_id, name, payload, client_id)
-    values (${token}, ${tenantId}, ${name}, ${JSON.stringify(payload)}::jsonb, ${clientId ?? null})
+    insert into share_links (token, tenant_id, name, payload, client_id, owner_user_id)
+    values (${token}, ${tenantId}, ${name}, ${JSON.stringify(payload)}::jsonb, ${clientId ?? null}, ${ownerUserId ?? null})
   `;
   return token;
 }

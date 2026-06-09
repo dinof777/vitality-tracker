@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth, clerkClient } from '@clerk/nextjs/server';
 import { getSql } from '@/lib/db';
 import { isValidSlug } from '@/lib/slug';
+import { currentTenant } from '@/lib/current-tenant';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -11,6 +12,12 @@ export const dynamic = 'force-dynamic';
 export async function POST(req: Request) {
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: 'Not signed in' }, { status: 401 });
+
+  // One gym per account — an invited trainer joins an existing gym instead.
+  const existing = await currentTenant();
+  if (existing) {
+    return NextResponse.json({ error: 'You already belong to a gym.', next: '/dashboard' }, { status: 409 });
+  }
 
   const sql = getSql();
   if (!sql) return NextResponse.json({ error: 'No database' }, { status: 500 });

@@ -1,17 +1,17 @@
 import { NextResponse } from 'next/server';
 import { getSql } from '@/lib/db';
-import { currentTenant } from '@/lib/current-tenant';
+import { currentTrainer } from '@/lib/current-tenant';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-// The gym's clients (no login of their own). Engagement is rolled up from their
-// shares: opens (from share_links.opens) and SyncroFit completions (events whose
-// circuit_id matches a share token assigned to that client).
+// A gym's clients. Scoped per-trainer: a trainer sees only the clients they
+// created; the gym owner (org admin) sees every trainer's. Engagement rolls up
+// from each client's shares (opens + SyncroFit completions).
 
 export async function GET() {
-  const tenant = await currentTenant();
-  if (!tenant) return NextResponse.json({ error: 'No gym for this account.' }, { status: 403 });
+  const t = await currentTrainer();
+  if (!t) return NextResponse.json({ error: 'No gym for this account.' }, { status: 403 });
   const sql = getSql();
   if (!sql) return NextResponse.json({ error: 'No database' }, { status: 500 });
   const rows = await sql`
@@ -22,15 +22,15 @@ export async function GET() {
          join share_links sl on sl.token = se.circuit_id
         where sl.client_id = c.id and se.event = 'circuit.completed') as completions
     from clients c
-    where c.tenant_id = ${tenant.id}
+    where c.tenant_id = ${t.tenant.id} and (${t.isOwner} or c.owner_user_id = ${t.userId})
     order by c.created_at desc
   `;
   return NextResponse.json({ clients: rows });
 }
 
 export async function POST(req: Request) {
-  const tenant = await currentTenant();
-  if (!tenant) return NextResponse.json({ error: 'No gym for this account.' }, { status: 403 });
+  const t = await currentTrainer();
+  if (!t) return NextResponse.json({ error: 'No gym for this account.' }, { status: 403 });
   const sql = getSql();
   if (!sql) return NextResponse.json({ error: 'No database' }, { status: 500 });
 
@@ -45,19 +45,23 @@ export async function POST(req: Request) {
   const contact = (body.contact ?? '').trim().slice(0, 120) || null;
 
   const rows = await sql`
-    insert into clients (tenant_id, name, contact) values (${tenant.id}, ${name}, ${contact})
+    insert into clients (tenant_id, name, contact, owner_user_id)
+    values (${t.tenant.id}, ${name}, ${contact}, ${t.userId})
     returning id, name, contact
   `;
   return NextResponse.json({ client: rows[0] }, { status: 201 });
 }
 
 export async function DELETE(req: Request) {
-  const tenant = await currentTenant();
-  if (!tenant) return NextResponse.json({ error: 'No gym for this account.' }, { status: 403 });
+  const t = await currentTrainer();
+  if (!t) return NextResponse.json({ error: 'No gym for this account.' }, { status: 403 });
   const sql = getSql();
   if (!sql) return NextResponse.json({ error: 'No database' }, { status: 500 });
   const id = new URL(req.url).searchParams.get('id');
   if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 });
-  await sql`delete from clients where id = ${id} and tenant_id = ${tenant.id}`;
+  await sql`
+    delete from clients
+    where id = ${id} and tenant_id = ${t.tenant.id} and (${t.isOwner} or owner_user_id = ${t.userId})
+  `;
   return NextResponse.json({ ok: true });
 }
