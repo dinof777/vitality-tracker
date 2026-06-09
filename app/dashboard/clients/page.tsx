@@ -101,7 +101,7 @@ export default function Clients() {
           <ul className="space-y-2">
             {list.map((c) => (
               <li key={c.id} className="flex items-center justify-between gap-2 rounded-lg border border-border bg-surface p-3">
-                <div className="min-w-0">
+                <Link href={`/dashboard/clients/${c.id}`} className="min-w-0 flex-1 active:opacity-70">
                   <p className="truncate text-body font-semibold text-text-primary">{c.name}</p>
                   <p className="truncate text-caption text-text-muted">{c.contact ?? '—'}</p>
                   {(Number(c.shares) > 0 || Number(c.completions) > 0) && (
@@ -109,7 +109,7 @@ export default function Clients() {
                       {c.shares} share{Number(c.shares) === 1 ? '' : 's'} · {c.opens} open{Number(c.opens) === 1 ? '' : 's'} · ✓ {c.completions} done
                     </p>
                   )}
-                </div>
+                </Link>
                 <button type="button" onClick={() => remove(c)} className="shrink-0 text-caption text-destructive">
                   Remove
                 </button>
