@@ -59,3 +59,18 @@ export async function fetchTenantBySlug(slug: string): Promise<Tenant | null> {
     return null;
   }
 }
+
+// Load a tenant by id (e.g. to theme a public share). Server-only.
+export async function fetchTenantById(id: string): Promise<Tenant | null> {
+  const sql = getSql();
+  if (!sql) return null;
+  try {
+    const rows = await sql`
+      select id, slug, name, branding, custom_domain, plan
+      from tenants where id = ${id} limit 1
+    `;
+    return (rows[0] as Tenant) ?? null;
+  } catch {
+    return null;
+  }
+}

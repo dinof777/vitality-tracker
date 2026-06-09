@@ -13,6 +13,7 @@ import { syncrofitRunUrl } from '@/lib/syncrofit';
 import { hashString, seededRng } from '@/lib/seed';
 import ExerciseThumb from '@/components/workout/ExerciseThumb';
 import PrintButton from '@/components/PrintButton';
+import ShareWorkoutButton from '@/components/workout/ShareWorkoutButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -65,6 +66,19 @@ export default async function TenantBuild({
   const sfUrl = workout.length
     ? syncrofitRunUrl(`${name} — ${focusLabel}`, displayExercises, wp, '', `${tenant.slug}-build`)
     : '#';
+
+  // Snapshot (with prescriptions) for a stable, shareable /s/<token> link.
+  const shareExercises = workout.map((ex) => {
+    const timed = isTimed(ex);
+    return {
+      name: byId.get(ex.id)?.name ?? ex.name,
+      equipment: ex.equipment,
+      image_url: ex.image_url,
+      notes: timed
+        ? `${wp.sets} × ${wp.holdSec}s ${modeWorkLabel(exerciseMode(ex))}`
+        : `${wp.sets} × ${wp.reps} @ ${wp.tempo}`,
+    };
+  });
 
   const qs = (f: string, l: number, v = variant) => `?focus=${f}&len=${l}&v=${v}`;
 
@@ -170,6 +184,10 @@ export default async function TenantBuild({
           >
             ⏱ SEND TO SYNCROFIT
           </a>
+        )}
+
+        {workout.length > 0 && (
+          <ShareWorkoutButton name={`${name} — ${focusLabel}`} exercises={shareExercises} params={wp} />
         )}
 
         {/* QR — print it on the gym wall; scanning opens this exact workout */}

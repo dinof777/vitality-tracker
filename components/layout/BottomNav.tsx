@@ -25,7 +25,7 @@ const TABS: Tab[] = [
 ];
 
 // Hidden on the focus screens (active workout) so logging is distraction-free.
-const HIDE_ON = ['/workout/', '/g/', '/pro'];
+const HIDE_ON = ['/workout/', '/g/', '/pro', '/s/'];
 
 export default function BottomNav() {
   const pathname = usePathname();
