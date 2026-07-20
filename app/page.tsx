@@ -213,6 +213,14 @@ export default function Home() {
             </>
           )}
 
+          {/* Always available — the manual alternative to letting it generate. */}
+          <Link
+            href="/build"
+            className="mt-3 flex h-12 w-full items-center justify-center rounded-md border border-border text-label text-text-primary active:bg-surface"
+          >
+            ✚ PICK MY OWN MOVES
+          </Link>
+
           <Link
             href="/plan"
             className="mt-3 flex h-12 w-full items-center justify-center rounded-md border border-border text-label text-text-primary active:bg-surface"

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSql } from '@/lib/db';
 import { currentTenant } from '@/lib/current-tenant';
+import { TAG_BY_ID } from '@/lib/tags';
 import { EQUIPMENT_ORDER } from '@/lib/exercises';
 
 export const runtime = 'nodejs';
@@ -19,7 +20,7 @@ export async function GET() {
   if (!sql) return NextResponse.json({ error: 'No database' }, { status: 500 });
   const rows = await sql`
     select e.id, e.name, e.muscle_group, e.equipment, e.equipment_catalog_id,
-           ec.name as custom_equip_name, e.default_cue, e.image_url
+           ec.name as custom_equip_name, e.default_cue, e.image_url, coalesce(e.tags, '{}') as tags
     from exercises e
     left join equipment_catalog ec on ec.id = e.equipment_catalog_id
     where e.tenant_id = ${tenant.id}
@@ -34,7 +35,7 @@ export async function POST(req: Request) {
   const sql = getSql();
   if (!sql) return NextResponse.json({ error: 'No database' }, { status: 500 });
 
-  let body: { name?: string; muscle_group?: string; equipment?: string; default_cue?: string };
+  let body: { name?: string; muscle_group?: string; equipment?: string; default_cue?: string; tags?: string[] };
   try {
     body = await req.json();
   } catch {
@@ -68,10 +69,13 @@ export async function POST(req: Request) {
     equipment = rawEquip;
   }
 
+  // Only accept tags from the known registry — no free-text tag sprawl.
+  const tags = Array.isArray(body.tags) ? body.tags.filter((t) => TAG_BY_ID[t]).slice(0, 12) : [];
+
   const rows = await sql`
-    insert into exercises (name, muscle_group, equipment, equipment_catalog_id, default_cue, tenant_id, is_global)
-    values (${name}, ${muscle}, ${equipment}, ${equipmentCatalogId}, ${cue}, ${tenant.id}, false)
-    returning id, name, muscle_group, equipment, equipment_catalog_id, default_cue, image_url
+    insert into exercises (name, muscle_group, equipment, equipment_catalog_id, default_cue, tenant_id, is_global, tags)
+    values (${name}, ${muscle}, ${equipment}, ${equipmentCatalogId}, ${cue}, ${tenant.id}, false, ${tags})
+    returning id, name, muscle_group, equipment, equipment_catalog_id, default_cue, image_url, tags
   `;
   return NextResponse.json({ exercise: rows[0] }, { status: 201 });
 }

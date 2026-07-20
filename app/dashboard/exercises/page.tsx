@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { tagsInCategory, type TagCategory } from '@/lib/tags';
 import Link from 'next/link';
 import { EQUIPMENT_CHOICES } from '@/lib/profile';
 import { SAMPLE_EXERCISES, EQUIPMENT_LABEL } from '@/lib/exercises';
@@ -27,6 +28,7 @@ export default function CustomExercises() {
   const [muscle, setMuscle] = useState('');
   const [equipment, setEquipment] = useState<string>(EQUIPMENT_CHOICES[0]?.value ?? 'dumbbell');
   const [cue, setCue] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [aliases, setAliases] = useState<Record<string, string>>({});
@@ -89,7 +91,7 @@ export default function CustomExercises() {
       const r = await fetch('/api/tenant/exercises', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), muscle_group: muscle.trim(), equipment, default_cue: cue.trim() }),
+        body: JSON.stringify({ name: name.trim(), muscle_group: muscle.trim(), equipment, default_cue: cue.trim(), tags }),
       });
       const j = await r.json();
       if (!r.ok) {
@@ -99,6 +101,7 @@ export default function CustomExercises() {
       setName('');
       setMuscle('');
       setCue('');
+      setTags([]);
       setList((prev) => [j.exercise, ...prev]);
     } catch {
       setError('Network error.');
@@ -166,6 +169,39 @@ export default function CustomExercises() {
             placeholder="Form cue (optional)"
             className="h-11 w-full rounded-md border border-border bg-background px-3 text-body text-text-primary placeholder:text-text-faint"
           />
+
+          {/* Tags — so custom moves show up in the same filters as the library */}
+          <div>
+            <p className="mb-1 text-caption text-text-muted">
+              Tags <span className="text-text-faint">(optional — makes it findable when building workouts)</span>
+            </p>
+            {(['goal', 'stage', 'pattern'] as TagCategory[]).map((cat) => (
+              <div key={cat} className="mb-1.5">
+                <p className="mb-1 text-[0.65rem] font-semibold tracking-wide text-text-faint">
+                  {cat === 'pattern' ? 'MOVEMENT' : cat.toUpperCase()}
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {tagsInCategory(cat).map((t) => {
+                    const on = tags.includes(t.id);
+                    return (
+                      <button
+                        key={t.id}
+                        type="button"
+                        title={t.description}
+                        onClick={() => setTags(on ? tags.filter((x) => x !== t.id) : [...tags, t.id])}
+                        className={`rounded-full border px-2.5 py-1 text-caption transition ${
+                          on ? 'border-accent bg-accent text-on-accent' : 'border-border bg-background text-text-muted'
+                        }`}
+                      >
+                        {t.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+
           <button
             type="button"
             onClick={add}
