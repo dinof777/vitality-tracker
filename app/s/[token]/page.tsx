@@ -6,6 +6,7 @@ import { brandingToCssVars, fetchTenantById, DEFAULT_BRANDING, type Branding } f
 import { fetchShareByToken, bumpShareOpens } from '@/lib/share';
 import { syncrofitRunUrl } from '@/lib/syncrofit';
 import ExerciseThumb from '@/components/workout/ExerciseThumb';
+import SyncroFitButton from '@/components/workout/SyncroFitButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -62,12 +63,7 @@ export default async function SharedWorkout({ params }: { params: { token: strin
           ))}
         </ul>
 
-        <a
-          href={sfUrl}
-          className="mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-md bg-accent text-label text-on-accent active:scale-[0.97] active:bg-accent-press print:hidden"
-        >
-          ⏱ SEND TO SYNCROFIT
-        </a>
+        <div className="mt-5"><SyncroFitButton url={sfUrl} /></div>
 
         {/* QR for printing / scanning on the gym wall */}
         <div className="mt-8 flex flex-col items-center gap-2">

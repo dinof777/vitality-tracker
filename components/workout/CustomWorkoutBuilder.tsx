@@ -10,6 +10,7 @@ import ExerciseThumb from './ExerciseThumb';
 import ShareWorkoutButton from './ShareWorkoutButton';
 import ExerciseFilterPicker, { type PickerItem } from './ExerciseFilterPicker';
 import SaveCircuitBox from './SaveCircuitBox';
+import SyncroFitButton from './SyncroFitButton';
 import { familyOf } from '@/lib/movement-families';
 
 interface Props {
@@ -122,9 +123,7 @@ export default function CustomWorkoutBuilder({ library, workoutName, params, cir
 
             <SaveCircuitBox exercises={shareExercises} params={params} defaultName={workoutName} />
 
-            <a href={sfUrl} className="mt-3 flex h-14 w-full items-center justify-center gap-2 rounded-md bg-accent text-label text-on-accent active:scale-[0.97] active:bg-accent-press">
-              ⏱ SEND TO SYNCROFIT
-            </a>
+            <div className="mt-3"><SyncroFitButton url={sfUrl} /></div>
             <ShareWorkoutButton name={workoutName} exercises={shareExercises} params={params} />
             <button type="button" onClick={() => setPicked([])} className="mt-2 w-full text-center text-caption text-text-faint">
               Clear all

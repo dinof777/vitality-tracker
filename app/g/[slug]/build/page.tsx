@@ -17,6 +17,7 @@ import ShareWorkoutButton from '@/components/workout/ShareWorkoutButton';
 import CustomWorkoutBuilder from '@/components/workout/CustomWorkoutBuilder';
 import TenantNav from '@/components/layout/TenantNav';
 import SaveCircuitBox from '@/components/workout/SaveCircuitBox';
+import SyncroFitButton from '@/components/workout/SyncroFitButton';
 import TenantBuilderControls from '@/components/workout/TenantBuilderControls';
 import { filterByFacets, tagsInCategory, type TagCategory } from '@/lib/tags';
 import { tenantEquipmentSlugs } from '@/lib/tenant-equipment';
@@ -343,14 +344,7 @@ export default async function TenantBuild({
           </ul>
         )}
 
-        {workout.length > 0 && (
-          <a
-            href={sfUrl}
-            className="mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-md bg-accent text-label text-on-accent active:scale-[0.97] active:bg-accent-press print:hidden"
-          >
-            ⏱ SEND TO SYNCROFIT
-          </a>
-        )}
+        {workout.length > 0 && <SyncroFitButton url={sfUrl} />}
 
         {workout.length > 0 && (
           <ShareWorkoutButton name={`${name} — ${focusLabel}`} exercises={shareExercises} params={wp} />

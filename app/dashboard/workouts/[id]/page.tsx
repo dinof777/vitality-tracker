@@ -9,6 +9,7 @@ import { getWorkout, workoutShares } from '@/lib/tenant-workouts';
 import { syncrofitRunUrl } from '@/lib/syncrofit';
 import ExerciseThumb from '@/components/workout/ExerciseThumb';
 import PrintButton from '@/components/PrintButton';
+import SyncroFitButton from '@/components/workout/SyncroFitButton';
 import CopyField from '@/components/CopyField';
 import CreateShareFromWorkout from '@/components/workout/CreateShareFromWorkout';
 
@@ -95,12 +96,7 @@ export default async function WorkoutDetail({ params }: { params: { id: string }
         </ul>
 
         {/* Run it */}
-        <a
-          href={sfUrl}
-          className="mb-3 flex h-14 w-full items-center justify-center gap-2 rounded-md bg-accent text-label text-on-accent active:scale-[0.97] active:bg-accent-press print:hidden"
-        >
-          ⏱ SEND TO SYNCROFIT
-        </a>
+        <div className="mb-3"><SyncroFitButton url={sfUrl} /></div>
 
         <CreateShareFromWorkout
           workoutId={workout.id}

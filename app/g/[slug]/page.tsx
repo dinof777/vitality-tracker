@@ -11,6 +11,9 @@ import { isTimed, exerciseMode, modeWorkLabel } from '@/lib/exercise-mode';
 import { hashString, seededRng } from '@/lib/seed';
 import TenantNav from '@/components/layout/TenantNav';
 import ExerciseRow from '@/components/workout/ExerciseRow';
+import SyncroFitButton from '@/components/workout/SyncroFitButton';
+import SaveCircuitBox from '@/components/workout/SaveCircuitBox';
+import { syncrofitRunUrl } from '@/lib/syncrofit';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,6 +48,22 @@ export default async function TenantHome({ params }: { params: { slug: string } 
   const workout = generateWorkout(profile, { focus: 'full', count: 5, pool, rng });
   const wp = workoutParams(profile);
   const byId = new Map(library.map((e) => [e.id, e]));
+
+  const presc = (ex: Exercise) =>
+    isTimed(ex)
+      ? `${wp.sets} × ${wp.holdSec}s ${modeWorkLabel(exerciseMode(ex))}`
+      : `${wp.sets} × ${wp.reps} @ ${wp.tempo}`;
+
+  // Today's suggestion is a real workout, so it gets the same actions as any other.
+  const todayName = `${name} — Today`;
+  const displayToday = workout.map((ex) => ({ ...ex, name: byId.get(ex.id)?.name ?? ex.name }));
+  const sfUrl = workout.length ? syncrofitRunUrl(todayName, displayToday, wp, '', `${tenant.slug}-today`) : '#';
+  const todaySnapshot = workout.map((ex) => ({
+    name: byId.get(ex.id)?.name ?? ex.name,
+    equipment: ex.equipment,
+    image_url: ex.image_url,
+    notes: presc(ex),
+  }));
 
   return (
     <div style={brandingToCssVars(tenant.branding)} className="min-h-dvh bg-background text-text-primary">
@@ -83,19 +102,19 @@ export default async function TenantHome({ params }: { params: { slug: string } 
                   name={byId.get(ex.id)?.name ?? ex.name}
                   equipment={ex.equipment}
                   imageUrl={ex.image_url}
-                  detail={
-                    isTimed(ex)
-                      ? `${wp.sets} × ${wp.holdSec}s ${modeWorkLabel(exerciseMode(ex))}`
-                      : `${wp.sets} × ${wp.reps} @ ${wp.tempo}`
-                  }
+                  detail={presc(ex)}
                 />
               ))}
             </ul>
+            <div className="mt-4">
+              <SyncroFitButton url={sfUrl} />
+            </div>
+            <SaveCircuitBox exercises={todaySnapshot} params={wp} defaultName={todayName} />
             <Link
-              href={`/g/${tenant.slug}/build?focus=full&len=6&v=1`}
+              href={`/g/${tenant.slug}/build`}
               className="mt-3 flex h-12 w-full items-center justify-center rounded-md border border-border text-label text-text-primary active:bg-surface"
             >
-              BUILD TODAY’S WORKOUT
+              BUILD A DIFFERENT ONE
             </Link>
           </>
         )}
