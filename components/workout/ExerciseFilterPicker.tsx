@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import type { Equipment } from '@/lib/database.types';
 import { EQUIPMENT_LABEL } from '@/lib/exercises';
-import { TAG_BY_ID, tagsInCategory, type TagCategory } from '@/lib/tags';
+import { TAG_BY_ID, tagsInCategory, filterByFacets, type TagCategory } from '@/lib/tags';
 import ExerciseThumb from './ExerciseThumb';
 
 export interface PickerItem {
@@ -49,16 +49,11 @@ export default function ExerciseFilterPicker({ items, pickedIds, onToggle }: Pro
     [items],
   );
 
-  const results = useMemo(() => {
-    const query = q.trim().toLowerCase();
-    return items.filter((e) => {
-      if (query && !e.name.toLowerCase().includes(query) && !(e.muscle_group ?? '').toLowerCase().includes(query))
-        return false;
-      if (tags.length && !tags.every((t) => (e.tags ?? []).includes(t))) return false;
-      if (equip.length && !(e.equipment && equip.includes(e.equipment))) return false;
-      return true;
-    });
-  }, [items, q, tags, equip]);
+  // OR within a filter group, AND across groups — see filterByFacets.
+  const results = useMemo(
+    () => filterByFacets(items, { tags, equipment: equip, search: q }),
+    [items, q, tags, equip],
+  );
 
   const toggle = (list: string[], set: (v: string[]) => void, v: string) =>
     set(list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { SAMPLE_EXERCISES } from './exercises';
-import { TAG_BY_ID, STAGE_ORDER, filterExercises, groupByTag, usedTags, hasTag } from './tags';
+import { TAG_BY_ID, STAGE_ORDER, filterExercises, filterByFacets, groupByTag, usedTags, hasTag } from './tags';
 
 const kneePt = SAMPLE_EXERCISES.filter((e) => hasTag(e, 'knee-pt'));
 
@@ -79,5 +79,58 @@ describe('exercise tags', () => {
   it('usedTags only returns tags actually in use', () => {
     const goals = usedTags(SAMPLE_EXERCISES, 'goal').map((t) => t.id);
     expect(goals).toContain('knee-pt');
+  });
+});
+
+describe('filterByFacets — OR within a group, AND across groups', () => {
+  const flexion = kneePt.filter((e) => hasTag(e, 'knee-flexion'));
+  const extension = kneePt.filter((e) => hasTag(e, 'knee-extension'));
+
+  it('picking two tags in the SAME group widens the list (union, not intersection)', () => {
+    const both = filterByFacets(SAMPLE_EXERCISES, { tags: ['knee-flexion', 'knee-extension'] });
+    // The old bug: every() required BOTH tags, so this shrank toward zero.
+    expect(both.length).toBeGreaterThanOrEqual(Math.max(flexion.length, extension.length));
+    const names = new Set(both.map((e) => e.name));
+    for (const e of [...flexion, ...extension]) {
+      expect(names, `"${e.name}" should survive an OR of its own group`).toContain(e.name);
+    }
+  });
+
+  it('adding a tag to a group never removes results already in that group', () => {
+    const only = filterByFacets(SAMPLE_EXERCISES, { tags: ['knee-flexion'] });
+    const widened = filterByFacets(SAMPLE_EXERCISES, { tags: ['knee-flexion', 'knee-extension'] });
+    expect(widened.length).toBeGreaterThanOrEqual(only.length);
+  });
+
+  it('tags in DIFFERENT groups narrow the list (intersection)', () => {
+    const goalOnly = filterByFacets(SAMPLE_EXERCISES, { tags: ['knee-pt'] });
+    const goalAndStage = filterByFacets(SAMPLE_EXERCISES, { tags: ['knee-pt', 'stage-1'] });
+    expect(goalAndStage.length).toBeLessThan(goalOnly.length);
+    expect(goalAndStage.every((e) => hasTag(e, 'knee-pt') && hasTag(e, 'stage-1'))).toBe(true);
+  });
+
+  it('combines an in-group OR with a cross-group AND', () => {
+    const res = filterByFacets(SAMPLE_EXERCISES, { tags: ['knee-pt', 'stage-2', 'stage-3'] });
+    expect(res.length).toBeGreaterThan(0);
+    // every result: knee-pt AND (stage-2 OR stage-3)
+    expect(res.every((e) => hasTag(e, 'knee-pt') && (hasTag(e, 'stage-2') || hasTag(e, 'stage-3')))).toBe(true);
+    expect(res.some((e) => hasTag(e, 'stage-2'))).toBe(true);
+    expect(res.some((e) => hasTag(e, 'stage-3'))).toBe(true);
+  });
+
+  it('equipment is its own OR facet, AND-ed with tags', () => {
+    const res = filterByFacets(SAMPLE_EXERCISES, { tags: ['knee-pt'], equipment: ['stretch', 'tube_band'] });
+    expect(res.length).toBeGreaterThan(0);
+    expect(res.every((e) => hasTag(e, 'knee-pt') && ['stretch', 'tube_band'].includes(e.equipment ?? ''))).toBe(true);
+  });
+
+  it('search AND-s with the rest', () => {
+    const res = filterByFacets(SAMPLE_EXERCISES, { tags: ['knee-pt'], search: 'heel' });
+    expect(res.every((e) => hasTag(e, 'knee-pt') && /heel/i.test(e.name))).toBe(true);
+    expect(res.map((e) => e.name)).toContain('Heel Slide');
+  });
+
+  it('no facets selected returns everything', () => {
+    expect(filterByFacets(SAMPLE_EXERCISES, {}).length).toBe(SAMPLE_EXERCISES.length);
   });
 });

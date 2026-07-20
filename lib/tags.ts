@@ -84,6 +84,55 @@ export function filterExercises(list: Exercise[], f: ExerciseFilter): Exercise[]
   });
 }
 
+/** The minimum shape the faceted filter needs — Exercise and PickerItem both fit. */
+export interface FacetFilterable {
+  name: string;
+  muscle_group: string | null;
+  equipment: string | null;
+  tags?: string[];
+}
+
+export interface Facets {
+  /** Tag ids across any categories. */
+  tags?: string[];
+  equipment?: string[];
+  /** Matches name or muscle group, case-insensitive. */
+  search?: string;
+}
+
+/**
+ * Faceted filter with the semantics people expect from filter chips:
+ *
+ *   • OR **within** a group — picking "Knee flexion" + "Knee extension" widens the
+ *     list to movements that do either, rather than demanding both.
+ *   • AND **across** groups — Goal "Knee PT" + Stage "Stage 1" narrows to movements
+ *     that are both.
+ *
+ * Equipment is its own OR facet, AND-ed in the same way.
+ */
+export function filterByFacets<T extends FacetFilterable>(list: T[], f: Facets): T[] {
+  // Group the selected tags by their category so each group can OR internally.
+  const byCategory = new Map<TagCategory, string[]>();
+  for (const id of f.tags ?? []) {
+    const cat = TAG_BY_ID[id]?.category;
+    if (!cat) continue;
+    byCategory.set(cat, [...(byCategory.get(cat) ?? []), id]);
+  }
+  const groups = Array.from(byCategory.values());
+  const q = f.search?.trim().toLowerCase();
+
+  return list.filter((item) => {
+    const tags = item.tags ?? [];
+    // Every group that has a selection must be satisfied by at least one of its tags.
+    for (const group of groups) {
+      if (!group.some((t) => tags.includes(t))) return false;
+    }
+    if (f.equipment?.length && !(item.equipment && f.equipment.includes(item.equipment))) return false;
+    if (q && !item.name.toLowerCase().includes(q) && !(item.muscle_group ?? '').toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+
 /** Bucket a list by the tags of one category, in registry order. */
 export function groupByTag(list: Exercise[], category: TagCategory): Array<{ tag: Tag; items: Exercise[] }> {
   return tagsInCategory(category)
