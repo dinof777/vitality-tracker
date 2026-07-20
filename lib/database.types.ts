@@ -27,6 +27,8 @@ export interface Exercise {
   // a gym's own custom moves carry their tenant_id.
   tenant_id?: string | null;
   is_global?: boolean;
+  // Goal / stage / pattern tags — see lib/tags.ts.
+  tags?: string[];
 }
 
 export interface Routine {

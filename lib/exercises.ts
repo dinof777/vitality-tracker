@@ -12,7 +12,8 @@ const E = (
   equipment: Equipment,
   default_cue: string,
   image_url: string | null = null,
-): Exercise => ({ id, name, muscle_group, equipment, default_cue, image_url, created_at: '' });
+  tags: string[] = [],
+): Exercise => ({ id, name, muscle_group, equipment, default_cue, image_url, created_at: '', tags });
 
 export const SAMPLE_EXERCISES: Exercise[] = [
   // ===== Dumbbell (38) =====
@@ -202,7 +203,68 @@ export const SAMPLE_EXERCISES: Exercise[] = [
   E('d0000147-0000-4000-8000-000000000000', 'Flutter Kicks', 'Core', 'calisthenics', 'Legs straight · small fast alternating kicks · low back down', '/exercises/flutter-kicks.jpg'),
   E('d0000148-0000-4000-8000-000000000000', 'Bear Crawl', 'Full Body', 'calisthenics', 'On hands and toes · knees hovering · crawl forward', '/exercises/bear-crawl.jpg'),
   E('d0000149-0000-4000-8000-000000000000', 'Inchworm', 'Full Body', 'calisthenics', 'Hinge · walk the hands out to a plank · walk back', '/exercises/inchworm.jpg'),
+
+  // ===== Knee rehab — post knee-replacement (20) =====
+  // Standard movements from knee-replacement rehab, staged early → strengthening.
+  // NOTE: a few need a sturdy chair or a low step — the only place the library's
+  // "no benches/boxes/chairs" rule bends, because sit-to-stand and step-ups are
+  // core to getting a knee working again. Classified as bodyweight.
+  // Deliberately NO kneeling movements — kneeling on a replaced knee isn't
+  // appropriate, certainly not early.
+
+  // Stage 1 — off the feet: activate, protect, win back range
+  E('e0000201-0000-4000-8000-000000000000', 'Ankle Pumps', 'Calves', 'calisthenics', 'Lie back · flex and point the foot slowly · keeps the blood moving', null, ['knee-pt', 'stage-1', 'low-impact', 'seated-lying']),
+  E('e0000202-0000-4000-8000-000000000000', 'Quad Set', 'Quads', 'calisthenics', 'Leg straight · press the back of the knee down · squeeze the thigh 5s', null, ['knee-pt', 'stage-1', 'knee-extension', 'isometric', 'seated-lying']),
+  E('e0000203-0000-4000-8000-000000000000', 'Glute Set', 'Glutes', 'calisthenics', 'Lie back · squeeze the glutes together · hold 5s · relax', null, ['knee-pt', 'stage-1', 'isometric', 'seated-lying']),
+  E('e0000204-0000-4000-8000-000000000000', 'Heel Slide', 'Quads', 'calisthenics', 'Lie back · slide the heel toward the glute · hold the bend · slide back', null, ['knee-pt', 'stage-1', 'knee-flexion', 'seated-lying', 'mobility']),
+  E('e0000205-0000-4000-8000-000000000000', 'Short Arc Quad', 'Quads', 'calisthenics', 'Rolled towel under the knee · straighten the lower leg · hold 3s · lower', null, ['knee-pt', 'stage-1', 'knee-extension', 'seated-lying']),
+  E('e0000206-0000-4000-8000-000000000000', 'Straight Leg Raise', 'Quads', 'calisthenics', 'Knee locked straight · lift to the other thigh · lower slow', null, ['knee-pt', 'stage-1', 'knee-extension', 'strength', 'seated-lying']),
+  E('e0000207-0000-4000-8000-000000000000', 'Seated Heel Drag', 'Hamstrings', 'calisthenics', 'Sit tall · drag the heel back under the chair · hold the bend', null, ['knee-pt', 'stage-1', 'knee-flexion', 'seated-lying', 'mobility']),
+  E('e0000208-0000-4000-8000-000000000000', 'Prone Knee Hang', 'Quads', 'calisthenics', 'Face down, shins off the edge · let gravity straighten the knee', null, ['knee-pt', 'stage-1', 'knee-extension', 'seated-lying', 'mobility']),
+
+  // Range work — hold and breathe
+  E('e0000209-0000-4000-8000-000000000000', 'Heel Prop Stretch', 'Quads', 'stretch', 'Heel on a rolled towel · let the knee sink straight · relax 2–3 min', null, ['knee-pt', 'stage-1', 'knee-extension', 'stretch', 'mobility', 'seated-lying']),
+  E('e0000210-0000-4000-8000-000000000000', 'Seated Knee Flexion Stretch', 'Hamstrings', 'stretch', 'Foot planted · slide the hips forward · hold the deepest comfortable bend', null, ['knee-pt', 'stage-1', 'knee-flexion', 'stretch', 'mobility', 'seated-lying']),
+  E('e0000211-0000-4000-8000-000000000000', 'Standing Calf Stretch', 'Calves', 'stretch', 'Hands on the wall · back leg straight · heel stays down · hold', null, ['knee-pt', 'stage-2', 'stretch', 'mobility', 'weight-bearing']),
+
+  // Stage 2 — on the feet: load it, control it
+  E('e0000212-0000-4000-8000-000000000000', 'Long Arc Quad', 'Quads', 'calisthenics', 'Sit tall · straighten the knee fully · hold 3s at the top · lower slow', null, ['knee-pt', 'stage-2', 'knee-extension', 'strength', 'seated-lying']),
+  E('e0000213-0000-4000-8000-000000000000', 'Standing Hamstring Curl', 'Hamstrings', 'calisthenics', 'Hold support · bend the knee, heel toward the glute · lower controlled', null, ['knee-pt', 'stage-2', 'knee-flexion', 'strength', 'weight-bearing']),
+  E('e0000214-0000-4000-8000-000000000000', 'Wall Slide Mini Squat', 'Quads', 'calisthenics', 'Back on the wall · slide to a shallow bend · drive up through the heels', null, ['knee-pt', 'stage-2', 'knee-flexion', 'strength', 'weight-bearing']),
+  E('e0000215-0000-4000-8000-000000000000', 'Sit-to-Stand', 'Quads', 'calisthenics', 'Sturdy chair · nose over toes · stand without hands if you can · sit down slow', null, ['knee-pt', 'stage-2', 'strength', 'weight-bearing']),
+  E('e0000216-0000-4000-8000-000000000000', 'Terminal Knee Extension', 'Quads', 'tube_band', 'Band behind the knee · straighten against the tension · squeeze the quad', null, ['knee-pt', 'stage-2', 'knee-extension', 'strength', 'weight-bearing']),
+  E('e0000217-0000-4000-8000-000000000000', 'Standing Marching', 'Hip Flexors', 'calisthenics', 'Hold support · lift the knee to hip height · slow and tall', null, ['knee-pt', 'stage-2', 'balance', 'stability', 'weight-bearing']),
+
+  // Stage 3 — rebuild strength and confidence
+  E('e0000218-0000-4000-8000-000000000000', 'Step-Up', 'Quads', 'calisthenics', 'Low step · drive through the whole foot · step down with control', null, ['knee-pt', 'stage-3', 'strength', 'weight-bearing']),
+  E('e0000219-0000-4000-8000-000000000000', 'Single-Leg Balance', 'Full Body', 'calisthenics', 'Stand on one leg near support · eyes forward · build toward 30s', null, ['knee-pt', 'stage-3', 'balance', 'stability', 'weight-bearing']),
+  E('e0000220-0000-4000-8000-000000000000', 'Lateral Step-Down', 'Quads', 'calisthenics', 'On a low step · lower the free heel slowly to the floor · drive back up', null, ['knee-pt', 'stage-3', 'strength', 'knee-flexion', 'weight-bearing']),
 ];
+
+// Library moves that already serve knee rehab — tagged, not duplicated. Kneeling
+// movements (e.g. the Kneeling Hip Flexor Stretch) are intentionally left out.
+const RETRO_TAGS: Record<string, string[]> = {
+  'Glute Bridge': ['knee-pt', 'stage-2', 'strength'],
+  'Glute Bridge Hold': ['knee-pt', 'stage-2', 'isometric'],
+  'Single-Leg Glute Bridge': ['knee-pt', 'stage-3', 'strength'],
+  'Wall Sit': ['knee-pt', 'stage-3', 'isometric', 'weight-bearing'],
+  'Single-Leg Wall Sit': ['knee-pt', 'stage-3', 'isometric', 'weight-bearing'],
+  'Calf Raise': ['knee-pt', 'stage-2', 'strength', 'weight-bearing'],
+  'Seated Hamstring Stretch': ['knee-pt', 'stage-1', 'stretch', 'mobility', 'seated-lying'],
+  'Standing Quad Stretch': ['knee-pt', 'stage-2', 'stretch', 'mobility', 'weight-bearing'],
+  'Banded Clamshell': ['knee-pt', 'stage-2', 'stability', 'seated-lying'],
+  'Banded Seated Hip Abduction': ['knee-pt', 'stage-2', 'stability', 'seated-lying'],
+  'Banded Standing Hip Abduction': ['knee-pt', 'stage-2', 'stability', 'weight-bearing'],
+  'Bodyweight Squat': ['knee-pt', 'stage-3', 'strength', 'weight-bearing'],
+  'Isometric Squat Hold': ['knee-pt', 'stage-3', 'isometric', 'weight-bearing'],
+  'Bird Dog Hold': ['stability', 'isometric'],
+  'Butterfly Stretch': ['mobility', 'stretch'],
+};
+
+for (const ex of SAMPLE_EXERCISES) {
+  const extra = RETRO_TAGS[ex.name];
+  if (extra) ex.tags = Array.from(new Set([...(ex.tags ?? []), ...extra]));
+}
 
 // Display order + labels for grouping the picker.
 export const EQUIPMENT_ORDER: Equipment[] = [

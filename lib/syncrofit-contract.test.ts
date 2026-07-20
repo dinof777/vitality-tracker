@@ -15,10 +15,12 @@ import contract from '../contracts/syncrofit.json';
 // before bumping the pin.
 const EXPECTED_CONTRACT_VERSION = 1;
 
+type DecodedExercise = Record<string, unknown> & { requiredEquipment?: string[] };
+
 interface DecodedCircuit {
   webhook?: string;
   id?: string;
-  exercises: Array<Record<string, unknown>>;
+  exercises: DecodedExercise[];
   [key: string]: unknown;
 }
 

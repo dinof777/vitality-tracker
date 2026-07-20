@@ -5,6 +5,7 @@ import Link from 'next/link';
 import type { Exercise } from '@/lib/database.types';
 import { EQUIPMENT_LABEL, EQUIPMENT_ORDER, SAMPLE_EXERCISES } from '@/lib/exercises';
 import { TIER_LABEL, exerciseTier } from '@/lib/exercise-intensity';
+import { usedTags, tagLabel } from '@/lib/tags';
 import ExerciseThumb from '@/components/workout/ExerciseThumb';
 import ExerciseDetailSheet from '@/components/workout/ExerciseDetailSheet';
 import AddToRoutineSheet from '@/components/workout/AddToRoutineSheet';
@@ -21,7 +22,8 @@ export default function ExercisesPage() {
     const match = (e: Exercise) =>
       !q ||
       e.name.toLowerCase().includes(q) ||
-      (e.muscle_group ?? '').toLowerCase().includes(q);
+      (e.muscle_group ?? '').toLowerCase().includes(q) ||
+      (e.tags ?? []).some((t) => tagLabel(t).toLowerCase().includes(q));
     return EQUIPMENT_ORDER.map((eq) => ({
       eq,
       items: SAMPLE_EXERCISES.filter((e) => e.equipment === eq && match(e)),
@@ -42,6 +44,19 @@ export default function ExercisesPage() {
           Routines ›
         </Link>
       </header>
+
+      {/* Tagged collections — a whole program pulled from the library by goal */}
+      <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
+        {usedTags(SAMPLE_EXERCISES, 'goal').map((t) => (
+          <Link
+            key={t.id}
+            href={`/collections/${t.id}`}
+            className="shrink-0 rounded-full border border-border bg-surface px-3 py-1.5 text-caption text-text-primary active:bg-surface-raised"
+          >
+            {t.label} ›
+          </Link>
+        ))}
+      </div>
 
       <input
         value={query}
