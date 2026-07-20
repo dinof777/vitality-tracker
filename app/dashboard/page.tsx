@@ -96,6 +96,17 @@ export default async function Dashboard() {
             </Link>
 
             <Link
+              href="/dashboard/workouts"
+              className="mt-3 flex items-center justify-between rounded-xl border border-border bg-surface p-4 active:bg-surface-raised"
+            >
+              <span>
+                <span className="block text-body font-semibold text-text-primary">Your circuits</span>
+                <span className="block text-caption text-text-muted">Saved workouts — re-share, print, embed</span>
+              </span>
+              <span className="text-text-faint">›</span>
+            </Link>
+
+            <Link
               href="/dashboard/clients"
               className="mt-3 flex items-center justify-between rounded-xl border border-border bg-surface p-4 active:bg-surface-raised"
             >

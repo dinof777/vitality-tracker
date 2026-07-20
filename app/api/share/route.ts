@@ -13,7 +13,7 @@ export async function POST(req: Request) {
   if (!t) return NextResponse.json({ error: 'No gym for this account.' }, { status: 403 });
   const tenant = t.tenant;
 
-  let body: { name?: string; exercises?: ShareExercise[]; params?: ShareParams; clientId?: string };
+  let body: { name?: string; exercises?: ShareExercise[]; params?: ShareParams; clientId?: string; workoutId?: string };
   try {
     body = await req.json();
   } catch {
@@ -39,6 +39,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Missing workout params.' }, { status: 400 });
   }
 
+  // Optional saved circuit this share came from — must belong to this gym.
+  let workoutId: string | null = null;
+  if (body.workoutId) {
+    const sql = getSql();
+    const ok = sql
+      ? await sql`select 1 from tenant_workouts where id = ${body.workoutId} and tenant_id = ${tenant.id} and (${t.isOwner} or owner_user_id = ${t.userId})`
+      : [];
+    if (ok[0]) workoutId = body.workoutId;
+  }
+
   const token = await createShare(
     tenant.id,
     name,
@@ -54,6 +64,7 @@ export async function POST(req: Request) {
     },
     clientId,
     t.userId,
+    workoutId,
   );
 
   return NextResponse.json({ token, url: `/s/${token}` }, { status: 201 });
