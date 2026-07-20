@@ -14,6 +14,7 @@ import { hashString, seededRng } from '@/lib/seed';
 import ExerciseThumb from '@/components/workout/ExerciseThumb';
 import PrintButton from '@/components/PrintButton';
 import ShareWorkoutButton from '@/components/workout/ShareWorkoutButton';
+import CustomWorkoutBuilder from '@/components/workout/CustomWorkoutBuilder';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,7 +30,7 @@ export default async function TenantBuild({
   searchParams,
 }: {
   params: { slug: string };
-  searchParams: { focus?: string; len?: string; v?: string };
+  searchParams: { focus?: string; len?: string; v?: string; mode?: string };
 }) {
   const tenant = await fetchTenantBySlug(params.slug);
   if (!tenant) notFound();
@@ -40,6 +41,7 @@ export default async function TenantBuild({
   const count = LENGTHS.includes(Number(searchParams.len) as (typeof LENGTHS)[number]) ? Number(searchParams.len) : 6;
   const variant = Math.max(1, Math.min(999, Number(searchParams.v) || 1));
   const focusLabel = FOCUS_CHOICES.find((f) => f.value === focusVal)?.label ?? 'Full Body';
+  const custom = searchParams.mode === 'custom';
 
   // Deterministic seed → the same URL always yields the same workout, so a
   // printed QR reproduces it exactly when scanned. Shuffle bumps `v`.
@@ -102,6 +104,33 @@ export default async function TenantBuild({
         <h1 className="mb-1 mt-2 text-h1 text-text-primary">Build a workout</h1>
         <p className="mb-5 text-body text-text-muted">From {name}’s library, ready for SyncroFit.</p>
 
+        {/* How do you want to build it? */}
+        <div className="mb-6 grid grid-cols-2 gap-2 print:hidden">
+          <Link
+            href={`/g/${tenant.slug}/build${qs(focusVal, count)}`}
+            className={`rounded-lg border p-3 text-center ${!custom ? 'border-accent bg-accent/10' : 'border-border bg-surface'}`}
+          >
+            <span className="block text-body font-semibold text-text-primary">✨ Build it for me</span>
+            <span className="block text-caption text-text-muted">Pick a focus, we choose</span>
+          </Link>
+          <Link
+            href={`/g/${tenant.slug}/build?mode=custom`}
+            className={`rounded-lg border p-3 text-center ${custom ? 'border-accent bg-accent/10' : 'border-border bg-surface'}`}
+          >
+            <span className="block text-body font-semibold text-text-primary">✚ Pick my own</span>
+            <span className="block text-caption text-text-muted">Search &amp; add moves</span>
+          </Link>
+        </div>
+
+        {custom ? (
+          <CustomWorkoutBuilder
+            library={library}
+            workoutName={`${name} — Custom`}
+            params={wp}
+            circuitId={`${tenant.slug}-custom`}
+          />
+        ) : (
+        <>
         {/* Focus */}
         <div className="mb-2 flex flex-wrap gap-2 print:hidden">
           {FOCI.map((f) => (
@@ -205,6 +234,8 @@ export default async function TenantBuild({
               <PrintButton className="h-10 rounded-md border border-border px-4 text-caption font-semibold text-text-primary active:bg-surface-raised" />
             </div>
           </div>
+        )}
+        </>
         )}
 
         <p className="mt-8 text-center text-caption text-text-faint">Powered by Vitality</p>

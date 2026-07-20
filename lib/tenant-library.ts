@@ -13,6 +13,8 @@ export interface LibraryExercise {
   custom_equip_name: string | null; // when the move uses the gym's own equipment
   image_url: string | null;
   is_custom: boolean;
+  default_cue: string | null;
+  tags: string[];
 }
 
 export async function tenantLibrary(tenantId: string): Promise<LibraryExercise[]> {
@@ -27,6 +29,8 @@ export async function tenantLibrary(tenantId: string): Promise<LibraryExercise[]
       e.equipment,
       ec.name                  as custom_equip_name,
       e.image_url,
+      e.default_cue,
+      coalesce(e.tags, '{}')   as tags,
       (e.tenant_id is not null) as is_custom
     from exercises e
     left join exercise_aliases a
