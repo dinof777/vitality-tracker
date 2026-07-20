@@ -17,6 +17,8 @@ import ShareWorkoutButton from '@/components/workout/ShareWorkoutButton';
 import CustomWorkoutBuilder from '@/components/workout/CustomWorkoutBuilder';
 import SaveCircuitBox from '@/components/workout/SaveCircuitBox';
 import { filterByFacets, tagsInCategory, type TagCategory } from '@/lib/tags';
+import { tenantEquipmentSlugs } from '@/lib/tenant-equipment';
+import { currentTrainer } from '@/lib/current-tenant';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,6 +41,14 @@ export default async function TenantBuild({
   const library = await tenantLibrary(tenant.id);
   const name = tenant.branding.brandName ?? tenant.name;
 
+  // Only build with gear the gym actually has. Empty = not set up yet, so fall
+  // back to everything rather than producing an empty workout.
+  const gymEquipment = await tenantEquipmentSlugs(tenant.id);
+  const equipmentSet = gymEquipment.length > 0;
+  const allowedEquipment = equipmentSet ? gymEquipment : EQUIPMENT_ORDER;
+  const me = await currentTrainer();
+  const isMyGym = me?.tenant.id === tenant.id;
+
   const focusVal = FOCI.includes(searchParams.focus as (typeof FOCI)[number]) ? (searchParams.focus as string) : 'full';
   const count = LENGTHS.includes(Number(searchParams.len) as (typeof LENGTHS)[number]) ? Number(searchParams.len) : 6;
   const variant = Math.max(1, Math.min(999, Number(searchParams.v) || 1));
@@ -48,7 +58,10 @@ export default async function TenantBuild({
   // Tag facets narrow the pool the generator draws from — so "Stage 3 + Knee PT"
   // generates a stage-3 knee session rather than a general workout.
   const selectedTags = (searchParams.tags ?? '').split(',').map((t) => t.trim()).filter(Boolean);
-  const poolSource = selectedTags.length ? filterByFacets(library, { tags: selectedTags }) : library;
+  const equipmentScoped = equipmentSet ? library.filter((e) => e.equipment && allowedEquipment.includes(e.equipment)) : library;
+  const poolSource = selectedTags.length
+    ? filterByFacets(equipmentScoped, { tags: selectedTags })
+    : equipmentScoped;
 
   // Deterministic seed → the same URL always yields the same workout, so a
   // printed QR reproduces it exactly when scanned. Shuffle bumps `v`.
@@ -66,7 +79,7 @@ export default async function TenantBuild({
     created_at: '',
   }));
 
-  const profile: Profile = { equipment: EQUIPMENT_ORDER, focus: focusVal, intensity: 'moderate' };
+  const profile: Profile = { equipment: allowedEquipment, focus: focusVal, intensity: 'moderate' };
   const workout = generateWorkout(profile, { focus: focusVal, count, pool, rng });
   const wp = workoutParams(profile);
 
@@ -117,7 +130,28 @@ export default async function TenantBuild({
           ← {name}
         </Link>
         <h1 className="mb-1 mt-2 text-h1 text-text-primary">Build a workout</h1>
-        <p className="mb-5 text-body text-text-muted">From {name}’s library, ready for SyncroFit.</p>
+        <p className="mb-1 text-body text-text-muted">From {name}’s library, ready for SyncroFit.</p>
+        {isMyGym && (
+          <p className="mb-5 text-caption text-text-faint print:hidden">
+            {equipmentSet ? (
+              <>
+                Using your gear: {gymEquipment.map((e) => EQUIPMENT_LABEL[e]).join(', ')} ·{' '}
+                <Link href="/dashboard/equipment" className="text-accent">
+                  Change
+                </Link>
+              </>
+            ) : (
+              <>
+                Using <span className="text-text-muted">all equipment</span> —{' '}
+                <Link href="/dashboard/equipment" className="text-accent">
+                  tell us what you actually have
+                </Link>{' '}
+                and workouts will only use that.
+              </>
+            )}
+          </p>
+        )}
+        {!isMyGym && <p className="mb-5" />}
 
         {/* How do you want to build it? */}
         <div className="mb-6 grid grid-cols-2 gap-2 print:hidden">
@@ -139,7 +173,7 @@ export default async function TenantBuild({
 
         {custom ? (
           <CustomWorkoutBuilder
-            library={library}
+            library={equipmentScoped}
             workoutName={`${name} — Custom`}
             params={wp}
             circuitId={`${tenant.slug}-custom`}

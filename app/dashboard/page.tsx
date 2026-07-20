@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { UserButton } from '@clerk/nextjs';
 import { currentTrainer } from '@/lib/current-tenant';
+import { tenantEquipmentSlugs } from '@/lib/tenant-equipment';
+import { EQUIPMENT_LABEL } from '@/lib/exercises';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,6 +11,7 @@ export const dynamic = 'force-dynamic';
 export default async function Dashboard() {
   const t = await currentTrainer();
   const gym = t?.tenant;
+  const gear = gym ? await tenantEquipmentSlugs(gym.id) : [];
 
   return (
     <div className="min-h-dvh bg-background text-text-primary">
@@ -47,23 +50,41 @@ export default async function Dashboard() {
               <p className="mb-1 text-label text-accent">START HERE</p>
               <p className="mb-3 text-caption text-text-muted">Your app is live at /g/{gym.slug}.</p>
               <div className="space-y-2">
+                <Link
+                  href="/dashboard/equipment"
+                  className={`flex items-center justify-between rounded-lg border p-3 active:bg-surface-raised ${
+                    gear.length ? 'border-border bg-background' : 'border-accent/50 bg-accent/5'
+                  }`}
+                >
+                  <span>
+                    <span className="block text-body font-semibold text-text-primary">
+                      {gear.length ? '✓ ' : ''}1. Tell us your equipment
+                    </span>
+                    <span className="block text-caption text-text-muted">
+                      {gear.length
+                        ? gear.map((e) => EQUIPMENT_LABEL[e]).join(', ')
+                        : 'Workouts only use gear you actually have — set this first'}
+                    </span>
+                  </span>
+                  <span className="text-text-faint">›</span>
+                </Link>
                 <Link href={`/g/${gym.slug}`} className="flex items-center justify-between rounded-lg border border-border bg-background p-3 active:bg-surface-raised">
                   <span>
-                    <span className="block text-body font-semibold text-text-primary">1. See your app</span>
+                    <span className="block text-body font-semibold text-text-primary">2. See your app</span>
                     <span className="block text-caption text-text-muted">Exactly what your clients see — try it out</span>
                   </span>
                   <span className="text-text-faint">›</span>
                 </Link>
                 <Link href={`/g/${gym.slug}/build`} className="flex items-center justify-between rounded-lg border border-border bg-background p-3 active:bg-surface-raised">
                   <span>
-                    <span className="block text-body font-semibold text-text-primary">2. Build a workout</span>
+                    <span className="block text-body font-semibold text-text-primary">3. Build a workout</span>
                     <span className="block text-caption text-text-muted">Generate one, share by link or QR, push to SyncroFit</span>
                   </span>
                   <span className="text-text-faint">›</span>
                 </Link>
                 <Link href="/dashboard/embed" className="flex items-center justify-between rounded-lg border border-border bg-background p-3 active:bg-surface-raised">
                   <span>
-                    <span className="block text-body font-semibold text-text-primary">3. Add it to your website</span>
+                    <span className="block text-body font-semibold text-text-primary">4. Add it to your website</span>
                     <span className="block text-caption text-text-muted">Copy-paste a button, an embed, or a QR code</span>
                   </span>
                   <span className="text-text-faint">›</span>
