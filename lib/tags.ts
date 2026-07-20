@@ -96,6 +96,7 @@ export interface Facets {
   /** Tag ids across any categories. */
   tags?: string[];
   equipment?: string[];
+  muscleGroups?: string[];
   /** Matches name or muscle group, case-insensitive. */
   search?: string;
 }
@@ -108,7 +109,7 @@ export interface Facets {
  *   • AND **across** groups — Goal "Knee PT" + Stage "Stage 1" narrows to movements
  *     that are both.
  *
- * Equipment is its own OR facet, AND-ed in the same way.
+ * Equipment and muscle group are each their own OR facet, AND-ed in the same way.
  */
 export function filterByFacets<T extends FacetFilterable>(list: T[], f: Facets): T[] {
   // Group the selected tags by their category so each group can OR internally.
@@ -128,6 +129,7 @@ export function filterByFacets<T extends FacetFilterable>(list: T[], f: Facets):
       if (!group.some((t) => tags.includes(t))) return false;
     }
     if (f.equipment?.length && !(item.equipment && f.equipment.includes(item.equipment))) return false;
+    if (f.muscleGroups?.length && !(item.muscle_group && f.muscleGroups.includes(item.muscle_group))) return false;
     if (q && !item.name.toLowerCase().includes(q) && !(item.muscle_group ?? '').toLowerCase().includes(q)) return false;
     return true;
   });

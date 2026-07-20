@@ -170,3 +170,19 @@ describe('movement families', () => {
     expect(squat.length).toBeGreaterThanOrEqual(10);
   });
 });
+
+describe('muscle group facet', () => {
+  it('ORs within the group and ANDs with the rest', () => {
+    const quads = filterByFacets(SAMPLE_EXERCISES, { muscleGroups: ['Quads'] });
+    const both = filterByFacets(SAMPLE_EXERCISES, { muscleGroups: ['Quads', 'Glutes'] });
+    expect(both.length).toBeGreaterThan(quads.length); // same group → widens
+    expect(both.every((e) => ['Quads', 'Glutes'].includes(e.muscle_group ?? ''))).toBe(true);
+
+    // Cross-facet narrows: 'Legs' has plenty of non-rehab movements.
+    const legs = filterByFacets(SAMPLE_EXERCISES, { muscleGroups: ['Legs'] });
+    const kneeLegs = filterByFacets(SAMPLE_EXERCISES, { tags: ['knee-pt'], muscleGroups: ['Legs'] });
+    expect(kneeLegs.length).toBeGreaterThan(0);
+    expect(kneeLegs.length).toBeLessThan(legs.length);
+    expect(kneeLegs.every((e) => hasTag(e, 'knee-pt') && e.muscle_group === 'Legs')).toBe(true);
+  });
+});

@@ -38,6 +38,7 @@ export default function ExerciseFilterPicker({ items, pickedIds, onToggle }: Pro
   const [q, setQ] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [equip, setEquip] = useState<string[]>([]);
+  const [muscles, setMuscles] = useState<string[]>([]);
   const [openFamily, setOpenFamily] = useState<string | null>(null);
 
   // Only offer tags/equipment this list actually contains.
@@ -53,10 +54,17 @@ export default function ExerciseFilterPicker({ items, pickedIds, onToggle }: Pro
     [items],
   );
 
+  // Muscle groups present, most-common first.
+  const muscleGroups = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const e of items) if (e.muscle_group) counts.set(e.muscle_group, (counts.get(e.muscle_group) ?? 0) + 1);
+    return Array.from(counts.entries()).sort((a, b) => b[1] - a[1]).map(([g]) => g);
+  }, [items]);
+
   // OR within a filter group, AND across groups — see filterByFacets.
   const results = useMemo(
-    () => filterByFacets(items, { tags, equipment: equip, search: q }),
-    [items, q, tags, equip],
+    () => filterByFacets(items, { tags, equipment: equip, muscleGroups: muscles, search: q }),
+    [items, q, tags, equip, muscles],
   );
 
   // Collapse a family into ONE row when more than one of its variations is in
@@ -86,7 +94,7 @@ export default function ExerciseFilterPicker({ items, pickedIds, onToggle }: Pro
   const toggle = (list: string[], set: (v: string[]) => void, v: string) =>
     set(list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
 
-  const activeFilters = tags.length + equip.length;
+  const activeFilters = tags.length + equip.length + muscles.length;
 
   return (
     <div>
@@ -120,6 +128,29 @@ export default function ExerciseFilterPicker({ items, pickedIds, onToggle }: Pro
           </div>
         </div>
       ))}
+
+      {muscleGroups.length > 1 && (
+        <div className="mb-2">
+          <p className="mb-1 text-[0.65rem] font-semibold tracking-wide text-text-faint">MUSCLE GROUP</p>
+          <div className="flex flex-wrap gap-1.5">
+            {muscleGroups.map((g) => {
+              const on = muscles.includes(g);
+              return (
+                <button
+                  key={g}
+                  type="button"
+                  onClick={() => toggle(muscles, setMuscles, g)}
+                  className={`rounded-full border px-2.5 py-1 text-caption transition ${
+                    on ? 'border-accent bg-accent text-on-accent' : 'border-border bg-surface text-text-muted'
+                  }`}
+                >
+                  {g}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {equipments.length > 1 && (
         <div className="mb-3">
@@ -155,6 +186,7 @@ export default function ExerciseFilterPicker({ items, pickedIds, onToggle }: Pro
             onClick={() => {
               setTags([]);
               setEquip([]);
+              setMuscles([]);
             }}
             className="text-caption text-accent"
           >
@@ -169,7 +201,7 @@ export default function ExerciseFilterPicker({ items, pickedIds, onToggle }: Pro
         </p>
       ) : (
         <ul className="space-y-2">
-          {rows.slice(0, 80).map((row) => {
+          {rows.map((row) => {
             /* ── A family: one entry, variations inside ─────────────────── */
             if (row.kind === 'family') {
               const open = openFamily === row.family;
@@ -267,11 +299,6 @@ export default function ExerciseFilterPicker({ items, pickedIds, onToggle }: Pro
             );
           })}
         </ul>
-      )}
-      {rows.length > 80 && (
-        <p className="mt-2 text-center text-caption text-text-faint">
-          Showing 80 of {rows.length} — narrow it with search or filters.
-        </p>
       )}
     </div>
   );
