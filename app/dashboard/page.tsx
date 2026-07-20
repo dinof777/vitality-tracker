@@ -42,9 +42,36 @@ export default async function Dashboard() {
           </>
         ) : (
           <>
-            <Link href={`/g/${gym.slug}`} className="mb-5 block text-caption text-accent">
-              View your gym’s app — /g/{gym.slug} ›
-            </Link>
+            {/* Start here — the three things a new trainer actually needs to do. */}
+            <div className="mb-6 rounded-xl border border-accent/40 bg-surface p-4">
+              <p className="mb-1 text-label text-accent">START HERE</p>
+              <p className="mb-3 text-caption text-text-muted">Your app is live at /g/{gym.slug}.</p>
+              <div className="space-y-2">
+                <Link href={`/g/${gym.slug}`} className="flex items-center justify-between rounded-lg border border-border bg-background p-3 active:bg-surface-raised">
+                  <span>
+                    <span className="block text-body font-semibold text-text-primary">1. See your app</span>
+                    <span className="block text-caption text-text-muted">Exactly what your clients see — try it out</span>
+                  </span>
+                  <span className="text-text-faint">›</span>
+                </Link>
+                <Link href={`/g/${gym.slug}/build`} className="flex items-center justify-between rounded-lg border border-border bg-background p-3 active:bg-surface-raised">
+                  <span>
+                    <span className="block text-body font-semibold text-text-primary">2. Build a workout</span>
+                    <span className="block text-caption text-text-muted">Generate one, share by link or QR, push to SyncroFit</span>
+                  </span>
+                  <span className="text-text-faint">›</span>
+                </Link>
+                <Link href="/dashboard/embed" className="flex items-center justify-between rounded-lg border border-border bg-background p-3 active:bg-surface-raised">
+                  <span>
+                    <span className="block text-body font-semibold text-text-primary">3. Add it to your website</span>
+                    <span className="block text-caption text-text-muted">Copy-paste a button, an embed, or a QR code</span>
+                  </span>
+                  <span className="text-text-faint">›</span>
+                </Link>
+              </div>
+            </div>
+
+            <p className="mb-2 text-label text-text-faint">MANAGE</p>
 
             <Link
               href="/dashboard/exercises"
@@ -107,6 +134,23 @@ export default async function Dashboard() {
             )}
           </>
         )}
+
+        {/* Not everyone here is a trainer — make the personal app an obvious door. */}
+        <div className="mt-8 rounded-xl border border-border bg-surface p-4">
+          <p className="text-body font-semibold text-text-primary">Just want workouts for yourself?</p>
+          <p className="mb-3 text-caption text-text-muted">
+            You don&rsquo;t need a gym set up — the full training app is yours either way.
+          </p>
+          <Link
+            href="/"
+            className="flex h-11 w-full items-center justify-center rounded-md bg-accent text-label text-on-accent active:scale-[0.98]"
+          >
+            START TODAY&rsquo;S WORKOUT
+          </Link>
+          <Link href="/exercises" className="mt-2 block text-center text-caption text-text-muted">
+            or browse all 188 exercises ›
+          </Link>
+        </div>
       </main>
     </div>
   );

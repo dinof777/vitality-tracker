@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { darken, isValidHex, onAccentFor } from '@/lib/color';
 
 export default function BrandingSettings({ params }: { params: { slug: string } }) {
@@ -81,7 +82,10 @@ export default function BrandingSettings({ params }: { params: { slug: string } 
   return (
     <div className="min-h-dvh bg-background text-text-primary">
       <main className="mx-auto max-w-md px-5 pb-20 pt-10">
-        <h1 className="mb-1 text-h1 text-text-primary">Branding</h1>
+        <Link href="/dashboard" className="text-caption text-text-muted">
+          ← Dashboard
+        </Link>
+        <h1 className="mb-1 mt-2 text-h1 text-text-primary">Branding</h1>
         <p className="mb-6 text-body text-text-muted">Make the app look like {name || 'your gym'}.</p>
 
         {/* Import from website */}
@@ -171,6 +175,42 @@ export default function BrandingSettings({ params }: { params: { slug: string } 
         </button>
 
         {msg && <p className="mt-3 text-center text-caption text-text-muted">{msg}</p>}
+
+        {/* Don't dead-end here — branding is step 1 of several. */}
+        <div className="mt-8 rounded-xl border border-border bg-surface p-4">
+          <p className="mb-1 text-label text-accent">WHAT&rsquo;S NEXT</p>
+          <p className="mb-3 text-caption text-text-muted">Your app is live. Here&rsquo;s what to do with it.</p>
+          <div className="space-y-2">
+            <Link href={`/g/${slug}`} className="flex items-center justify-between rounded-lg border border-border bg-background p-3 active:bg-surface-raised">
+              <span>
+                <span className="block text-body font-semibold text-text-primary">See your app</span>
+                <span className="block text-caption text-text-muted">Open it exactly as your clients will</span>
+              </span>
+              <span className="text-text-faint">›</span>
+            </Link>
+            <Link href={`/g/${slug}/build`} className="flex items-center justify-between rounded-lg border border-border bg-background p-3 active:bg-surface-raised">
+              <span>
+                <span className="block text-body font-semibold text-text-primary">Build a workout</span>
+                <span className="block text-caption text-text-muted">Generate one, then share it by link or QR</span>
+              </span>
+              <span className="text-text-faint">›</span>
+            </Link>
+            <Link href="/dashboard/embed" className="flex items-center justify-between rounded-lg border border-border bg-background p-3 active:bg-surface-raised">
+              <span>
+                <span className="block text-body font-semibold text-text-primary">Add it to your website</span>
+                <span className="block text-caption text-text-muted">Copy-paste a button, embed, or QR code</span>
+              </span>
+              <span className="text-text-faint">›</span>
+            </Link>
+            <Link href="/dashboard" className="flex items-center justify-between rounded-lg border border-border bg-background p-3 active:bg-surface-raised">
+              <span>
+                <span className="block text-body font-semibold text-text-primary">Back to your dashboard</span>
+                <span className="block text-caption text-text-muted">Exercises, equipment, clients — edit any time</span>
+              </span>
+              <span className="text-text-faint">›</span>
+            </Link>
+          </div>
+        </div>
       </main>
     </div>
   );
