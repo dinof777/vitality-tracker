@@ -42,14 +42,14 @@ export default async function SharedWorkout({ params }: { params: { token: strin
 
   return (
     <div style={brandingToCssVars(branding)} className="min-h-dvh bg-background text-text-primary">
-      <main className="mx-auto max-w-md px-5 pb-16 pt-10">
+      <main className="shell px-5 pb-16 pt-10">
         <p className="text-label text-accent">{gym.toUpperCase()}</p>
         <h1 className="mb-1 mt-1 text-h1 text-text-primary">{name}</h1>
         <p className="mb-6 text-body text-text-muted">
           {exercises.length} moves · {wp.sets} sets · {wp.restSec}s rest
         </p>
 
-        <ul className="space-y-2">
+        <ul className="space-y-2 md:grid md:grid-cols-2 md:gap-2 md:space-y-0 lg:grid-cols-3">
           {exercises.map((e, i) => (
             <li key={i} className="flex items-center gap-3 rounded-lg border border-border bg-surface p-3">
               <span className="w-5 shrink-0 text-center text-caption font-semibold text-text-faint nums">{i + 1}</span>

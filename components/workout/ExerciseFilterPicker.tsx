@@ -219,7 +219,7 @@ export default function ExerciseFilterPicker({ items, pickedIds, onToggle }: Pro
           Nothing matches those filters.
         </p>
       ) : (
-        <ul className="space-y-2">
+        <ul className="space-y-2 md:grid md:grid-cols-2 md:gap-2 md:space-y-0 lg:grid-cols-3">
           {rows.map((row) => {
             /* ── A family: one entry, variations inside ─────────────────── */
             if (row.kind === 'family') {

@@ -14,7 +14,7 @@ export default async function Embed() {
 
   if (!t) {
     return (
-      <main className="mx-auto min-h-dvh max-w-md px-5 pt-10">
+      <main className="shell min-h-dvh px-5 pt-10">
         <Link href="/dashboard" className="text-caption text-text-muted">
           ← Dashboard
         </Link>
@@ -49,7 +49,7 @@ export default async function Embed() {
 
   return (
     <div className="min-h-dvh bg-background text-text-primary">
-      <main className="mx-auto max-w-md px-5 pb-20 pt-10">
+      <main className="shell px-5 pb-20 pt-10">
         <Link href="/dashboard" className="text-caption text-text-muted print:hidden">
           ← Dashboard
         </Link>

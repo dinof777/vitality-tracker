@@ -21,7 +21,7 @@ export default function Collection({ params }: { params: { goal: string } }) {
   const untagged = items.filter((e) => !stages.some((g) => g.items.includes(e)));
 
   return (
-    <main className="mx-auto min-h-dvh max-w-md px-4 pb-28 pt-8">
+    <main className="shell min-h-dvh px-4 pb-28 pt-8">
       <Link href="/exercises" className="text-caption text-text-muted">
         ← Exercises
       </Link>
@@ -42,7 +42,7 @@ export default function Collection({ params }: { params: { goal: string } }) {
         <section key={tag.id} className="mb-7">
           <h2 className="text-h3 font-semibold text-text-primary">{tag.label}</h2>
           <p className="mb-3 text-caption text-text-muted">{tag.description}</p>
-          <ul className="space-y-2">
+          <ul className="space-y-2 md:grid md:grid-cols-2 md:gap-2 md:space-y-0 lg:grid-cols-3">
             {group.map((ex) => (
               <li key={ex.id} className="flex items-center gap-3 rounded-lg border border-border bg-surface p-3">
                 <ExerciseThumb equipment={ex.equipment} imageUrl={ex.image_url} name={ex.name} size={44} />
@@ -73,7 +73,7 @@ export default function Collection({ params }: { params: { goal: string } }) {
       {untagged.length > 0 && (
         <section className="mb-7">
           <h2 className="mb-3 text-h3 font-semibold text-text-primary">Also useful</h2>
-          <ul className="space-y-2">
+          <ul className="space-y-2 md:grid md:grid-cols-2 md:gap-2 md:space-y-0 lg:grid-cols-3">
             {untagged.map((ex) => (
               <li key={ex.id} className="flex items-center gap-3 rounded-lg border border-border bg-surface p-3">
                 <ExerciseThumb equipment={ex.equipment} imageUrl={ex.image_url} name={ex.name} size={44} />

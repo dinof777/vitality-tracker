@@ -19,7 +19,7 @@ export default function TenantNav({ slug, name, logoUrl }: { slug: string; name:
 
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur">
-      <div className="mx-auto max-w-md px-5">
+      <div className="shell px-5">
         <Link href={base} className="flex items-center gap-2 pb-2 pt-3">
           {logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element

@@ -49,7 +49,7 @@ export default async function TenantHome({ params }: { params: { slug: string } 
     <div style={brandingToCssVars(tenant.branding)} className="min-h-dvh bg-background text-text-primary">
       <TenantNav slug={tenant.slug} name={name} logoUrl={tenant.branding.logoUrl} />
 
-      <main className="mx-auto max-w-md px-5 pb-16 pt-8">
+      <main className="shell px-5 pb-16 pt-8">
         {/* Hero */}
         <p className="text-label text-accent">YOUR TRAINING APP</p>
         <h1 className="mb-2 text-h1 text-text-primary">Train at {name}.</h1>
@@ -76,7 +76,7 @@ export default async function TenantHome({ params }: { params: { slug: string } 
               <p className="text-label text-accent">TODAY’S SUGGESTION</p>
               <span className="text-caption text-text-faint nums">{workout.length} moves</span>
             </div>
-            <ul className="space-y-2">
+            <ul className="space-y-2 md:grid md:grid-cols-2 md:gap-2 md:space-y-0 lg:grid-cols-3">
               {workout.map((ex, i) => (
                 <ExerciseRow
                   key={ex.id}

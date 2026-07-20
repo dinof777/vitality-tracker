@@ -97,7 +97,7 @@ export default function SettingsPage() {
   const ip = profile ? intensityParams(profile.intensity) : null;
 
   return (
-    <main className="mx-auto min-h-dvh max-w-md px-4 pb-28 pt-10">
+    <main className="shell min-h-dvh px-4 pb-28 pt-10">
       <header className="mb-6">
         <p className="text-label text-accent">LIVE ELEVATED</p>
         <h1 className="text-h1 text-text-primary">Profile</h1>
@@ -261,27 +261,42 @@ export default function SettingsPage() {
         📅 PLAN MY WEEK
       </Link>
 
-      {/* Vitality Pro — entry point into the white-label trainer platform */}
-      <div className="mb-5 rounded-lg border border-accent/40 bg-accent/10 p-4">
-        <p className="text-label text-accent">VITALITY PRO</p>
-        <p className="mt-1 text-caption text-text-muted">
-          Run a branded training app for your gym or clients — your logo, your URL, share by QR.
-        </p>
-        <div className="mt-3 flex gap-2">
-          <Link
-            href="/dashboard"
-            className="flex h-10 flex-1 items-center justify-center rounded-md bg-accent text-caption font-semibold text-on-accent"
-          >
-            Trainer dashboard
-          </Link>
-          <Link
-            href="/pro"
-            className="flex h-10 flex-1 items-center justify-center rounded-md border border-border text-caption text-text-primary active:bg-surface"
-          >
-            Learn more
+      {/* Vitality Pro — the trainer tools, right here rather than a hop away */}
+      {account.role === 'trainer' ? (
+        <>
+          <p className="mb-2 text-caption text-text-muted">VITALITY PRO</p>
+          <div className="mb-5 grid grid-cols-2 gap-2">
+            {[
+              { href: '/dashboard/workouts', label: 'Circuits', hint: 'Saved workouts' },
+              { href: '/dashboard/clients', label: 'Clients', hint: 'Engagement' },
+              { href: '/dashboard/equipment', label: 'Equipment', hint: 'Your gear' },
+              { href: '/dashboard/exercises', label: 'Exercises', hint: 'Custom + renames' },
+              { href: '/dashboard/embed', label: 'Add to site', hint: 'Button, embed, QR' },
+              { href: '/dashboard', label: 'Dashboard', hint: 'Everything else' },
+            ].map((t) => (
+              <Link
+                key={t.href}
+                href={t.href}
+                className="rounded-lg border border-border bg-surface p-3 active:bg-surface-raised"
+              >
+                <span className="block text-body font-semibold text-text-primary">{t.label}</span>
+                <span className="block text-caption text-text-muted">{t.hint}</span>
+              </Link>
+            ))}
+          </div>
+        </>
+      ) : (
+        <div className="mb-5 rounded-lg border border-accent/40 bg-accent/10 p-4">
+          <p className="text-body font-semibold text-text-primary">Train other people?</p>
+          <p className="mb-3 text-caption text-text-muted">
+            Switch your role to <span className="text-text-primary">trainer</span> above to unlock Vitality Pro — your
+            own branded app, clients and shareable circuits.
+          </p>
+          <Link href="/pro" className="text-caption text-accent">
+            See what it does ›
           </Link>
         </div>
-      </div>
+      )}
 
       {/* History */}
       <p className="mb-2 text-caption text-text-muted">WORKOUT HISTORY</p>

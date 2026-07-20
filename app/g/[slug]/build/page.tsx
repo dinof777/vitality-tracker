@@ -36,7 +36,7 @@ export default async function TenantBuild({
   searchParams,
 }: {
   params: { slug: string };
-  searchParams: { focus?: string; len?: string; mins?: string; intensity?: string; v?: string; mode?: string; tags?: string };
+  searchParams: { focus?: string; len?: string; mins?: string; intensity?: string; v?: string; mode?: string; tags?: string; sw?: string };
 }) {
   const tenant = await fetchTenantBySlug(params.slug);
   if (!tenant) notFound();
@@ -64,6 +64,12 @@ export default async function TenantBuild({
     ? (searchParams.intensity as Intensity)
     : 'moderate';
   const variant = Math.max(1, Math.min(999, Number(searchParams.v) || 1));
+  // Per-slot rerolls: sw=0:2,3:1 means "slot 0 swapped twice, slot 3 once".
+  const swaps = new Map<number, number>();
+  for (const part of (searchParams.sw ?? '').split(',').filter(Boolean)) {
+    const [i, k] = part.split(':').map(Number);
+    if (Number.isInteger(i) && i >= 0) swaps.set(i, Math.max(1, Math.min(50, k || 1)));
+  }
   const focusLabel = FOCUS_CHOICES.find((f) => f.value === focusVal)?.label ?? 'Full Body';
   const custom = searchParams.mode === 'custom';
 
@@ -92,7 +98,19 @@ export default async function TenantBuild({
   }));
 
   const profile: Profile = { equipment: allowedEquipment, focus: focusVal, intensity };
-  const workout = generateWorkout(profile, { focus: focusVal, count, pool, rng });
+  const generated = generateWorkout(profile, { focus: focusVal, count, pool, rng });
+
+  // Refresh a single move: swap that slot for another from the pool, chosen
+  // deterministically so the URL (and any QR of it) still reproduces exactly.
+  const workout = generated.map((ex, i) => {
+    const bumps = swaps.get(i);
+    if (!bumps) return ex;
+    const used = new Set(generated.map((g) => g.id));
+    const alts = pool.filter((c) => !used.has(c.id));
+    if (alts.length === 0) return ex;
+    const pick = seededRng(hashString(`${tenant.slug}|swap|${i}|${bumps}|${variant}`));
+    return alts[Math.floor(pick() * alts.length)] ?? ex;
+  });
   const wp = workoutParams(profile);
 
   // SyncroFit shows the gym's names; circuit id is tenant-scoped so feedback maps back.
@@ -115,12 +133,19 @@ export default async function TenantBuild({
   });
 
   const tagParam = selectedTags.length ? `&tags=${selectedTags.join(',')}` : '';
-  const qs = (f: string, l: number, v = variant) => `?focus=${f}&mins=${minutes}&intensity=${intensity}&v=${v}${tagParam}`;
+  const qs = (f: string, l: number, v = variant) => `?focus=${f}&mins=${minutes}&intensity=${intensity}&v=${v}${tagParam}${v === variant ? swParam : ''}`;
   // Toggle one tag, keeping focus/length; reset the shuffle so the new pool is used.
   const tagHref = (id: string) => {
     const next = selectedTags.includes(id) ? selectedTags.filter((t) => t !== id) : [...selectedTags, id];
     const q = next.length ? `&tags=${next.join(',')}` : '';
     return `/g/${tenant.slug}/build?focus=${focusVal}&mins=${minutes}&intensity=${intensity}&v=1${q}`;
+  };
+  const swParam = swaps.size ? `&sw=${Array.from(swaps).map(([i, k]) => `${i}:${k}`).join(',')}` : '';
+  const rerollHref = (i: number) => {
+    const next = new Map(swaps);
+    next.set(i, (next.get(i) ?? 0) + 1);
+    const sw = Array.from(next).map(([idx, k]) => `${idx}:${k}`).join(',');
+    return `/g/${tenant.slug}/build?focus=${focusVal}&mins=${minutes}&intensity=${intensity}&v=${variant}${tagParam}&sw=${sw}`;
   };
   const usedTagIds = new Set(library.flatMap((e) => e.tags ?? []));
 
@@ -140,7 +165,7 @@ export default async function TenantBuild({
       <div className="print:hidden">
         <TenantNav slug={tenant.slug} name={name} logoUrl={tenant.branding.logoUrl} />
       </div>
-      <main className="mx-auto max-w-md px-5 pb-16 pt-6">
+      <main className="shell px-5 pb-16 pt-6">
         <h1 className="mb-1 text-h1 text-text-primary">Build a workout</h1>
         <p className="mb-1 text-body text-text-muted">From {name}’s library, ready for SyncroFit.</p>
         {isMyGym && (
@@ -215,7 +240,7 @@ export default async function TenantBuild({
             href={qs(focusVal, count, variant + 1)}
             className="flex h-9 items-center gap-1 rounded-md border border-accent/40 bg-accent/10 px-3 text-caption font-semibold text-accent active:scale-[0.97]"
           >
-            🔀 Shuffle
+            🔀 Refresh all
           </Link>
         </div>
 
@@ -294,6 +319,15 @@ export default async function TenantBuild({
                       {[ex.equipment && EQUIPMENT_LABEL[ex.equipment], presc].filter(Boolean).join(' · ')}
                     </span>
                   </span>
+                  {/* Swap just this move, keeping the rest of the workout */}
+                  <Link
+                    href={rerollHref(i)}
+                    aria-label={`Refresh ${display?.name ?? ex.name}`}
+                    title="Swap this exercise"
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border text-caption text-text-muted active:scale-95 active:text-accent print:hidden"
+                  >
+                    ↻
+                  </Link>
                 </li>
               );
             })}

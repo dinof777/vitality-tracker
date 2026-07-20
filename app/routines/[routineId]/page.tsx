@@ -161,7 +161,7 @@ export default function RoutineDetailPage() {
 
   if (loading) {
     return (
-      <main className="mx-auto min-h-dvh max-w-md px-4 pt-8">
+      <main className="shell min-h-dvh px-4 pt-8">
         <div className="h-8 w-40 animate-pulse rounded bg-surface" />
       </main>
     );
@@ -169,7 +169,7 @@ export default function RoutineDetailPage() {
 
   if (!routine) {
     return (
-      <main className="mx-auto min-h-dvh max-w-md px-4 pt-8">
+      <main className="shell min-h-dvh px-4 pt-8">
         <p className="text-body text-text-muted">Routine not found.</p>
         <Link href="/routines" className="text-accent">
           ← Back to routines
@@ -179,7 +179,7 @@ export default function RoutineDetailPage() {
   }
 
   return (
-    <main className="mx-auto min-h-dvh max-w-md px-4 pb-32 pt-8">
+    <main className="shell min-h-dvh px-4 pb-32 pt-8">
       <Link href="/routines" className="text-caption text-text-muted">
         ← Routines
       </Link>

@@ -38,6 +38,12 @@ body {
 }
 
 @layer utilities {
+  /* Page container: a phone column that opens up on bigger screens instead of
+     stranding desktop users in a 448px strip. */
+  .shell {
+    @apply mx-auto w-full max-w-md md:max-w-3xl lg:max-w-5xl;
+  }
+
   .text-balance {
     text-wrap: balance;
   }

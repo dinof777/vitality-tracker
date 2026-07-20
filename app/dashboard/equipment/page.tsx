@@ -92,7 +92,7 @@ export default function GymEquipment() {
 
   return (
     <div className="min-h-dvh bg-background text-text-primary">
-      <main className="mx-auto max-w-md px-5 pb-20 pt-10">
+      <main className="shell px-5 pb-20 pt-10">
         <Link href="/dashboard" className="text-caption text-text-muted">
           ← Dashboard
         </Link>

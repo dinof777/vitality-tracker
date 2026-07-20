@@ -79,7 +79,7 @@ export default function PlanPage() {
   const trainingCount = week.filter((d) => d.exercises.length > 0).length;
 
   return (
-    <main className="mx-auto min-h-dvh max-w-md px-4 pb-44 pt-8">
+    <main className="shell min-h-dvh px-4 pb-44 pt-8">
       <header className="mb-5 flex items-start justify-between">
         <div>
           <p className="text-label text-accent">4 PILLARS</p>

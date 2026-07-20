@@ -68,7 +68,7 @@ export default function BuildYourOwn() {
   };
 
   return (
-    <main className="mx-auto min-h-dvh max-w-md px-4 pb-32 pt-8">
+    <main className="shell min-h-dvh px-4 pb-32 pt-8">
       <Link href="/" className="text-caption text-text-muted">
         ← Home
       </Link>
@@ -141,7 +141,7 @@ export default function BuildYourOwn() {
       {/* Sticky start bar */}
       {picked.length > 0 && (
         <div className="fixed inset-x-0 bottom-0 border-t border-border bg-background/95 p-4 backdrop-blur">
-          <div className="mx-auto flex max-w-md items-center gap-3">
+          <div className="shell flex items-center gap-3">
             <button type="button" onClick={() => setPicked([])} className="shrink-0 text-caption text-text-faint">
               Clear
             </button>

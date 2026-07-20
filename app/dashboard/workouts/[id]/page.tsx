@@ -68,7 +68,7 @@ export default async function WorkoutDetail({ params }: { params: { id: string }
 
   return (
     <div className="min-h-dvh bg-background text-text-primary">
-      <main className="mx-auto max-w-md px-5 pb-20 pt-10">
+      <main className="shell px-5 pb-20 pt-10">
         <Link href="/dashboard/workouts" className="text-caption text-text-muted print:hidden">
           ← Your circuits
         </Link>

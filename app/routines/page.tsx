@@ -58,7 +58,7 @@ export default function RoutinesPage() {
   };
 
   return (
-    <main className="mx-auto min-h-dvh max-w-md px-4 pb-28 pt-8">
+    <main className="shell min-h-dvh px-4 pb-28 pt-8">
       <header className="mb-5 flex items-start justify-between">
         <div>
           <p className="text-label text-accent">BLUEPRINTS</p>

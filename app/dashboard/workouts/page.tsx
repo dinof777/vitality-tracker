@@ -36,7 +36,7 @@ export default function SavedWorkouts() {
 
   return (
     <div className="min-h-dvh bg-background text-text-primary">
-      <main className="mx-auto max-w-md px-5 pb-20 pt-10">
+      <main className="shell px-5 pb-20 pt-10">
         <Link href="/dashboard" className="text-caption text-text-muted">
           ← Dashboard
         </Link>
@@ -55,7 +55,7 @@ export default function SavedWorkouts() {
             </Link>
           </div>
         ) : (
-          <ul className="space-y-2">
+          <ul className="space-y-2 md:grid md:grid-cols-2 md:gap-2 md:space-y-0 lg:grid-cols-3">
             {list.map((w) => (
               <li key={w.id} className="flex items-center justify-between gap-2 rounded-lg border border-border bg-surface p-3">
                 <Link href={`/dashboard/workouts/${w.id}`} className="min-w-0 flex-1 active:opacity-70">

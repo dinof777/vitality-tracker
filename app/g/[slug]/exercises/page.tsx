@@ -39,7 +39,7 @@ export default async function TenantExercises({ params }: { params: { slug: stri
     <div style={brandingToCssVars(tenant.branding)} className="min-h-dvh bg-background text-text-primary">
       <TenantNav slug={tenant.slug} name={name} logoUrl={tenant.branding.logoUrl} />
 
-      <main className="mx-auto max-w-md px-5 pb-16 pt-10">
+      <main className="shell px-5 pb-16 pt-10">
         <Link href={`/g/${tenant.slug}`} className="text-caption text-text-muted">
           ← {name}
         </Link>
@@ -51,7 +51,7 @@ export default async function TenantExercises({ params }: { params: { slug: stri
         {groups.map((g) => (
           <section key={g.label} className="mb-6">
             <p className="mb-2 text-label text-accent">{g.label.toUpperCase()}</p>
-            <ul className="space-y-2">
+            <ul className="space-y-2 md:grid md:grid-cols-2 md:gap-2 md:space-y-0 lg:grid-cols-3">
               {g.items.map((ex) => (
                 <li key={ex.id} className="flex items-center gap-3 rounded-lg border border-border bg-surface p-3">
                   <ExerciseThumb equipment={ex.equipment} imageUrl={ex.image_url} name={ex.name} size={40} />

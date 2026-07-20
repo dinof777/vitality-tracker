@@ -64,7 +64,7 @@ export default function EquipmentModeration() {
 
   return (
     <div className="min-h-dvh bg-background text-text-primary">
-      <main className="mx-auto max-w-md px-5 pb-20 pt-10">
+      <main className="shell px-5 pb-20 pt-10">
         <p className="text-label text-accent">ADMIN</p>
         <h1 className="mb-1 text-h1 text-text-primary">Equipment review</h1>
         <p className="mb-6 text-body text-text-muted">

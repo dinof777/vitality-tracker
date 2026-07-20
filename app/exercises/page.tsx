@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
 import type { Exercise } from '@/lib/database.types';
 import { EQUIPMENT_LABEL, EQUIPMENT_ORDER, SAMPLE_EXERCISES } from '@/lib/exercises';
@@ -16,6 +16,24 @@ export default function ExercisesPage() {
   const [query, setQuery] = useState('');
   const [detail, setDetail] = useState<Exercise | null>(null);
   const [addTarget, setAddTarget] = useState<Exercise | null>(null);
+  // Saved circuits become filters — "show me just what's in Knee Rehab Week 1".
+  const [circuits, setCircuits] = useState<Array<{ id: string; name: string; names: string[] }>>([]);
+  const [circuitId, setCircuitId] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch('/api/tenant/workouts')
+      .then((r) => (r.ok ? r.json() : { workouts: [] }))
+      .then((d) =>
+        setCircuits(
+          (d.workouts ?? []).map((w: { id: string; name: string; payload?: { exercises?: { name: string }[] } }) => ({
+            id: w.id,
+            name: w.name,
+            names: (w.payload?.exercises ?? []).map((e) => e.name),
+          })),
+        ),
+      )
+      .catch(() => {});
+  }, []);
 
   const groups = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -24,16 +42,18 @@ export default function ExercisesPage() {
       e.name.toLowerCase().includes(q) ||
       (e.muscle_group ?? '').toLowerCase().includes(q) ||
       (e.tags ?? []).some((t) => tagLabel(t).toLowerCase().includes(q));
+    const circuit = circuits.find((c) => c.id === circuitId);
+    const inCircuit = (e: Exercise) => !circuit || circuit.names.includes(e.name);
     return EQUIPMENT_ORDER.map((eq) => ({
       eq,
-      items: SAMPLE_EXERCISES.filter((e) => e.equipment === eq && match(e)),
+      items: SAMPLE_EXERCISES.filter((e) => e.equipment === eq && match(e) && inCircuit(e)),
     })).filter((g) => g.items.length > 0);
-  }, [query]);
+  }, [query, circuits, circuitId]);
 
   const total = groups.reduce((n, g) => n + g.items.length, 0);
 
   return (
-    <main className="mx-auto min-h-dvh max-w-md px-4 pb-28 pt-8">
+    <main className="shell min-h-dvh px-4 pb-28 pt-8">
       <header className="mb-4 flex items-start justify-between">
         <div>
           <p className="text-label text-accent">LIBRARY</p>
@@ -58,6 +78,29 @@ export default function ExercisesPage() {
         ))}
       </div>
 
+      {circuits.length > 0 && (
+        <div className="mb-3">
+          <p className="mb-1 text-[0.65rem] font-semibold tracking-wide text-text-faint">MY CIRCUITS</p>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {circuits.map((c) => {
+              const on = circuitId === c.id;
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => setCircuitId(on ? null : c.id)}
+                  className={`shrink-0 rounded-full border px-3 py-1.5 text-caption transition ${
+                    on ? 'border-accent bg-accent text-on-accent' : 'border-border bg-surface text-text-muted'
+                  }`}
+                >
+                  {c.name}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <input
         value={query}
         onChange={(e) => setQuery(e.target.value)}
@@ -76,7 +119,7 @@ export default function ExercisesPage() {
               <p className="mb-2 text-caption text-text-muted">
                 {EQUIPMENT_LABEL[g.eq].toUpperCase()} · {g.items.length}
               </p>
-              <ul className="space-y-2">
+              <ul className="space-y-2 md:grid md:grid-cols-2 md:gap-2 md:space-y-0 lg:grid-cols-3">
                 {g.items.map((ex) => (
                   <li
                     key={ex.id}

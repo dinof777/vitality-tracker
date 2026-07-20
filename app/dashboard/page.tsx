@@ -15,7 +15,7 @@ export default async function Dashboard() {
 
   return (
     <div className="min-h-dvh bg-background text-text-primary">
-      <main className="mx-auto max-w-md px-5 pb-20 pt-10">
+      <main className="shell px-5 pb-20 pt-10">
         <div className="mb-6 flex items-center justify-between">
           <div>
             <p className="text-label text-accent">VITALITY PRO</p>
