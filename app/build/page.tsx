@@ -1,12 +1,15 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { SAMPLE_EXERCISES } from '@/lib/exercises';
 import ExerciseThumb from '@/components/workout/ExerciseThumb';
 import ExerciseFilterPicker, { type PickerItem } from '@/components/workout/ExerciseFilterPicker';
 import { familyOf } from '@/lib/movement-families';
+import { loadProfile } from '@/lib/profile';
+import { EQUIPMENT_LABEL } from '@/lib/exercises';
+import type { Equipment } from '@/lib/database.types';
 
 // Build your own session: search the whole library, filter by goal/stage/movement
 // or gear, order the moves, then run it. Same session engine as a generated
@@ -14,13 +17,30 @@ import { familyOf } from '@/lib/movement-families';
 export default function BuildYourOwn() {
   const router = useRouter();
   const [picked, setPicked] = useState<string[]>([]);
+  // Default to the gear in your profile — with a way out, since you might be
+  // somewhere with different equipment today.
+  const [myGear, setMyGear] = useState<Equipment[] | null>(null);
+  const [showAll, setShowAll] = useState(false);
+
+  useEffect(() => {
+    const p = loadProfile();
+    setMyGear(p?.equipment?.length ? p.equipment : null);
+  }, []);
 
   const byId = useMemo(() => new Map(SAMPLE_EXERCISES.map((e) => [e.id, e])), []);
   const pickedIds = useMemo(() => new Set(picked), [picked]);
 
+  const source = useMemo(
+    () =>
+      myGear && !showAll
+        ? SAMPLE_EXERCISES.filter((e) => e.equipment && myGear.includes(e.equipment))
+        : SAMPLE_EXERCISES,
+    [myGear, showAll],
+  );
+
   const items: PickerItem[] = useMemo(
     () =>
-      SAMPLE_EXERCISES.map((e) => ({
+      source.map((e) => ({
         id: e.id,
         name: e.name,
         muscle_group: e.muscle_group,
@@ -29,7 +49,7 @@ export default function BuildYourOwn() {
         tags: e.tags,
         ...familyOf(e.name),
       })),
-    [],
+    [source],
   );
 
   const toggle = (id: string) => setPicked(pickedIds.has(id) ? picked.filter((p) => p !== id) : [...picked, id]);
@@ -100,7 +120,21 @@ export default function BuildYourOwn() {
 
       {/* Find moves */}
       <section>
-        <p className="mb-2 text-label text-accent">ADD EXERCISES</p>
+        <div className="mb-2 flex items-baseline justify-between gap-2">
+          <p className="text-label text-accent">ADD EXERCISES</p>
+          {myGear && (
+            <button type="button" onClick={() => setShowAll(!showAll)} className="text-caption text-accent">
+              {showAll ? 'Just my equipment' : 'Show everything'}
+            </button>
+          )}
+        </div>
+        {myGear && (
+          <p className="mb-2 text-caption text-text-faint">
+            {showAll
+              ? `Showing the full library — your kit is ${myGear.map((e) => EQUIPMENT_LABEL[e]).join(', ')}.`
+              : `Your equipment: ${myGear.map((e) => EQUIPMENT_LABEL[e]).join(', ')}.`}
+          </p>
+        )}
         <ExerciseFilterPicker items={items} pickedIds={pickedIds} onToggle={toggle} />
       </section>
 
