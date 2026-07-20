@@ -20,7 +20,13 @@ export const dynamic = 'force-dynamic';
 // A gym's front door. Everything shown here is REAL: the suggestion below is
 // generated from this gym's own library and the gear they've registered, seeded
 // by the date so it's stable for the day.
-export default async function TenantHome({ params }: { params: { slug: string } }) {
+export default async function TenantHome({
+  params,
+  searchParams,
+}: {
+  params: { slug: string };
+  searchParams: { v?: string; sw?: string };
+}) {
   const tenant = await fetchTenantBySlug(params.slug);
   if (!tenant) notFound();
 
@@ -43,9 +49,35 @@ export default async function TenantHome({ params }: { params: { slug: string } 
     }));
 
   const today = new Date().toISOString().slice(0, 10);
-  const rng = seededRng(hashString(`${tenant.slug}|${today}`));
+  const variant = Math.max(1, Math.min(999, Number(searchParams.v) || 1));
+  const swaps = new Map<number, number>();
+  for (const part of (searchParams.sw ?? '').split(',').filter(Boolean)) {
+    const [i, k] = part.split(':').map(Number);
+    if (Number.isInteger(i) && i >= 0) swaps.set(i, Math.max(1, Math.min(50, k || 1)));
+  }
+
+  const rng = seededRng(hashString(`${tenant.slug}|${today}|${variant}`));
   const profile: Profile = { equipment: allowed, focus: 'full', intensity: 'moderate' };
-  const workout = generateWorkout(profile, { focus: 'full', count: 5, pool, rng });
+  const generated = generateWorkout(profile, { focus: 'full', count: 5, pool, rng });
+
+  // Swap one move without disturbing the rest — deterministic so the link is stable.
+  const workout = generated.map((ex, i) => {
+    const bumps = swaps.get(i);
+    if (!bumps) return ex;
+    const used = new Set(generated.map((g) => g.id));
+    const alts = pool.filter((c) => !used.has(c.id));
+    if (alts.length === 0) return ex;
+    const pick = seededRng(hashString(`${tenant.slug}|today-swap|${i}|${bumps}|${variant}`));
+    return alts[Math.floor(pick() * alts.length)] ?? ex;
+  });
+
+  const swParam = swaps.size ? `&sw=${Array.from(swaps).map(([i, k]) => `${i}:${k}`).join(',')}` : '';
+  const rerollHref = (i: number) => {
+    const next = new Map(swaps);
+    next.set(i, (next.get(i) ?? 0) + 1);
+    return `/g/${tenant.slug}?v=${variant}&sw=${Array.from(next).map(([idx, k]) => `${idx}:${k}`).join(',')}`;
+  };
+  const refreshAllHref = `/g/${tenant.slug}?v=${variant + 1}`;
   const wp = workoutParams(profile);
   const byId = new Map(library.map((e) => [e.id, e]));
 
@@ -58,6 +90,7 @@ export default async function TenantHome({ params }: { params: { slug: string } 
   const todayName = `${name} — Today`;
   const displayToday = workout.map((ex) => ({ ...ex, name: byId.get(ex.id)?.name ?? ex.name }));
   const sfUrl = workout.length ? syncrofitRunUrl(todayName, displayToday, wp, '', `${tenant.slug}-today`) : '#';
+  void swParam;
   const todaySnapshot = workout.map((ex) => ({
     name: byId.get(ex.id)?.name ?? ex.name,
     equipment: ex.equipment,
@@ -90,9 +123,14 @@ export default async function TenantHome({ params }: { params: { slug: string } 
         {/* A real suggestion from this gym's library — not a placeholder */}
         {workout.length > 0 && (
           <>
-            <div className="mb-2 flex items-baseline justify-between">
+            <div className="mb-2 flex items-center justify-between gap-2">
               <p className="text-label text-accent">TODAY’S SUGGESTION</p>
-              <span className="text-caption text-text-faint nums">{workout.length} moves</span>
+              <Link
+                href={refreshAllHref}
+                className="flex h-9 items-center gap-1 rounded-md border border-accent/40 bg-accent/10 px-3 text-caption font-semibold text-accent active:scale-[0.97]"
+              >
+                🔀 Refresh all
+              </Link>
             </div>
             <ul className="space-y-2 md:grid md:grid-cols-2 md:gap-2 md:space-y-0 lg:grid-cols-3">
               {workout.map((ex, i) => (
@@ -103,6 +141,15 @@ export default async function TenantHome({ params }: { params: { slug: string } 
                   equipment={ex.equipment}
                   imageUrl={ex.image_url}
                   detail={presc(ex)}
+                  trailing={
+                    <Link
+                      href={rerollHref(i)}
+                      aria-label={`Swap ${byId.get(ex.id)?.name ?? ex.name}`}
+                      className="flex h-9 shrink-0 items-center gap-1 rounded-md border border-border px-2 text-caption text-text-muted active:scale-95 active:text-accent"
+                    >
+                      ↻ <span className="hidden sm:inline">Swap</span>
+                    </Link>
+                  }
                 />
               ))}
             </ul>

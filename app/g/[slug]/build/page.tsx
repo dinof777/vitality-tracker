@@ -244,7 +244,7 @@ export default async function TenantBuild({
           }
         />
 
-        <div className="mb-4 flex items-center justify-between print:hidden">
+        <div className="mb-1 flex items-center justify-between print:hidden">
           <span className="text-caption text-text-faint nums">{workout.length} moves</span>
           <Link
             href={qs(focusVal, count, variant + 1)}
@@ -253,6 +253,9 @@ export default async function TenantBuild({
             🔀 Refresh all
           </Link>
         </div>
+        <p className="mb-4 text-caption text-text-faint print:hidden">
+          Don’t like a move? Tap ↻ next to it to swap just that one.
+        </p>
 
         {/* Narrow the pool the generator draws from — same facets as Pick my own */}
         <div className="mb-6 print:hidden">
@@ -332,11 +335,10 @@ export default async function TenantBuild({
                   {/* Swap just this move, keeping the rest of the workout */}
                   <Link
                     href={rerollHref(i)}
-                    aria-label={`Refresh ${display?.name ?? ex.name}`}
-                    title="Swap this exercise"
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border text-caption text-text-muted active:scale-95 active:text-accent print:hidden"
+                    aria-label={`Swap ${display?.name ?? ex.name} for another move`}
+                    className="flex h-9 shrink-0 items-center gap-1 rounded-md border border-border px-2 text-caption text-text-muted active:scale-95 active:text-accent print:hidden"
                   >
-                    ↻
+                    ↻ <span className="hidden sm:inline">Swap</span>
                   </Link>
                 </li>
               );
