@@ -9,6 +9,7 @@ import { syncrofitRunUrl } from '@/lib/syncrofit';
 import ExerciseThumb from './ExerciseThumb';
 import ShareWorkoutButton from './ShareWorkoutButton';
 import ExerciseFilterPicker, { type PickerItem } from './ExerciseFilterPicker';
+import SaveCircuitBox from './SaveCircuitBox';
 import { familyOf } from '@/lib/movement-families';
 
 interface Props {
@@ -22,10 +23,6 @@ interface Props {
 // add moves in the order you want, then share it exactly like a generated one.
 export default function CustomWorkoutBuilder({ library, workoutName, params, circuitId }: Props) {
   const [picked, setPicked] = useState<LibraryExercise[]>([]);
-  const [saveName, setSaveName] = useState('');
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState<{ id: string; name: string } | null>(null);
-  const [saveError, setSaveError] = useState<string | null>(null);
 
   const pickedIds = useMemo(() => new Set(picked.map((p) => p.id)), [picked]);
 
@@ -123,55 +120,7 @@ export default function CustomWorkoutBuilder({ library, workoutName, params, cir
               ))}
             </ul>
 
-            {/* Save it to the gym's library so it's reusable, not one-off */}
-            <div className="mt-4 rounded-lg border border-border bg-background p-3">
-              {saved ? (
-                <p className="text-center text-caption text-text-muted">
-                  Saved as <span className="text-text-primary">{saved.name}</span> ·{' '}
-                  <a href={`/dashboard/workouts/${saved.id}`} className="text-accent">
-                    Open it ›
-                  </a>
-                </p>
-              ) : (
-                <>
-                  <p className="mb-2 text-caption text-text-muted">Save this circuit to your library to reuse it</p>
-                  <div className="flex gap-2">
-                    <input
-                      value={saveName}
-                      onChange={(e) => setSaveName(e.target.value)}
-                      placeholder="Name this circuit"
-                      className="h-10 min-w-0 flex-1 rounded-md border border-border bg-surface px-2 text-body text-text-primary placeholder:text-text-faint"
-                    />
-                    <button
-                      type="button"
-                      disabled={saving || !saveName.trim()}
-                      onClick={async () => {
-                        setSaving(true);
-                        setSaveError(null);
-                        try {
-                          const r = await fetch('/api/tenant/workouts', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ name: saveName.trim(), exercises: shareExercises, params }),
-                          });
-                          const j = await r.json();
-                          if (!r.ok) setSaveError(j.error ?? 'Could not save.');
-                          else setSaved({ id: j.workout.id, name: j.workout.name });
-                        } catch {
-                          setSaveError('Network error.');
-                        } finally {
-                          setSaving(false);
-                        }
-                      }}
-                      className="h-10 shrink-0 rounded-md bg-accent px-4 text-caption font-semibold text-on-accent disabled:opacity-50"
-                    >
-                      {saving ? 'Saving…' : 'SAVE'}
-                    </button>
-                  </div>
-                  {saveError && <p className="mt-1 text-caption text-text-faint">{saveError}</p>}
-                </>
-              )}
-            </div>
+            <SaveCircuitBox exercises={shareExercises} params={params} defaultName={workoutName} />
 
             <a href={sfUrl} className="mt-3 flex h-14 w-full items-center justify-center gap-2 rounded-md bg-accent text-label text-on-accent active:scale-[0.97] active:bg-accent-press">
               ⏱ SEND TO SYNCROFIT

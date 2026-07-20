@@ -15,6 +15,8 @@ import ExerciseThumb from '@/components/workout/ExerciseThumb';
 import PrintButton from '@/components/PrintButton';
 import ShareWorkoutButton from '@/components/workout/ShareWorkoutButton';
 import CustomWorkoutBuilder from '@/components/workout/CustomWorkoutBuilder';
+import SaveCircuitBox from '@/components/workout/SaveCircuitBox';
+import { filterByFacets, tagsInCategory, type TagCategory } from '@/lib/tags';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,7 +32,7 @@ export default async function TenantBuild({
   searchParams,
 }: {
   params: { slug: string };
-  searchParams: { focus?: string; len?: string; v?: string; mode?: string };
+  searchParams: { focus?: string; len?: string; v?: string; mode?: string; tags?: string };
 }) {
   const tenant = await fetchTenantBySlug(params.slug);
   if (!tenant) notFound();
@@ -43,13 +45,18 @@ export default async function TenantBuild({
   const focusLabel = FOCUS_CHOICES.find((f) => f.value === focusVal)?.label ?? 'Full Body';
   const custom = searchParams.mode === 'custom';
 
+  // Tag facets narrow the pool the generator draws from — so "Stage 3 + Knee PT"
+  // generates a stage-3 knee session rather than a general workout.
+  const selectedTags = (searchParams.tags ?? '').split(',').map((t) => t.trim()).filter(Boolean);
+  const poolSource = selectedTags.length ? filterByFacets(library, { tags: selectedTags }) : library;
+
   // Deterministic seed → the same URL always yields the same workout, so a
   // printed QR reproduces it exactly when scanned. Shuffle bumps `v`.
-  const rng = seededRng(hashString(`${tenant.slug}|${focusVal}|${count}|${variant}`));
+  const rng = seededRng(hashString(`${tenant.slug}|${focusVal}|${count}|${variant}|${selectedTags.join(',')}`));
 
   // Classify on the REAL name (so timing is right), display the gym's alias.
   const byId = new Map(library.map((e) => [e.id, e]));
-  const pool: Exercise[] = library.map((e) => ({
+  const pool: Exercise[] = poolSource.map((e) => ({
     id: e.id,
     name: e.real_name,
     muscle_group: e.muscle_group,
@@ -82,7 +89,15 @@ export default async function TenantBuild({
     };
   });
 
-  const qs = (f: string, l: number, v = variant) => `?focus=${f}&len=${l}&v=${v}`;
+  const tagParam = selectedTags.length ? `&tags=${selectedTags.join(',')}` : '';
+  const qs = (f: string, l: number, v = variant) => `?focus=${f}&len=${l}&v=${v}${tagParam}`;
+  // Toggle one tag, keeping focus/length; reset the shuffle so the new pool is used.
+  const tagHref = (id: string) => {
+    const next = selectedTags.includes(id) ? selectedTags.filter((t) => t !== id) : [...selectedTags, id];
+    const q = next.length ? `&tags=${next.join(',')}` : '';
+    return `/g/${tenant.slug}/build?focus=${focusVal}&len=${count}&v=1${q}`;
+  };
+  const usedTagIds = new Set(library.flatMap((e) => e.tags ?? []));
 
   // Absolute URL of THIS exact workout → encode it in a QR to scan/print.
   const h = headers();
@@ -166,6 +181,47 @@ export default async function TenantBuild({
           </Link>
         </div>
 
+        {/* Narrow the pool the generator draws from — same facets as Pick my own */}
+        <div className="mb-6 print:hidden">
+          {([
+            { id: 'goal' as TagCategory, label: 'GOAL' },
+            { id: 'stage' as TagCategory, label: 'STAGE' },
+            { id: 'pattern' as TagCategory, label: 'MOVEMENT' },
+          ])
+            .map((cat) => ({ ...cat, items: tagsInCategory(cat.id).filter((t) => usedTagIds.has(t.id)) }))
+            .filter((cat) => cat.items.length > 0)
+            .map((cat) => (
+              <div key={cat.id} className="mb-2">
+                <p className="mb-1 text-[0.65rem] font-semibold tracking-wide text-text-faint">{cat.label}</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {cat.items.map((t) => {
+                    const on = selectedTags.includes(t.id);
+                    return (
+                      <Link
+                        key={t.id}
+                        href={tagHref(t.id)}
+                        title={t.description}
+                        className={`rounded-full border px-2.5 py-1 text-caption ${
+                          on ? 'border-accent bg-accent text-on-accent' : 'border-border bg-surface text-text-muted'
+                        }`}
+                      >
+                        {t.label}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          {selectedTags.length > 0 && (
+            <p className="mt-1 text-caption text-text-faint nums">
+              Drawing from {poolSource.length} matching move{poolSource.length === 1 ? '' : 's'} ·{' '}
+              <Link href={`/g/${tenant.slug}/build?focus=${focusVal}&len=${count}&v=1`} className="text-accent">
+                Clear
+              </Link>
+            </p>
+          )}
+        </div>
+
         {/* Print-only header */}
         <div className="mb-4 hidden print:block">
           <p className="text-label text-text-muted">{focusLabel.toUpperCase()} · {count} MOVES</p>
@@ -217,6 +273,14 @@ export default async function TenantBuild({
 
         {workout.length > 0 && (
           <ShareWorkoutButton name={`${name} — ${focusLabel}`} exercises={shareExercises} params={wp} />
+        )}
+
+        {workout.length > 0 && (
+          <SaveCircuitBox
+            exercises={shareExercises}
+            params={wp}
+            defaultName={selectedTags.length ? `${focusLabel} — ${selectedTags.length} filter${selectedTags.length === 1 ? '' : 's'}` : `${name} — ${focusLabel}`}
+          />
         )}
 
         {/* QR — print it on the gym wall; scanning opens this exact workout */}
