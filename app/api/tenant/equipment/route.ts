@@ -21,7 +21,7 @@ export async function GET() {
       (c.status = 'core') as is_core,
       exists(select 1 from tenant_equipment te where te.catalog_id = c.id and te.tenant_id = ${tenant.id}) as added
     from equipment_catalog c
-    where c.status = 'core'
+    where c.status in ('core','approved') or c.created_by_tenant_id = ${tenant.id}
        or exists(select 1 from tenant_equipment te where te.catalog_id = c.id and te.tenant_id = ${tenant.id})
     order by (c.status = 'core') desc, c.name
   `;
@@ -87,4 +87,40 @@ export async function DELETE(req: Request) {
   if (!catalogId) return NextResponse.json({ error: 'catalogId is required' }, { status: 400 });
   await sql`delete from tenant_equipment where tenant_id = ${tenant.id} and catalog_id = ${catalogId}`;
   return NextResponse.json({ ok: true });
+}
+
+// Toggle "we have this" for a catalog item. The missing piece: the page listed
+// core gear but gave no way to select it, so tenant_equipment could never fill.
+export async function PUT(req: Request) {
+  const tenant = await currentTenant();
+  if (!tenant) return NextResponse.json({ error: 'No gym for this account.' }, { status: 403 });
+  const sql = getSql();
+  if (!sql) return NextResponse.json({ error: 'No database' }, { status: 500 });
+
+  let body: { catalogId?: string; have?: boolean };
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+  }
+  if (!body.catalogId) return NextResponse.json({ error: 'catalogId is required' }, { status: 400 });
+
+  // Only gear this gym is allowed to use: core, approved, or its own.
+  const ok = await sql`
+    select 1 from equipment_catalog c
+    where c.id = ${body.catalogId}
+      and (c.status in ('core','approved') or c.created_by_tenant_id = ${tenant.id})
+  `;
+  if (!ok[0]) return NextResponse.json({ error: 'Unknown equipment.' }, { status: 404 });
+
+  if (body.have) {
+    await sql`
+      insert into tenant_equipment (tenant_id, catalog_id)
+      values (${tenant.id}, ${body.catalogId})
+      on conflict do nothing
+    `;
+  } else {
+    await sql`delete from tenant_equipment where tenant_id = ${tenant.id} and catalog_id = ${body.catalogId}`;
+  }
+  return NextResponse.json({ ok: true, have: !!body.have });
 }

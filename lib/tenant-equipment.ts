@@ -1,21 +1,44 @@
 import { getSql } from './db';
-import { EQUIPMENT_LABEL } from './exercises';
 import type { Equipment } from './database.types';
 
-// What gear a gym actually has. Registered on /dashboard/equipment, and used to
-// constrain what the builder can put in a workout — no point generating a
-// kettlebell swing for a studio with no kettlebells.
+// What gear a gym has. The catalog uses SyncroFit's canonical equipment names
+// (contracts/syncrofit.json → equipmentTaxonomy) so the two apps speak the same
+// vocabulary. The exercise library still carries its own 9 slugs, so this maps
+// between them.
+//
+// Many-to-one is expected: SyncroFit has one "Resistance bands", we distinguish
+// tube vs loop bands — a gym with resistance bands unlocks both.
 
-// The core catalog rows are seeded with the same display names as EQUIPMENT_LABEL,
-// so we can map a catalog name back to the exercise-library slug.
-const SLUG_BY_LABEL = Object.fromEntries(
-  Object.entries(EQUIPMENT_LABEL).map(([slug, label]) => [label.toLowerCase(), slug as Equipment]),
-) as Record<string, Equipment>;
+export const SYNCROFIT_EQUIPMENT_TO_SLUGS: Record<string, Equipment[]> = {
+  'No equipment': ['calisthenics'],
+  Dumbbells: ['dumbbell'],
+  Kettlebell: ['kettlebell'],
+  'Resistance bands': ['tube_band', 'loop_band'],
+  'Pull-up bar': ['pullup_bar'],
+  'Yoga mat': ['stretch'],
+  'Medicine ball': ['medicine_ball'],
+  'Jump rope': ['jump_rope'],
+  // Gear SyncroFit knows about that the library has no movements for (yet).
+  // A gym can still declare it; it just won't unlock any exercises.
+  Barbell: [],
+  Bench: [],
+  'Stability ball': [],
+  'Foam roller': [],
+  'TRX / suspension': [],
+  'Boxing gloves': [],
+  Treadmill: [],
+  'Stationary bike': [],
+  'Rowing machine': [],
+};
+
+/** Does selecting this catalog item unlock any library exercises? */
+export function unlocksExercises(catalogName: string): boolean {
+  return (SYNCROFIT_EQUIPMENT_TO_SLUGS[catalogName] ?? []).length > 0;
+}
 
 /**
- * The gym's core equipment as library slugs. An empty array means "not set up
- * yet" — callers should fall back to allowing everything rather than generating
- * an empty workout.
+ * The gym's equipment as library slugs. Empty means "not set up yet" — callers
+ * fall back to allowing everything rather than generating an empty workout.
  */
 export async function tenantEquipmentSlugs(tenantId: string): Promise<Equipment[]> {
   const sql = getSql();
@@ -25,11 +48,13 @@ export async function tenantEquipmentSlugs(tenantId: string): Promise<Equipment[
       select c.name
       from tenant_equipment te
       join equipment_catalog c on c.id = te.catalog_id
-      where te.tenant_id = ${tenantId} and c.status = 'core'
+      where te.tenant_id = ${tenantId}
     `;
-    return (rows as Array<{ name: string }>)
-      .map((r) => SLUG_BY_LABEL[r.name.toLowerCase()])
-      .filter(Boolean) as Equipment[];
+    const slugs = new Set<Equipment>();
+    for (const r of rows as Array<{ name: string }>) {
+      for (const s of SYNCROFIT_EQUIPMENT_TO_SLUGS[r.name] ?? []) slugs.add(s);
+    }
+    return Array.from(slugs);
   } catch {
     return [];
   }

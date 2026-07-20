@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { unlocksExercises } from '@/lib/tenant-equipment';
 
 interface Equip {
   id: string;
@@ -75,6 +76,15 @@ export default function GymEquipment() {
     }
   };
 
+  const setHave = async (id: string, have: boolean) => {
+    setList((prev) => prev.map((e) => (e.id === id ? { ...e, added: have } : e)));
+    await fetch('/api/tenant/equipment', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ catalogId: id, have }),
+    });
+  };
+
   const remove = async (catalogId: string) => {
     setList((prev) => prev.filter((e) => e.id !== catalogId));
     await fetch(`/api/tenant/equipment?catalogId=${catalogId}`, { method: 'DELETE' });
@@ -139,32 +149,56 @@ export default function GymEquipment() {
           {msg && <p className="mt-2 text-caption text-text-muted">{msg}</p>}
         </div>
 
-        {/* List */}
+        {/* Pick what you actually have */}
+        <p className="mb-1 text-label text-accent">WHAT YOU HAVE</p>
+        <p className="mb-3 text-caption text-text-muted">
+          Tap to select. Workouts only use gear you&rsquo;ve got. These names match the SyncroFit app.
+        </p>
         <ul className="space-y-2">
-          {list.map((e) => (
-            <li key={e.id} className="flex items-center justify-between gap-2 rounded-lg border border-border bg-surface p-3">
-              <span className="min-w-0">
-                <span className="text-body font-semibold text-text-primary">{e.name}</span>
-                {e.is_core ? (
-                  <span className="ml-2 text-caption text-text-faint">core</span>
-                ) : e.status === 'pending' ? (
-                  <span className="ml-2 rounded-full bg-energy/15 px-2 py-0.5 text-caption font-semibold text-energy">in review</span>
-                ) : e.status === 'approved' ? (
-                  <span className="ml-2 text-caption text-accent">approved</span>
-                ) : null}
-              </span>
-              {!e.is_core && (
+          {list.map((e) => {
+            const usable = e.is_core ? unlocksExercises(e.name) : true;
+            return (
+              <li
+                key={e.id}
+                className={`flex items-center justify-between gap-2 rounded-lg border p-3 ${
+                  e.added ? 'border-accent bg-accent/10' : 'border-border bg-surface'
+                }`}
+              >
                 <button
                   type="button"
-                  onClick={() => remove(e.id)}
-                  className="shrink-0 text-caption text-destructive"
+                  onClick={() => setHave(e.id, !e.added)}
+                  className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                  aria-pressed={e.added}
                 >
-                  Remove
+                  <span
+                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md border text-caption ${
+                      e.added ? 'border-accent bg-accent text-on-accent' : 'border-border text-transparent'
+                    }`}
+                  >
+                    ✓
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-body font-semibold text-text-primary">{e.name}</span>
+                    {!usable && (
+                      <span className="block text-caption text-text-faint">On SyncroFit — no exercises here yet</span>
+                    )}
+                    {e.status === 'pending' && (
+                      <span className="block text-caption text-energy">In review</span>
+                    )}
+                  </span>
                 </button>
-              )}
-            </li>
-          ))}
+                {!e.is_core && (
+                  <button type="button" onClick={() => remove(e.id)} className="shrink-0 text-caption text-destructive">
+                    Delete
+                  </button>
+                )}
+              </li>
+            );
+          })}
         </ul>
+        <p className="mt-3 text-caption text-text-faint nums">
+          {list.filter((e) => e.added).length} selected
+        </p>
       </main>
     </div>
   );
