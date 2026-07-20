@@ -10,7 +10,8 @@
     "lint": "next lint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "sync:syncrofit": "node scripts/sync-syncrofit-contract.mjs"
+    "sync:syncrofit": "node scripts/sync-syncrofit-contract.mjs",
+    "check:syncrofit": "node scripts/check-syncrofit-contract.mjs"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.39.5",

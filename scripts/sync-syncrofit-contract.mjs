@@ -1,38 +1,62 @@
 #!/usr/bin/env node
-// Pull SyncroFit's canonical integration-contract.json into this repo's vendored
-// copy (contracts/syncrofit.json) and report what changed. Run after SyncroFit
-// bumps the contract version.
+// Pull SyncroFit's canonical integration contract into this repo's vendored copy
+// (contracts/syncrofit.json) and report what changed.
 //
 //   npm run sync:syncrofit
-//   SYNCROFIT_REPO=/path/to/IntervalTimer-Source npm run sync:syncrofit
 //
-// After syncing, `npm test` will fail the version pin in syncrofit-contract.test.ts
-// until you review the diff and bump EXPECTED_CONTRACT_VERSION — that's the point.
+// Source resolution (first that works wins):
+//   1. The hosted contract  — SYNCROFIT_CONTRACT_URL, default:
+//      https://www.mysyncrofit.com/.well-known/syncrofit-integration.json
+//   2. The local SyncroFit repo — SYNCROFIT_REPO/integration-contract.json
+//      (default ~/Developer/IntervalTimer-Source), used until the URL is published.
+//
+// We sync here rather than fetching at build/test time on purpose: the build stays
+// hermetic (no network dependency in CI), while contracts/syncrofit.json remains the
+// single artifact the conformance test validates against.
+//
+// After syncing, `npm test` fails the version pin in syncrofit-contract.test.ts until
+// you review the diff and bump EXPECTED_CONTRACT_VERSION — that's the point.
 
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
-const repo = process.env.SYNCROFIT_REPO || join(homedir(), 'Developer', 'IntervalTimer-Source');
-const src = join(repo, 'integration-contract.json');
+const URL_SRC = process.env.SYNCROFIT_CONTRACT_URL || 'https://www.mysyncrofit.com/.well-known/syncrofit-integration.json';
+const REPO = process.env.SYNCROFIT_REPO || join(homedir(), 'Developer', 'IntervalTimer-Source');
+const LOCAL_SRC = join(REPO, 'integration-contract.json');
 const dest = new URL('../contracts/syncrofit.json', import.meta.url).pathname;
 
-if (!existsSync(src)) {
-  console.error(`✗ Canonical contract not found at ${src}`);
-  console.error('  Set SYNCROFIT_REPO to the SyncroFit repo path.');
-  process.exit(1);
+async function loadCanonical() {
+  try {
+    const res = await fetch(URL_SRC, { signal: AbortSignal.timeout(10_000) });
+    if (res.ok) {
+      const text = await res.text();
+      JSON.parse(text); // reject HTML error pages masquerading as 200
+      return { text, from: `hosted ${URL_SRC}` };
+    }
+    console.log(`· hosted contract not available (HTTP ${res.status}) — falling back to the local repo`);
+  } catch (err) {
+    console.log(`· hosted contract unreachable (${err.message}) — falling back to the local repo`);
+  }
+  if (!existsSync(LOCAL_SRC)) {
+    console.error(`✗ No contract found. Publish ${URL_SRC}, or set SYNCROFIT_REPO (looked in ${LOCAL_SRC}).`);
+    process.exit(1);
+  }
+  return { text: readFileSync(LOCAL_SRC, 'utf8'), from: `local ${LOCAL_SRC}` };
 }
 
-const incoming = readFileSync(src, 'utf8');
-const current = existsSync(dest) ? readFileSync(dest, 'utf8') : '';
+const { text: incoming, from } = await loadCanonical();
+console.log(`Source: ${from}`);
 
-if (incoming === current) {
-  const v = JSON.parse(incoming).version;
-  console.log(`✓ Already up to date (contract v${v}).`);
+const current = existsSync(dest) ? readFileSync(dest, 'utf8') : '';
+if (incoming.trim() === current.trim()) {
+  console.log(`✓ Already up to date (contract v${JSON.parse(incoming).version}).`);
   process.exit(0);
 }
 
-const before = current ? JSON.parse(current) : { version: '—', outbound: { circuit: { fields: {}, exercise: { fields: {} } } }, equipmentTaxonomy: [] };
+const before = current
+  ? JSON.parse(current)
+  : { version: '—', outbound: { circuit: { fields: {}, exercise: { fields: {} } } }, equipmentTaxonomy: [] };
 const after = JSON.parse(incoming);
 
 const keys = (o) => new Set(Object.keys(o ?? {}));
@@ -52,8 +76,8 @@ const report = (label, d) => {
 report('circuit field', cf);
 report('exercise field', ef);
 report('equipment', eq);
-if (!cf.added.length && !cf.removed.length && !ef.added.length && !ef.removed.length && !eq.added.length && !eq.removed.length) {
-  console.log('  (no field/equipment changes — likely a wording or version-only bump)');
+if (![cf, ef, eq].some((d) => d.added.length || d.removed.length)) {
+  console.log('  (no field/equipment changes — wording or version-only bump)');
 }
-console.log('\nNext: review the changes, update lib/syncrofit.ts if needed, then bump');
+console.log('\nNext: review, update lib/syncrofit.ts if fields changed, then bump');
 console.log('EXPECTED_CONTRACT_VERSION in lib/syncrofit-contract.test.ts and run `npm test`.');
