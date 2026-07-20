@@ -6,7 +6,7 @@ import type { Exercise } from '@/lib/database.types';
 import { brandingToCssVars, fetchTenantBySlug } from '@/lib/tenant';
 import { tenantLibrary } from '@/lib/tenant-library';
 import { generateWorkout } from '@/lib/workout-generator';
-import { workoutParams, FOCUS_CHOICES, type Profile } from '@/lib/profile';
+import { workoutParams, FOCUS_CHOICES, lengthToCount, DEFAULT_LENGTH, LENGTH_MIN, LENGTH_MAX, type Profile, type Intensity } from '@/lib/profile';
 import { EQUIPMENT_ORDER, EQUIPMENT_LABEL } from '@/lib/exercises';
 import { isTimed, exerciseMode, modeWorkLabel } from '@/lib/exercise-mode';
 import { syncrofitRunUrl } from '@/lib/syncrofit';
@@ -17,6 +17,7 @@ import ShareWorkoutButton from '@/components/workout/ShareWorkoutButton';
 import CustomWorkoutBuilder from '@/components/workout/CustomWorkoutBuilder';
 import TenantNav from '@/components/layout/TenantNav';
 import SaveCircuitBox from '@/components/workout/SaveCircuitBox';
+import TenantBuilderControls from '@/components/workout/TenantBuilderControls';
 import { filterByFacets, tagsInCategory, type TagCategory } from '@/lib/tags';
 import { tenantEquipmentSlugs } from '@/lib/tenant-equipment';
 import { currentTrainer } from '@/lib/current-tenant';
@@ -35,7 +36,7 @@ export default async function TenantBuild({
   searchParams,
 }: {
   params: { slug: string };
-  searchParams: { focus?: string; len?: string; v?: string; mode?: string; tags?: string };
+  searchParams: { focus?: string; len?: string; mins?: string; intensity?: string; v?: string; mode?: string; tags?: string };
 }) {
   const tenant = await fetchTenantBySlug(params.slug);
   if (!tenant) notFound();
@@ -51,7 +52,17 @@ export default async function TenantBuild({
   const isMyGym = me?.tenant.id === tenant.id;
 
   const focusVal = FOCI.includes(searchParams.focus as (typeof FOCI)[number]) ? (searchParams.focus as string) : 'full';
-  const count = LENGTHS.includes(Number(searchParams.len) as (typeof LENGTHS)[number]) ? Number(searchParams.len) : 6;
+  // Minutes (like the personal app) rather than a fixed move count. `len` is still
+  // honoured so older printed QR codes keep resolving.
+  const minutes = searchParams.mins
+    ? Math.min(LENGTH_MAX, Math.max(LENGTH_MIN, Number(searchParams.mins) || DEFAULT_LENGTH))
+    : DEFAULT_LENGTH;
+  const count = LENGTHS.includes(Number(searchParams.len) as (typeof LENGTHS)[number])
+    ? Number(searchParams.len)
+    : lengthToCount(minutes);
+  const intensity: Intensity = (['light', 'moderate', 'intense'] as const).includes(searchParams.intensity as Intensity)
+    ? (searchParams.intensity as Intensity)
+    : 'moderate';
   const variant = Math.max(1, Math.min(999, Number(searchParams.v) || 1));
   const focusLabel = FOCUS_CHOICES.find((f) => f.value === focusVal)?.label ?? 'Full Body';
   const custom = searchParams.mode === 'custom';
@@ -66,7 +77,7 @@ export default async function TenantBuild({
 
   // Deterministic seed → the same URL always yields the same workout, so a
   // printed QR reproduces it exactly when scanned. Shuffle bumps `v`.
-  const rng = seededRng(hashString(`${tenant.slug}|${focusVal}|${count}|${variant}|${selectedTags.join(',')}`));
+  const rng = seededRng(hashString(`${tenant.slug}|${focusVal}|${count}|${intensity}|${variant}|${selectedTags.join(',')}`));
 
   // Classify on the REAL name (so timing is right), display the gym's alias.
   const byId = new Map(library.map((e) => [e.id, e]));
@@ -80,7 +91,7 @@ export default async function TenantBuild({
     created_at: '',
   }));
 
-  const profile: Profile = { equipment: allowedEquipment, focus: focusVal, intensity: 'moderate' };
+  const profile: Profile = { equipment: allowedEquipment, focus: focusVal, intensity };
   const workout = generateWorkout(profile, { focus: focusVal, count, pool, rng });
   const wp = workoutParams(profile);
 
@@ -104,12 +115,12 @@ export default async function TenantBuild({
   });
 
   const tagParam = selectedTags.length ? `&tags=${selectedTags.join(',')}` : '';
-  const qs = (f: string, l: number, v = variant) => `?focus=${f}&len=${l}&v=${v}${tagParam}`;
+  const qs = (f: string, l: number, v = variant) => `?focus=${f}&mins=${minutes}&intensity=${intensity}&v=${v}${tagParam}`;
   // Toggle one tag, keeping focus/length; reset the shuffle so the new pool is used.
   const tagHref = (id: string) => {
     const next = selectedTags.includes(id) ? selectedTags.filter((t) => t !== id) : [...selectedTags, id];
     const q = next.length ? `&tags=${next.join(',')}` : '';
-    return `/g/${tenant.slug}/build?focus=${focusVal}&len=${count}&v=1${q}`;
+    return `/g/${tenant.slug}/build?focus=${focusVal}&mins=${minutes}&intensity=${intensity}&v=1${q}`;
   };
   const usedTagIds = new Set(library.flatMap((e) => e.tags ?? []));
 
@@ -181,38 +192,28 @@ export default async function TenantBuild({
           />
         ) : (
         <>
-        {/* Focus */}
-        <p className="mb-1 text-[0.65rem] font-semibold tracking-wide text-text-faint print:hidden">FOCUS</p>
-        <div className="mb-3 flex flex-wrap gap-2 print:hidden">
-          {FOCI.map((f) => (
-            <Link
-              key={f}
-              href={qs(f, count)}
-              className={`rounded-full px-3 py-1.5 text-caption font-semibold ${
-                f === focusVal ? 'bg-accent text-on-accent' : 'border border-border text-text-muted'
-              }`}
-            >
-              {FOCUS_CHOICES.find((c) => c.value === f)?.label ?? f}
-            </Link>
-          ))}
-        </div>
-        {/* Length + shuffle */}
-        <p className="mb-1 text-[0.65rem] font-semibold tracking-wide text-text-faint print:hidden">LENGTH</p>
-        <div className="mb-5 flex items-center gap-2 print:hidden">
-          {LENGTHS.map((l) => (
-            <Link
-              key={l}
-              href={qs(focusVal, l)}
-              className={`rounded-full px-3 py-1.5 text-caption font-semibold ${
-                l === count ? 'bg-accent text-on-accent' : 'border border-border text-text-muted'
-              }`}
-            >
-              {l} moves
-            </Link>
-          ))}
+        <TenantBuilderControls
+          slug={tenant.slug}
+          focus={focusVal}
+          intensity={intensity}
+          minutes={minutes}
+          tags={selectedTags}
+          equipmentNote={
+            isMyGym ? (
+              <p className="text-caption text-text-faint">
+                {equipmentSet
+                  ? `Using your gear: ${gymEquipment.map((e) => EQUIPMENT_LABEL[e]).join(', ')}`
+                  : 'Using all equipment — set your gear in the dashboard.'}
+              </p>
+            ) : null
+          }
+        />
+
+        <div className="mb-4 flex items-center justify-between print:hidden">
+          <span className="text-caption text-text-faint nums">{workout.length} moves</span>
           <Link
             href={qs(focusVal, count, variant + 1)}
-            className="ml-auto flex h-9 items-center gap-1 rounded-md border border-accent/40 bg-accent/10 px-3 text-caption font-semibold text-accent active:scale-[0.97]"
+            className="flex h-9 items-center gap-1 rounded-md border border-accent/40 bg-accent/10 px-3 text-caption font-semibold text-accent active:scale-[0.97]"
           >
             🔀 Shuffle
           </Link>
