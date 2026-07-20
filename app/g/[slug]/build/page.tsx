@@ -25,7 +25,7 @@ import { currentTrainer } from '@/lib/current-tenant';
 export const dynamic = 'force-dynamic';
 
 // Focus options offered on the tenant builder (a useful subset).
-const FOCI = ['full', 'upper', 'lower', 'core', 'cardio', 'mobility'] as const;
+const FOCI = ['full', 'upper', 'lower', 'core', 'cardio', 'mobility', 'physical-therapy', 'knee'] as const;
 const LENGTHS = [4, 6, 8] as const;
 
 // Public, themed: generate a workout from THIS gym's library (global + their
@@ -95,14 +95,21 @@ export default async function TenantBuild({
     equipment: e.equipment,
     image_url: e.image_url,
     created_at: '',
+    tags: e.tags,
   }));
 
   const profile: Profile = { equipment: allowedEquipment, focus: focusVal, intensity };
   const generated = generateWorkout(profile, { focus: focusVal, count, pool, rng });
 
+  // A rehab session should read early → late. Sorting the pool doesn't survive
+  // the generator's per-muscle selection, so order the finished session instead.
+  const stageOf = (e: Exercise) =>
+    (e.tags ?? []).includes('stage-1') ? 0 : (e.tags ?? []).includes('stage-2') ? 1 : 2;
+  const focusChoiceFull = FOCUS_CHOICES.find((f) => f.value === focusVal);
+
   // Refresh a single move: swap that slot for another from the pool, chosen
   // deterministically so the URL (and any QR of it) still reproduces exactly.
-  const workout = generated.map((ex, i) => {
+  const swapped = generated.map((ex, i) => {
     const bumps = swaps.get(i);
     if (!bumps) return ex;
     const used = new Set(generated.map((g) => g.id));
@@ -111,6 +118,8 @@ export default async function TenantBuild({
     const pick = seededRng(hashString(`${tenant.slug}|swap|${i}|${bumps}|${variant}`));
     return alts[Math.floor(pick() * alts.length)] ?? ex;
   });
+
+  const workout = focusChoiceFull?.byStage ? [...swapped].sort((a, b) => stageOf(a) - stageOf(b)) : swapped;
   const wp = workoutParams(profile);
 
   // SyncroFit shows the gym's names; circuit id is tenant-scoped so feedback maps back.
@@ -166,7 +175,7 @@ export default async function TenantBuild({
         <TenantNav slug={tenant.slug} name={name} logoUrl={tenant.branding.logoUrl} />
       </div>
       <main className="shell px-5 pb-16 pt-6">
-        <h1 className="mb-1 text-h1 text-text-primary">Build a workout</h1>
+        <h1 className="mb-1 text-h2 text-text-primary">Build a workout</h1>
         <p className="mb-1 text-body text-text-muted">From {name}’s library, ready for SyncroFit.</p>
         {isMyGym && (
           <p className="mb-5 text-caption text-text-faint print:hidden">
@@ -191,20 +200,20 @@ export default async function TenantBuild({
         {!isMyGym && <p className="mb-5" />}
 
         {/* How do you want to build it? */}
-        <div className="mb-6 grid grid-cols-2 gap-2 print:hidden">
+        <div className="mb-5 grid grid-cols-2 gap-2 print:hidden">
           <Link
             href={`/g/${tenant.slug}/build${qs(focusVal, count)}`}
             className={`rounded-lg border p-3 text-center ${!custom ? 'border-accent bg-accent/10' : 'border-border bg-surface'}`}
           >
-            <span className="block text-body font-semibold text-text-primary">✨ Build it for me</span>
-            <span className="block text-caption text-text-muted">Pick a focus, we choose</span>
+            <span className="block text-body font-semibold text-text-primary">✨ For me</span>
+            <span className="block text-caption text-text-muted">We choose</span>
           </Link>
           <Link
             href={`/g/${tenant.slug}/build?mode=custom`}
             className={`rounded-lg border p-3 text-center ${custom ? 'border-accent bg-accent/10' : 'border-border bg-surface'}`}
           >
-            <span className="block text-body font-semibold text-text-primary">✚ Pick my own</span>
-            <span className="block text-caption text-text-muted">Search &amp; add moves</span>
+            <span className="block text-body font-semibold text-text-primary">✚ My own</span>
+            <span className="block text-caption text-text-muted">Search &amp; add</span>
           </Link>
         </div>
 

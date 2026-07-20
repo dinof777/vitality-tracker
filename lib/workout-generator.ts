@@ -54,6 +54,11 @@ function varietyOrdered(
   const focus = focusChoice(focusValue);
   const eq = new Set(profile.equipment);
   let pool = source.filter((e) => e.equipment && eq.has(e.equipment));
+  // Clinical focuses (PT, Knee) select by tag instead of muscle group.
+  if (focus.tags?.length) {
+    const want = focus.tags;
+    pool = pool.filter((e) => (e.tags ?? []).some((t) => want.includes(t)));
+  }
   if (focus.mobility) {
     // Mobility = stretches + holds (any bodyweight hold), by tracking mode.
     pool = pool.filter((e) => exerciseMode(e) === 'hold');

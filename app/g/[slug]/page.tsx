@@ -36,6 +36,7 @@ export default async function TenantHome({ params }: { params: { slug: string } 
       equipment: e.equipment,
       image_url: e.image_url,
       created_at: '',
+      tags: e.tags,
     }));
 
   const today = new Date().toISOString().slice(0, 10);
@@ -49,13 +50,11 @@ export default async function TenantHome({ params }: { params: { slug: string } 
     <div style={brandingToCssVars(tenant.branding)} className="min-h-dvh bg-background text-text-primary">
       <TenantNav slug={tenant.slug} name={name} logoUrl={tenant.branding.logoUrl} />
 
-      <main className="shell px-5 pb-16 pt-8">
+      <main className="shell px-5 pb-16 pt-6">
         {/* Hero */}
         <p className="text-label text-accent">YOUR TRAINING APP</p>
-        <h1 className="mb-2 text-h1 text-text-primary">Train at {name}.</h1>
-        <p className="mb-5 text-body text-text-muted">
-          Your coach’s workouts, on your phone — built around your gear and time, ready to run with a tap.
-        </p>
+        <h1 className="mb-2 text-h2 text-text-primary">Train at {name}.</h1>
+        <p className="mb-4 text-body text-text-muted">Your coach’s workouts, built around your gear and time.</p>
         <Link
           href={`/g/${tenant.slug}/build`}
           className="flex h-14 w-full items-center justify-center rounded-md bg-accent text-label text-on-accent transition-all active:scale-[0.97] active:bg-accent-press"
@@ -64,7 +63,7 @@ export default async function TenantHome({ params }: { params: { slug: string } 
         </Link>
         <Link
           href={`/g/${tenant.slug}/exercises`}
-          className="mb-9 mt-3 flex h-12 w-full items-center justify-center rounded-md border border-border text-label text-text-primary active:bg-surface"
+          className="mb-7 mt-2 flex h-12 w-full items-center justify-center rounded-md border border-border text-label text-text-primary active:bg-surface"
         >
           BROWSE THE LIBRARY
         </Link>

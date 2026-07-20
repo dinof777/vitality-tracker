@@ -65,6 +65,10 @@ export const EQUIPMENT_CHOICES: { value: Equipment; label: string; hint: string;
 ];
 
 export interface FocusChoice {
+  /** Draw only from exercises carrying one of these tags (see lib/tags). */
+  tags?: string[];
+  /** Order the result by recovery stage — early work first. */
+  byStage?: boolean;
   value: string;
   label: string;
   emoji: string;
@@ -84,6 +88,9 @@ export const FOCUS_CHOICES: FocusChoice[] = [
   { value: 'cardio', label: 'Cardio', emoji: '🏃', desc: 'Heart-rate & conditioning', groups: null, pillars: ['cardio'] },
   { value: 'balance', label: 'Balance', emoji: '🤸', desc: 'Single-leg & stability', groups: null, pillars: ['balance'] },
   { value: 'mobility', label: 'Mobility', emoji: '🧘', desc: 'Stretch, holds & flexibility', groups: null, mobility: true },
+  // Clinical focuses draw from the tagged rehab pool rather than muscle groups.
+  { value: 'physical-therapy', label: 'Physical Therapy', emoji: '🩹', desc: 'Rehab & recovery work', groups: null, tags: ['knee-pt'], byStage: true },
+  { value: 'knee', label: 'Knee', emoji: '🦿', desc: 'Bend, straighten & rebuild the knee', groups: null, tags: ['knee-pt'], byStage: true },
 ];
 
 export interface IntensityChoice {
