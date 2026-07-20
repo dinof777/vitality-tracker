@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { SAMPLE_EXERCISES } from '@/lib/exercises';
 import ExerciseThumb from '@/components/workout/ExerciseThumb';
 import ExerciseFilterPicker, { type PickerItem } from '@/components/workout/ExerciseFilterPicker';
+import { familyOf } from '@/lib/movement-families';
 
 // Build your own session: search the whole library, filter by goal/stage/movement
 // or gear, order the moves, then run it. Same session engine as a generated
@@ -26,6 +27,7 @@ export default function BuildYourOwn() {
         equipment: e.equipment,
         image_url: e.image_url,
         tags: e.tags,
+        ...familyOf(e.name),
       })),
     [],
   );

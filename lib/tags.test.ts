@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { SAMPLE_EXERCISES } from './exercises';
+import { MOVEMENT_FAMILIES } from './movement-families';
 import { TAG_BY_ID, STAGE_ORDER, filterExercises, filterByFacets, groupByTag, usedTags, hasTag } from './tags';
 
 const kneePt = SAMPLE_EXERCISES.filter((e) => hasTag(e, 'knee-pt'));
@@ -132,5 +133,40 @@ describe('filterByFacets — OR within a group, AND across groups', () => {
 
   it('no facets selected returns everything', () => {
     expect(filterByFacets(SAMPLE_EXERCISES, {}).length).toBe(SAMPLE_EXERCISES.length);
+  });
+});
+
+describe('movement families', () => {
+  const names = new Set(SAMPLE_EXERCISES.map((e) => e.name));
+
+  it('every family key matches a real exercise (catches typos)', () => {
+    for (const key of Object.keys(MOVEMENT_FAMILIES)) {
+      expect(names, `"${key}" is not an exercise in the library`).toContain(key);
+    }
+  });
+
+  it('every family has at least two members (otherwise grouping is pointless)', () => {
+    const counts: Record<string, number> = {};
+    for (const { family } of Object.values(MOVEMENT_FAMILIES)) counts[family] = (counts[family] ?? 0) + 1;
+    for (const [family, n] of Object.entries(counts)) {
+      expect(n, `family "${family}" has only ${n} member`).toBeGreaterThanOrEqual(2);
+    }
+  });
+
+  it('variants are unique within a family', () => {
+    const seen: Record<string, Set<string>> = {};
+    for (const { family, variant } of Object.values(MOVEMENT_FAMILIES)) {
+      seen[family] ??= new Set();
+      expect(seen[family], `"${family}" has duplicate variant "${variant}"`).not.toContain(variant);
+      seen[family].add(variant);
+    }
+  });
+
+  it('groups the squat family the user flagged, incl. both hold variants', () => {
+    const squat = Object.entries(MOVEMENT_FAMILIES).filter(([, v]) => v.family === 'Squat');
+    const byName = Object.fromEntries(squat);
+    expect(byName['Bodyweight Squat'].variant).toBe('Bodyweight');
+    expect(byName['Isometric Squat Hold'].variant).toBe('Isometric hold');
+    expect(squat.length).toBeGreaterThanOrEqual(10);
   });
 });

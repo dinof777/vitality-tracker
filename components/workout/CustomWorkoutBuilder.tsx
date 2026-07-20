@@ -9,6 +9,7 @@ import { syncrofitRunUrl } from '@/lib/syncrofit';
 import ExerciseThumb from './ExerciseThumb';
 import ShareWorkoutButton from './ShareWorkoutButton';
 import ExerciseFilterPicker, { type PickerItem } from './ExerciseFilterPicker';
+import { familyOf } from '@/lib/movement-families';
 
 interface Props {
   library: LibraryExercise[];
@@ -34,6 +35,7 @@ export default function CustomWorkoutBuilder({ library, workoutName, params, cir
         image_url: e.image_url,
         tags: e.tags,
         subtitle: e.custom_equip_name,
+        ...familyOf(e.real_name),
       })),
     [library],
   );

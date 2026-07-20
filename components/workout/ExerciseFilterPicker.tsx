@@ -15,6 +15,9 @@ export interface PickerItem {
   tags?: string[];
   /** Extra line under the name — e.g. a gym's custom equipment name. */
   subtitle?: string | null;
+  /** Movement family, so variations collapse into one entry. */
+  family?: string;
+  variant?: string;
 }
 
 interface Props {
@@ -35,6 +38,7 @@ export default function ExerciseFilterPicker({ items, pickedIds, onToggle }: Pro
   const [q, setQ] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [equip, setEquip] = useState<string[]>([]);
+  const [openFamily, setOpenFamily] = useState<string | null>(null);
 
   // Only offer tags/equipment this list actually contains.
   const tagGroups = useMemo(() => {
@@ -54,6 +58,30 @@ export default function ExerciseFilterPicker({ items, pickedIds, onToggle }: Pro
     () => filterByFacets(items, { tags, equipment: equip, search: q }),
     [items, q, tags, equip],
   );
+
+  // Collapse a family into ONE row when more than one of its variations is in
+  // view — the user picks the variation from inside. A lone survivor stays a
+  // normal row (no point hiding one move behind a chooser).
+  const rows = useMemo(() => {
+    const byFamily = new Map<string, PickerItem[]>();
+    for (const r of results) {
+      if (r.family) byFamily.set(r.family, [...(byFamily.get(r.family) ?? []), r]);
+    }
+    const out: Array<{ kind: 'single'; item: PickerItem } | { kind: 'family'; family: string; items: PickerItem[] }> = [];
+    const emitted = new Set<string>();
+    for (const r of results) {
+      const group = r.family ? byFamily.get(r.family) : undefined;
+      if (group && group.length > 1) {
+        if (!emitted.has(r.family!)) {
+          emitted.add(r.family!);
+          out.push({ kind: 'family', family: r.family!, items: group });
+        }
+        continue;
+      }
+      out.push({ kind: 'single', item: r });
+    }
+    return out;
+  }, [results]);
 
   const toggle = (list: string[], set: (v: string[]) => void, v: string) =>
     set(list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
@@ -119,6 +147,7 @@ export default function ExerciseFilterPicker({ items, pickedIds, onToggle }: Pro
       <div className="mb-2 flex items-center justify-between">
         <span className="text-caption text-text-faint nums">
           {results.length} of {items.length}
+          {rows.length !== results.length && ` · ${rows.length} entries`}
         </span>
         {activeFilters > 0 && (
           <button
@@ -134,13 +163,75 @@ export default function ExerciseFilterPicker({ items, pickedIds, onToggle }: Pro
         )}
       </div>
 
-      {results.length === 0 ? (
+      {rows.length === 0 ? (
         <p className="rounded-lg border border-dashed border-border p-5 text-center text-body text-text-muted">
           Nothing matches those filters.
         </p>
       ) : (
         <ul className="space-y-2">
-          {results.slice(0, 80).map((e) => {
+          {rows.slice(0, 80).map((row) => {
+            /* ── A family: one entry, variations inside ─────────────────── */
+            if (row.kind === 'family') {
+              const open = openFamily === row.family;
+              const chosen = row.items.filter((i) => pickedIds.has(i.id));
+              const lead = row.items[0];
+              return (
+                <li key={`fam-${row.family}`} className="rounded-lg border border-border bg-surface">
+                  <button
+                    type="button"
+                    onClick={() => setOpenFamily(open ? null : row.family)}
+                    className="flex w-full items-center gap-3 p-2.5 text-left"
+                    aria-expanded={open}
+                  >
+                    <ExerciseThumb equipment={lead.equipment} imageUrl={lead.image_url} name={row.family} size={38} />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-body font-semibold text-text-primary">{row.family}</span>
+                      <span className="block truncate text-caption text-text-muted nums">
+                        {row.items.length} variations
+                        {chosen.length > 0 && ` · ${chosen.length} added`}
+                      </span>
+                    </span>
+                    <span className={`shrink-0 text-caption ${chosen.length ? 'text-accent' : 'text-text-faint'}`}>
+                      {open ? '▲' : `Choose ▾`}
+                    </span>
+                  </button>
+
+                  {open && (
+                    <ul className="border-t border-border p-2 pt-1">
+                      {row.items.map((v) => {
+                        const added = pickedIds.has(v.id);
+                        return (
+                          <li key={v.id} className="flex items-center gap-3 py-1.5">
+                            <ExerciseThumb equipment={v.equipment} imageUrl={v.image_url} name={v.name} size={32} />
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate text-body text-text-primary">{v.variant ?? v.name}</span>
+                              <span className="block truncate text-caption text-text-muted">
+                                {[v.subtitle ?? (v.equipment ? EQUIPMENT_LABEL[v.equipment] : null), v.name]
+                                  .filter(Boolean)
+                                  .join(' · ')}
+                              </span>
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => onToggle(v.id)}
+                              className={`h-8 w-8 shrink-0 rounded-full text-caption ${
+                                added ? 'bg-surface-raised text-text-muted' : 'bg-accent text-on-accent'
+                              }`}
+                              aria-label={added ? `Remove ${v.name}` : `Add ${v.name}`}
+                            >
+                              {added ? '✓' : '✚'}
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </li>
+              );
+            }
+
+            /* ── A one-off movement ─────────────────────────────────────── */
+            const e = row.item;
             const added = pickedIds.has(e.id);
             return (
               <li key={e.id} className="flex items-center gap-3 rounded-lg border border-border bg-surface p-2.5">
@@ -177,9 +268,9 @@ export default function ExerciseFilterPicker({ items, pickedIds, onToggle }: Pro
           })}
         </ul>
       )}
-      {results.length > 80 && (
+      {rows.length > 80 && (
         <p className="mt-2 text-center text-caption text-text-faint">
-          Showing 80 of {results.length} — narrow it with search or filters.
+          Showing 80 of {rows.length} — narrow it with search or filters.
         </p>
       )}
     </div>
