@@ -1,41 +1,59 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import type { Exercise } from '@/lib/database.types';
 import { brandingToCssVars, fetchTenantBySlug } from '@/lib/tenant';
+import { tenantLibrary } from '@/lib/tenant-library';
+import { tenantEquipmentSlugs } from '@/lib/tenant-equipment';
+import { generateWorkout } from '@/lib/workout-generator';
+import { workoutParams, type Profile } from '@/lib/profile';
+import { EQUIPMENT_ORDER } from '@/lib/exercises';
+import { isTimed, exerciseMode, modeWorkLabel } from '@/lib/exercise-mode';
+import { hashString, seededRng } from '@/lib/seed';
+import TenantNav from '@/components/layout/TenantNav';
+import ExerciseRow from '@/components/workout/ExerciseRow';
 
 export const dynamic = 'force-dynamic';
 
-// Path-based tenant surface: /g/<slug>. Loads the tenant, re-themes the whole
-// subtree from its branding, and renders a white-label landing. This is the
-// Phase-0 proof that one app serves many branded gyms — the full app routes
-// move under this theming wrapper in later phases.
+// A gym's front door. Everything shown here is REAL: the suggestion below is
+// generated from this gym's own library and the gear they've registered, seeded
+// by the date so it's stable for the day.
 export default async function TenantHome({ params }: { params: { slug: string } }) {
   const tenant = await fetchTenantBySlug(params.slug);
   if (!tenant) notFound();
 
   const name = tenant.branding.brandName ?? tenant.name;
-  const initial = name.trim().charAt(0).toUpperCase();
-  const sample = ['Goblet Squat', 'Push-Up', 'KB Swing', 'Plank', 'World’s Greatest Stretch'];
+  const library = await tenantLibrary(tenant.id);
+  const gear = await tenantEquipmentSlugs(tenant.id);
+  const allowed = gear.length ? gear : EQUIPMENT_ORDER;
+
+  const pool: Exercise[] = library
+    .filter((e) => e.equipment && allowed.includes(e.equipment))
+    .map((e) => ({
+      id: e.id,
+      name: e.real_name,
+      muscle_group: e.muscle_group,
+      default_cue: null,
+      equipment: e.equipment,
+      image_url: e.image_url,
+      created_at: '',
+    }));
+
+  const today = new Date().toISOString().slice(0, 10);
+  const rng = seededRng(hashString(`${tenant.slug}|${today}`));
+  const profile: Profile = { equipment: allowed, focus: 'full', intensity: 'moderate' };
+  const workout = generateWorkout(profile, { focus: 'full', count: 5, pool, rng });
+  const wp = workoutParams(profile);
+  const byId = new Map(library.map((e) => [e.id, e]));
 
   return (
     <div style={brandingToCssVars(tenant.branding)} className="min-h-dvh bg-background text-text-primary">
-      <main className="mx-auto max-w-md px-5 pb-16 pt-12">
-        {/* Brand */}
-        <div className="mb-10 flex items-center gap-3">
-          {tenant.branding.logoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={tenant.branding.logoUrl} alt={name} className="h-10 w-10 rounded-lg object-contain" />
-          ) : (
-            <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent text-h3 font-extrabold text-on-accent">
-              {initial}
-            </span>
-          )}
-          <span className="text-h3 font-bold text-text-primary">{name}</span>
-        </div>
+      <TenantNav slug={tenant.slug} name={name} logoUrl={tenant.branding.logoUrl} />
 
+      <main className="mx-auto max-w-md px-5 pb-16 pt-8">
         {/* Hero */}
         <p className="text-label text-accent">YOUR TRAINING APP</p>
-        <h1 className="mb-3 text-display text-text-primary">Train at {name}.</h1>
-        <p className="mb-6 text-body text-text-muted">
+        <h1 className="mb-2 text-h1 text-text-primary">Train at {name}.</h1>
+        <p className="mb-5 text-body text-text-muted">
           Your coach’s workouts, on your phone — built around your gear and time, ready to run with a tap.
         </p>
         <Link
@@ -46,27 +64,44 @@ export default async function TenantHome({ params }: { params: { slug: string } 
         </Link>
         <Link
           href={`/g/${tenant.slug}/exercises`}
-          className="mb-10 mt-3 flex h-12 w-full items-center justify-center rounded-md border border-border text-label text-text-primary active:bg-surface"
+          className="mb-9 mt-3 flex h-12 w-full items-center justify-center rounded-md border border-border text-label text-text-primary active:bg-surface"
         >
           BROWSE THE LIBRARY
         </Link>
 
-        {/* Sample workout card — shows the accent + surface theming */}
-        <p className="mb-2 text-caption text-text-muted">TODAY · FULL BODY</p>
-        <ul className="space-y-2">
-          {sample.map((ex, i) => (
-            <li key={ex} className="flex items-center gap-3 rounded-lg border border-border bg-surface p-3">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-accent/40 text-caption font-semibold text-accent">
-                {i + 1}
-              </span>
-              <span className="text-body text-text-primary">{ex}</span>
-            </li>
-          ))}
-        </ul>
+        {/* A real suggestion from this gym's library — not a placeholder */}
+        {workout.length > 0 && (
+          <>
+            <div className="mb-2 flex items-baseline justify-between">
+              <p className="text-label text-accent">TODAY’S SUGGESTION</p>
+              <span className="text-caption text-text-faint nums">{workout.length} moves</span>
+            </div>
+            <ul className="space-y-2">
+              {workout.map((ex, i) => (
+                <ExerciseRow
+                  key={ex.id}
+                  index={i + 1}
+                  name={byId.get(ex.id)?.name ?? ex.name}
+                  equipment={ex.equipment}
+                  imageUrl={ex.image_url}
+                  detail={
+                    isTimed(ex)
+                      ? `${wp.sets} × ${wp.holdSec}s ${modeWorkLabel(exerciseMode(ex))}`
+                      : `${wp.sets} × ${wp.reps} @ ${wp.tempo}`
+                  }
+                />
+              ))}
+            </ul>
+            <Link
+              href={`/g/${tenant.slug}/build?focus=full&len=6&v=1`}
+              className="mt-3 flex h-12 w-full items-center justify-center rounded-md border border-border text-label text-text-primary active:bg-surface"
+            >
+              BUILD TODAY’S WORKOUT
+            </Link>
+          </>
+        )}
 
-        <p className="mt-12 text-center text-caption text-text-faint">
-          Powered by Vitality · white-label preview ({tenant.slug})
-        </p>
+        <p className="mt-12 text-center text-caption text-text-faint">Powered by Vitality</p>
       </main>
     </div>
   );

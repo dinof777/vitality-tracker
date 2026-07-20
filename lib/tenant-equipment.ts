@@ -37,8 +37,13 @@ export function unlocksExercises(catalogName: string): boolean {
 }
 
 /**
- * The gym's equipment as library slugs. Empty means "not set up yet" — callers
- * fall back to allowing everything rather than generating an empty workout.
+ * The gym's equipment as library slugs.
+ *
+ * Bodyweight is ALWAYS included: you can't not have your own body, so excluding
+ * push-ups because nobody ticked "No equipment" is never the right answer.
+ *
+ * An empty result means "not set up yet" — callers fall back to allowing
+ * everything rather than generating an empty workout.
  */
 export async function tenantEquipmentSlugs(tenantId: string): Promise<Equipment[]> {
   const sql = getSql();
@@ -50,10 +55,16 @@ export async function tenantEquipmentSlugs(tenantId: string): Promise<Equipment[
       join equipment_catalog c on c.id = te.catalog_id
       where te.tenant_id = ${tenantId}
     `;
+    const picked = rows as Array<{ name: string }>;
+    if (picked.length === 0) return [];
+
     const slugs = new Set<Equipment>();
-    for (const r of rows as Array<{ name: string }>) {
+    for (const r of picked) {
       for (const s of SYNCROFIT_EQUIPMENT_TO_SLUGS[r.name] ?? []) slugs.add(s);
     }
+    // Bodyweight and stretching need nothing — always available once set up.
+    slugs.add('calisthenics');
+    slugs.add('stretch');
     return Array.from(slugs);
   } catch {
     return [];

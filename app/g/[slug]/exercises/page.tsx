@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { brandingToCssVars, fetchTenantBySlug } from '@/lib/tenant';
+import TenantNav from '@/components/layout/TenantNav';
 import { tenantLibrary } from '@/lib/tenant-library';
 import { EQUIPMENT_LABEL, EQUIPMENT_ORDER } from '@/lib/exercises';
 import ExerciseThumb from '@/components/workout/ExerciseThumb';
@@ -36,6 +37,8 @@ export default async function TenantExercises({ params }: { params: { slug: stri
 
   return (
     <div style={brandingToCssVars(tenant.branding)} className="min-h-dvh bg-background text-text-primary">
+      <TenantNav slug={tenant.slug} name={name} logoUrl={tenant.branding.logoUrl} />
+
       <main className="mx-auto max-w-md px-5 pb-16 pt-10">
         <Link href={`/g/${tenant.slug}`} className="text-caption text-text-muted">
           ← {name}

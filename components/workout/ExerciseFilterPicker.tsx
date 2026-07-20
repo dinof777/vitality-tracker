@@ -40,6 +40,7 @@ export default function ExerciseFilterPicker({ items, pickedIds, onToggle }: Pro
   const [equip, setEquip] = useState<string[]>([]);
   const [muscles, setMuscles] = useState<string[]>([]);
   const [openFamily, setOpenFamily] = useState<string | null>(null);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   // Only offer tags/equipment this list actually contains.
   const tagGroups = useMemo(() => {
@@ -105,6 +106,21 @@ export default function ExerciseFilterPicker({ items, pickedIds, onToggle }: Pro
         className="mb-3 h-11 w-full rounded-md border border-border bg-surface px-3 text-body text-text-primary placeholder:text-text-faint"
       />
 
+      {/* Filters collapse by default — results first, controls on demand. */}
+      <button
+        type="button"
+        onClick={() => setFiltersOpen(!filtersOpen)}
+        aria-expanded={filtersOpen}
+        className={`mb-3 flex h-10 w-full items-center justify-between rounded-md border px-3 text-caption font-semibold ${
+          activeFilters > 0 ? 'border-accent bg-accent/10 text-accent' : 'border-border bg-surface text-text-muted'
+        }`}
+      >
+        <span>Filters{activeFilters > 0 ? ` · ${activeFilters}` : ''}</span>
+        <span>{filtersOpen ? '▲' : '▼'}</span>
+      </button>
+
+      {filtersOpen && (
+        <div className="mb-3 rounded-lg border border-border bg-surface p-3">
       {tagGroups.map((group) => (
         <div key={group.id} className="mb-2">
           <p className="mb-1 text-[0.65rem] font-semibold tracking-wide text-text-faint">{group.label.toUpperCase()}</p>
@@ -172,6 +188,9 @@ export default function ExerciseFilterPicker({ items, pickedIds, onToggle }: Pro
               );
             })}
           </div>
+        </div>
+      )}
+
         </div>
       )}
 

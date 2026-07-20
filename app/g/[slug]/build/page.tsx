@@ -15,6 +15,7 @@ import ExerciseThumb from '@/components/workout/ExerciseThumb';
 import PrintButton from '@/components/PrintButton';
 import ShareWorkoutButton from '@/components/workout/ShareWorkoutButton';
 import CustomWorkoutBuilder from '@/components/workout/CustomWorkoutBuilder';
+import TenantNav from '@/components/layout/TenantNav';
 import SaveCircuitBox from '@/components/workout/SaveCircuitBox';
 import { filterByFacets, tagsInCategory, type TagCategory } from '@/lib/tags';
 import { tenantEquipmentSlugs } from '@/lib/tenant-equipment';
@@ -125,11 +126,11 @@ export default async function TenantBuild({
 
   return (
     <div style={brandingToCssVars(tenant.branding)} className="min-h-dvh bg-background text-text-primary">
-      <main className="mx-auto max-w-md px-5 pb-16 pt-10">
-        <Link href={`/g/${tenant.slug}`} className="text-caption text-text-muted print:hidden">
-          ← {name}
-        </Link>
-        <h1 className="mb-1 mt-2 text-h1 text-text-primary">Build a workout</h1>
+      <div className="print:hidden">
+        <TenantNav slug={tenant.slug} name={name} logoUrl={tenant.branding.logoUrl} />
+      </div>
+      <main className="mx-auto max-w-md px-5 pb-16 pt-6">
+        <h1 className="mb-1 text-h1 text-text-primary">Build a workout</h1>
         <p className="mb-1 text-body text-text-muted">From {name}’s library, ready for SyncroFit.</p>
         {isMyGym && (
           <p className="mb-5 text-caption text-text-faint print:hidden">
@@ -181,7 +182,8 @@ export default async function TenantBuild({
         ) : (
         <>
         {/* Focus */}
-        <div className="mb-2 flex flex-wrap gap-2 print:hidden">
+        <p className="mb-1 text-[0.65rem] font-semibold tracking-wide text-text-faint print:hidden">FOCUS</p>
+        <div className="mb-3 flex flex-wrap gap-2 print:hidden">
           {FOCI.map((f) => (
             <Link
               key={f}
@@ -195,7 +197,8 @@ export default async function TenantBuild({
           ))}
         </div>
         {/* Length + shuffle */}
-        <div className="mb-6 flex items-center gap-2 print:hidden">
+        <p className="mb-1 text-[0.65rem] font-semibold tracking-wide text-text-faint print:hidden">LENGTH</p>
+        <div className="mb-5 flex items-center gap-2 print:hidden">
           {LENGTHS.map((l) => (
             <Link
               key={l}
@@ -209,7 +212,7 @@ export default async function TenantBuild({
           ))}
           <Link
             href={qs(focusVal, count, variant + 1)}
-            className="ml-auto rounded-full border border-border px-3 py-1.5 text-caption font-semibold text-text-muted"
+            className="ml-auto flex h-9 items-center gap-1 rounded-md border border-accent/40 bg-accent/10 px-3 text-caption font-semibold text-accent active:scale-[0.97]"
           >
             🔀 Shuffle
           </Link>
