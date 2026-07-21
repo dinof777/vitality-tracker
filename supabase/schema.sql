@@ -267,6 +267,8 @@ on conflict (kind, normalized) do nothing;
 
 insert into taxonomy_terms (kind, name, normalized, category, status) values
   ('tag', 'Knee PT',              'knee pt',        'goal',    'core'),
+  ('tag', 'Shoulder PT',          'shoulder pt',    'goal',    'core'),
+  ('tag', 'Ankle PT',             'ankle pt',       'goal',    'core'),
   ('tag', 'Mobility',             'mobility',       'goal',    'core'),
   ('tag', 'Strength',             'strength',       'goal',    'core'),
   ('tag', 'Stability',            'stability',      'goal',    'core'),

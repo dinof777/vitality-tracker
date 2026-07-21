@@ -22,14 +22,18 @@ export interface Tag {
 export const TAGS: Tag[] = [
   // ── Goal: what program this movement serves ────────────────────────────────
   { id: 'knee-pt', category: 'goal', label: 'Knee PT', description: 'Knee rehab — post knee-replacement or knee-injury recovery', clinical: true },
+  { id: 'shoulder-pt', category: 'goal', label: 'Shoulder PT', description: 'Shoulder rehab — rotator-cuff, impingement and scapular recovery', clinical: true },
+  { id: 'ankle-pt', category: 'goal', label: 'Ankle PT', description: 'Ankle rehab — post-sprain strength, balance and range', clinical: true },
   { id: 'mobility', category: 'goal', label: 'Mobility', description: 'Range of motion and tissue length' },
   { id: 'strength', category: 'goal', label: 'Strength', description: 'Rebuilding force production' },
   { id: 'stability', category: 'goal', label: 'Stability', description: 'Balance, control, and joint support' },
 
   // ── Stage: where it sits in a recovery/progression arc ─────────────────────
-  { id: 'stage-1', category: 'stage', label: 'Stage 1 · Early', description: 'Gentle activation and range — floor/seated, little to no weight through the leg' },
-  { id: 'stage-2', category: 'stage', label: 'Stage 2 · Progressing', description: 'Standing work, partial load, building range and control' },
-  { id: 'stage-3', category: 'stage', label: 'Stage 3 · Strengthening', description: 'Loaded and single-leg work — rebuilding real strength and function' },
+  // Joint-agnostic: the same three-stage arc drives knee, shoulder and ankle
+  // rehab, so the wording avoids naming a body part.
+  { id: 'stage-1', category: 'stage', label: 'Stage 1 · Early', description: 'Gentle activation and range — off the feet or unloaded, little to no load through the joint' },
+  { id: 'stage-2', category: 'stage', label: 'Stage 2 · Progressing', description: 'Active, partial load — building range and control' },
+  { id: 'stage-3', category: 'stage', label: 'Stage 3 · Strengthening', description: 'Loaded and single-limb work — rebuilding real strength and function' },
 
   // ── Pattern: what the movement actually does ───────────────────────────────
   { id: 'knee-flexion', category: 'pattern', label: 'Knee flexion', description: 'Bending the knee — regaining the bend' },
