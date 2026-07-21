@@ -14,20 +14,26 @@ export async function GET() {
   const sql = getSql();
   if (!sql) return NextResponse.json({ error: 'No database' }, { status: 500 });
 
-  const pending = await sql`
-    select c.id, c.name, c.normalized, c.created_at,
+  // Every live piece of equipment (core + approved + still-pending proposals) —
+  // the admin browses and manages the whole catalog here, not just the review
+  // queue. Pending sorts first so what needs attention is on top even in "All".
+  const items = await sql`
+    select c.id, c.name, c.normalized, c.status, c.created_at,
       t.name as proposed_by,
       (select count(*) from tenant_equipment te where te.catalog_id = c.id) as gyms_using
     from equipment_catalog c
     left join tenants t on t.id = c.created_by_tenant_id
-    where c.status = 'pending'
-    order by c.created_at desc
+    where c.status not in ('rejected', 'merged')
+    order by
+      (c.status = 'pending') desc,
+      (select count(*) from tenant_equipment te where te.catalog_id = c.id) desc,
+      c.name
   `;
   // Possible merge targets (the canonical set).
   const canonical = await sql`
     select id, name from equipment_catalog where status in ('core', 'approved') order by name
   `;
-  return NextResponse.json({ pending, canonical });
+  return NextResponse.json({ items, canonical });
 }
 
 export async function PATCH(req: Request) {
