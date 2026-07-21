@@ -177,6 +177,37 @@ flex items-center gap-3 h-12 px-3 rounded-md bg-surface
 streak pill (top of list): bg-energy/15 text-energy rounded-full
 ```
 
+### Disclosure row (admin lifecycle lists)
+`components/admin/LifecycleRow.tsx` + `components/admin/ScopeSelect.tsx`.
+Reach for this pair — not a bespoke layout — any time a screen lists things an
+admin or trainer *manages* rather than just browses (exercises, muscle groups,
+tags; anything with add/update/delete/move-scope). Built twice already
+(`/admin/exercises`, `/admin/taxonomy`); that's the signal to reuse it rather
+than reinvent it a third time.
+
+Rules it encodes:
+- **A list is for reading first.** One scannable line per row: title, one
+  meta line, an optional badge. Managing a row is the exception, not the
+  default view.
+- **Controls live behind one per-row disclosure**, not stacked open on every
+  row (`open` / `onToggle`). A 19-term list is 19 lines, not 19 open forms.
+- **Scope is ONE control, not several.** `ScopeSelect` is a single `<select>`
+  — "Shared library — every gym" or a named gym — never a separate promote
+  button plus a demote dropdown plus a move button for what is one property.
+- **Badge the exception, not the rule.** Omit the badge for the common case
+  (shared, live); reserve it for what's different — gym-owned
+  (`tone: 'local'`) or archived. A badge on every row stops meaning anything.
+- **Destructive actions are not the widest control in a panel.** Delete/Archive
+  is a narrow, fixed-width button (`px-4`/`px-5`) sitting next to — never
+  instead of — the primary Save/Rename action, which stays the wide one
+  (`flex-1` or `w-full`).
+
+```
+<LifecycleRow title meta badge={…|null} archived flagged open onToggle>
+  {/* per-row panel: wide Save/Rename · ScopeSelect · narrow destructive */}
+</LifecycleRow>
+```
+
 ---
 
 ## 7. Layout & navigation

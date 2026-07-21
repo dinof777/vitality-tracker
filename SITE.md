@@ -42,9 +42,9 @@ routes, tables, or integrations change.
 | `/dashboard/exercises` | Custom exercises + per-gym renames (aliases); governed muscle-group/tag pickers |
 | `/dashboard/equipment` | Custom equipment (dedup + "did you mean?") |
 | `/g/<slug>/branding` | Brand autopilot (paste URL → logo/colors/name) + pickers |
-| `/admin/equipment` | Global equipment-catalog moderation (admins only) |
-| `/admin/taxonomy` | Muscle-group + tag lifecycle — rename, archive, delete, promote/demote scope (admins only) |
-| `/admin/exercises` | Exercise lifecycle at both scopes — edit any move, move it between shared and gym-owned (admins only) |
+| `/admin/equipment` | Global equipment-catalog moderation queue — approve/reject/merge a gym's proposed piece (admins only) |
+| `/admin/taxonomy` | Muscle-group + tag lifecycle at both scopes — rename, merge, archive/delete, promote/demote scope, via the disclosure-row pattern (admins only) |
+| `/admin/exercises` | Exercise lifecycle at both scopes — edit any move, archive/delete, move it between shared and gym-owned, via the same disclosure-row pattern (admins only) |
 
 ### Vitality Pro — public tenant surfaces
 | Route | What it is |
@@ -71,11 +71,14 @@ database that already exists; every change lands in both so they can't drift.
   `log_entries` is the progressive-overload spine (`side` for unilateral).
 - **mobility_logs** — Daily 5.
 - **tenants** — white-label gyms (`slug`, `branding` jsonb, `clerk_org_id`, `plan`).
-- **exercise_aliases** — per-tenant local renames.
+- **exercise_aliases** — per-tenant local renames of an *exercise's* display
+  name. This is the mechanism that's genuinely "local, never leaves the gym" —
+  see the taxonomy note below, which doesn't have an equivalent.
 - **equipment_catalog** + **tenant_equipment** — global deduped equipment
   taxonomy (status: core/approved/pending/rejected/merged) + per-gym usage.
-- **taxonomy_terms** + **tenant_terms** — the same governed model for every other
-  vocabulary a trainer can extend (muscle groups, tags). `exercises.muscle_group`
+  Predates `taxonomy_terms` and hasn't been migrated onto it — see below.
+- **taxonomy_terms** + **tenant_terms** — the same governed model for every
+  other vocabulary a trainer can extend (muscle groups, tags). `exercises.muscle_group`
   and `exercises.tags` hold display values validated against it on write.
 - **syncrofit_events** — inbound import/completion feedback from SyncroFit.
 
@@ -106,7 +109,9 @@ mandatory query helper; isolation is unit-tested.
 governance engine — normalize, synonym folding, fuzzy dedup, promotion rules) /
 `taxonomy-db` (its server-side reads/writes) / `equipment-normalize` (a shim over
 it) · `exercise-dedup` (near-duplicate move names → offer the alias, never fork) ·
-`syncrofit` / `syncrofit-events` (integration) · `profile` (params + choices).
+`syncrofit` / `syncrofit-events` (integration) · `profile` (params + choices) ·
+`lifecycle` (add/update/delete/move-scope rules, pure + unit-tested) /
+`lifecycle-db` (its usage-count queries).
 
 ### Lifecycle: add · update · delete · move scope
 
@@ -126,14 +131,59 @@ four operations, governed by `lib/lifecycle`:
 
 Trainers get add/update/delete for their own gym's moves at
 `/dashboard/exercises`; admins get all four plus scope at `/admin/exercises` and
-`/admin/taxonomy`.
+`/admin/taxonomy`. Both admin screens are built on the same shared component
+pair — see "Disclosure row" in `DESIGN.md` §6.
 
 ### How a trainer-extensible field stays clean
 
-Every vocabulary a trainer can extend runs the same four rules (`lib/taxonomy`):
-normalize → fold known synonyms → fuzzy-match for typos → tier the result as
-**canon** (curated, global), **proposed** (live for that gym now, `pending`
-globally), or **local** (an alias, never leaves the gym). Trainers are never
-blocked — only promotion to the shared vocabulary is gated, and a term
-`PROMOTION_THRESHOLD` gyms propose independently promotes itself, so the review
-queue stays small. Merges rewrite the referencing exercises, so nothing orphans.
+Every vocabulary a trainer can extend runs the same three rules (`lib/taxonomy`):
+normalize → fold known synonyms → fuzzy-match for typos, then tier the result.
+
+For muscle groups and tags (`taxonomy_terms`) there are really only **two**
+tiers in play: **canon** (curated, `core`/`approved` status, global) and
+**proposed** (this gym's addition — `pending` status globally, live for them
+immediately). There is no third "local" taxonomy tier: a new term is always a
+shared `taxonomy_terms` row from the moment it's created, just linked to one
+gym via `tenant_terms` until `PROMOTION_THRESHOLD` gyms independently propose
+the same thing and it self-promotes. ("Local, never leaves the gym" describes
+`exercise_aliases` — a per-tenant rename of an *exercise's* display name — not
+a taxonomy term. Don't conflate the two mechanisms.)
+
+Trainers are never blocked — only promotion to the shared vocabulary is gated,
+and the review queue stays small because most gaps self-promote before an admin
+ever sees them. Merges rewrite the referencing exercises, so nothing orphans.
+
+Equipment runs the same engine (`lib/equipment-normalize` is a thin shim over
+`lib/taxonomy`) but still lives in its own table, `equipment_catalog` — it
+predates `taxonomy_terms` and hasn't been migrated onto it. `TermKind` includes
+`'equipment'` for when that migration happens; today only `muscle_group` and
+`tag` actually read/write `taxonomy_terms`.
+
+### Adding a new trainer-extensible vocabulary field
+
+This pattern has been generalized twice now (equipment → muscle groups/tags)
+and will likely be reused for the next one. Steps, in order:
+
+1. **Add the kind** — extend `TermKind` in `lib/taxonomy.ts`, and add a
+   synonym map for it (`Record<string, string>`, empty object is fine to
+   start) wired into the `SYNONYMS` lookup.
+2. **Add the label** — add the field's singular/plural to `FIELD_LABEL` /
+   `FIELD_LABEL_PLURAL` in `lib/vocabulary.ts`. Surfaces import the label from
+   here; never hardcode it inline.
+3. **Add a drift guard** — add a case to `lib/vocabulary.test.ts` that fails
+   the build if a surface hardcodes the field's name instead of importing the
+   label (follow the existing `findOffenders`-style checks in that file).
+   Centralizing a label without a matching guard is exactly how the pre-M2
+   wording drift happened — don't skip this step. (This file belongs to Theo;
+   coordinate rather than editing it yourself.)
+4. **Add the DB column/constraint** — a migration adding the `kind` value to
+   `taxonomy_terms`'s `kind` check constraint (or a new table, if the field
+   doesn't fit the shared shape), following `supabase/migrations/0001_taxonomy.sql`.
+5. **Wire the API routes** — a trainer-scoped route (model:
+   `app/api/tenant/taxonomy/route.ts`) using `addTerm` / `tenantTerms` from
+   `lib/taxonomy-db.ts`; an admin route (model:
+   `app/api/admin/taxonomy/route.ts`) for rename/merge/promote/demote/delete.
+6. **Add lifecycle coverage** — a usage-count query in `lib/lifecycle-db.ts`
+   (model: `termUsage`) feeding `deleteEffect` / `checkScopeMove` from
+   `lib/lifecycle.ts`, and an admin UI built on `LifecycleRow` +
+   `ScopeSelect` (see `DESIGN.md` §6) rather than a bespoke list.
