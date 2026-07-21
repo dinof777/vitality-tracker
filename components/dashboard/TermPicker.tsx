@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { TAG_CATEGORIES, TAG_CATEGORY_HINT, TAG_CATEGORY_LABEL } from '@/lib/vocabulary';
 
 // Picker for a governed vocabulary field (muscle group, tag).
 //
@@ -19,11 +20,13 @@ export interface Term {
   is_mine: boolean;
 }
 
-const CATEGORIES = [
-  { value: 'goal', label: 'Goal', hint: 'What program it serves' },
-  { value: 'stage', label: 'Stage', hint: 'Where it sits in a progression' },
-  { value: 'pattern', label: 'Movement', hint: 'What the movement does' },
-];
+// Labels come from lib/vocabulary so the builder, the trainer dashboard and
+// admin all call a tag category the same thing.
+const CATEGORIES = TAG_CATEGORIES.map((value) => ({
+  value,
+  label: TAG_CATEGORY_LABEL[value],
+  hint: TAG_CATEGORY_HINT[value],
+}));
 
 interface Props {
   kind: 'muscle_group' | 'tag';

@@ -1,11 +1,16 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import LifecycleRow from '@/components/admin/LifecycleRow';
+import ScopeSelect, { GLOBAL, type Gym } from '@/components/admin/ScopeSelect';
+import { MOVE, SCOPE, plural } from '@/lib/vocabulary';
 
-// Admin lifecycle for the exercise library at both scopes. The one thing this
-// page can do that the trainer dashboard can't: move a move between "shared with
-// every gym" and "belongs to one gym".
+// Admin lifecycle for the exercise library at both scopes.
+//
+// Layout rule: this is a LIST first. One scannable line per move; the controls
+// (rare, some destructive) open behind a single disclosure. The earlier version
+// rendered every action on every row, turning the list into stacked forms.
 
 interface AdminExercise {
   id: string;
@@ -20,30 +25,30 @@ interface AdminExercise {
   log_entries: number;
   aliases: number;
 }
-interface Gym {
-  id: string;
-  name: string;
-}
 
-const SCOPES = [
+const FILTERS = [
   { value: 'all', label: 'All' },
-  { value: 'global', label: 'Shared library' },
-  { value: 'tenant', label: 'Gym-owned' },
+  { value: 'global', label: SCOPE.global.badge },
+  { value: 'tenant', label: SCOPE.tenant.badge },
+  { value: 'archived', label: 'Archived' },
 ] as const;
 
+type Filter = (typeof FILTERS)[number]['value'];
+
 export default function ExerciseAdmin() {
-  const [scope, setScope] = useState<'all' | 'global' | 'tenant'>('all');
+  const [filter, setFilter] = useState<Filter>('all');
   const [q, setQ] = useState('');
   const [list, setList] = useState<AdminExercise[]>([]);
   const [gyms, setGyms] = useState<Gym[]>([]);
   const [loading, setLoading] = useState(true);
   const [denied, setDenied] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [moveTarget, setMoveTarget] = useState<Record<string, string>>({});
-  const [editing, setEditing] = useState<AdminExercise | null>(null);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [draft, setDraft] = useState<AdminExercise | null>(null);
 
   const load = useCallback(() => {
     setLoading(true);
+    const scope = filter === 'archived' ? 'all' : filter;
     return fetch(`/api/admin/exercises?scope=${scope}&q=${encodeURIComponent(q)}`)
       .then((r) => {
         if (r.status === 403) {
@@ -60,23 +65,26 @@ export default function ExerciseAdmin() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [scope, q]);
+  }, [filter, q]);
 
   useEffect(() => {
     const t = setTimeout(load, q ? 300 : 0); // debounce the search
     return () => clearTimeout(t);
   }, [load, q]);
 
-  const usage = (ex: AdminExercise) => ex.routines + ex.log_entries + ex.aliases;
+  const shown = useMemo(
+    () => (filter === 'archived' ? list.filter((e) => e.archived_at) : list.filter((e) => !e.archived_at)),
+    [list, filter],
+  );
 
-  const usageLabel = (ex: AdminExercise) =>
-    [
-      ex.log_entries ? `${ex.log_entries} logged` : '',
-      ex.routines ? `${ex.routines} routine${ex.routines === 1 ? '' : 's'}` : '',
-      ex.aliases ? `${ex.aliases} rename${ex.aliases === 1 ? '' : 's'}` : '',
-    ]
-      .filter(Boolean)
-      .join(' · ');
+  const usageLabel = (ex: AdminExercise) => {
+    const parts = [
+      ex.log_entries ? plural(ex.log_entries, 'logged set') : '',
+      ex.routines ? plural(ex.routines, 'routine') : '',
+      ex.aliases ? plural(ex.aliases, 'rename') : '',
+    ].filter(Boolean);
+    return parts.join(' · ');
+  };
 
   const act = async (id: string, action: string, extra: Record<string, unknown> = {}) => {
     setError(null);
@@ -87,17 +95,22 @@ export default function ExerciseAdmin() {
     });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) {
-      // A blocked demotion explains who it would have broken it for.
-      setError(j.error ?? 'That did not work.');
+      setError(j.error ?? 'That did not work.'); // a blocked demotion names the gyms
       return false;
     }
     await load();
     return true;
   };
 
+  const changeScope = async (ex: AdminExercise, next: string) => {
+    if (next === GLOBAL) return act(ex.id, 'promote');
+    return act(ex.id, 'demote', { tenantId: next });
+  };
+
   const remove = async (ex: AdminExercise) => {
-    const msg = usage(ex)
-      ? `“${ex.name}” is used by ${usageLabel(ex)}.\n\nIt will be archived, not deleted — it leaves the library but everything using it keeps working.`
+    const used = usageLabel(ex);
+    const msg = used
+      ? `“${ex.name}” is used by ${used}.\n\nIt will be archived, not deleted — it leaves the ${MOVE.many} you can build from, but everything using it keeps working.`
       : `Delete “${ex.name}”? Nothing uses it, so it will be removed completely.`;
     if (!window.confirm(msg)) return;
     await act(ex.id, 'delete');
@@ -106,7 +119,7 @@ export default function ExerciseAdmin() {
   if (denied) {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-background px-6 text-center">
-        <p className="text-body text-text-muted">You don’t have access to the exercise library admin.</p>
+        <p className="text-body text-text-muted">You don’t have access to the {MOVE.one} library admin.</p>
       </div>
     );
   }
@@ -115,38 +128,38 @@ export default function ExerciseAdmin() {
     <div className="min-h-dvh bg-background text-text-primary">
       <main className="shell px-5 pb-20 pt-10">
         <p className="text-label text-accent">ADMIN</p>
-        <h1 className="mb-1 text-h1 text-text-primary">Exercise library</h1>
+        <h1 className="mb-1 text-h1 text-text-primary">Moves</h1>
         <p className="mb-4 text-body text-text-muted">
-          Edit any move, and decide where it lives — shared with every gym, or owned by one.
+          Every {MOVE.one} in the library. Tap one to edit it, change where it lives, or retire it.
         </p>
         <p className="mb-5 text-caption text-text-muted">
           <Link href="/admin/taxonomy" className="text-accent">
-            Vocabulary review →
+            Muscle groups &amp; tags →
           </Link>
         </p>
-
-        <div className="mb-3 flex gap-2">
-          {SCOPES.map((s) => (
-            <button
-              key={s.value}
-              type="button"
-              onClick={() => setScope(s.value)}
-              className={`h-9 rounded-full border px-4 text-caption transition ${
-                scope === s.value ? 'border-accent bg-accent text-on-accent' : 'border-border bg-surface text-text-muted'
-              }`}
-            >
-              {s.label}
-            </button>
-          ))}
-        </div>
 
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search moves…"
-          aria-label="Search moves"
-          className="mb-4 h-11 w-full rounded-md border border-border bg-surface px-3 text-body text-text-primary placeholder:text-text-faint"
+          placeholder={`Search ${MOVE.many}…`}
+          aria-label={`Search ${MOVE.many}`}
+          className="mb-3 h-11 w-full rounded-md border border-border bg-surface px-3 text-body text-text-primary placeholder:text-text-faint"
         />
+
+        <div className="mb-4 flex flex-wrap gap-2">
+          {FILTERS.map((f) => (
+            <button
+              key={f.value}
+              type="button"
+              onClick={() => setFilter(f.value)}
+              className={`h-9 rounded-full border px-4 text-caption transition ${
+                filter === f.value ? 'border-accent bg-accent text-on-accent' : 'border-border bg-surface text-text-muted'
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
 
         {error && (
           <p className="mb-4 rounded-md border border-destructive/40 bg-surface p-3 text-caption text-destructive">
@@ -156,157 +169,113 @@ export default function ExerciseAdmin() {
 
         {loading ? (
           <div className="h-16 animate-pulse rounded-lg bg-surface" />
-        ) : list.length === 0 ? (
+        ) : shown.length === 0 ? (
           <p className="rounded-lg border border-dashed border-border p-6 text-center text-body text-text-muted">
-            No moves match.
+            No {MOVE.many} match.
           </p>
         ) : (
-          <ul className="space-y-2">
-            {list.map((ex) => (
-              <li
-                key={ex.id}
-                className={`rounded-lg border p-3 ${
-                  ex.archived_at ? 'border-dashed border-border bg-background' : 'border-border bg-surface'
-                }`}
-              >
-                <div className="flex items-baseline justify-between gap-2">
-                  <p
-                    className={`truncate text-body font-semibold ${
-                      ex.archived_at ? 'text-text-faint line-through' : 'text-text-primary'
-                    }`}
-                  >
-                    {ex.name}
-                  </p>
-                  <span
-                    className={`shrink-0 rounded-full px-2 py-0.5 text-caption ${
-                      ex.is_global ? 'bg-accent/15 text-accent' : 'bg-surface-raised text-text-muted'
-                    }`}
-                  >
-                    {ex.is_global ? 'Shared' : (ex.gym_name ?? 'Gym')}
-                  </span>
-                </div>
-                <p className="mt-0.5 truncate text-caption text-text-muted">
-                  {[ex.archived_at ? 'Archived' : null, ex.muscle_group, usageLabel(ex)].filter(Boolean).join(' · ') ||
-                    'Unused'}
-                </p>
+          <>
+            <p className="mb-2 text-caption text-text-faint">{plural(shown.length, MOVE.one, MOVE.many)}</p>
+            <ul className="space-y-1.5">
+              {shown.map((ex) => (
+                <LifecycleRow
+                  key={ex.id}
+                  title={ex.name}
+                  badge={{
+                    label: ex.is_global ? SCOPE.global.badge : (ex.gym_name ?? SCOPE.tenant.badge),
+                    tone: ex.is_global ? 'shared' : 'local',
+                  }}
+                  meta={[ex.muscle_group, usageLabel(ex) || 'unused'].filter(Boolean).join(' · ')}
+                  archived={!!ex.archived_at}
+                  open={openId === ex.id}
+                  onToggle={() => {
+                    const next = openId === ex.id ? null : ex.id;
+                    setOpenId(next);
+                    setDraft(next ? ex : null);
+                  }}
+                >
+                  {ex.archived_at ? (
+                    <button
+                      type="button"
+                      onClick={() => act(ex.id, 'restore')}
+                      className="h-11 w-full rounded-md border border-accent text-caption font-semibold text-accent"
+                    >
+                      Restore to the library
+                    </button>
+                  ) : (
+                    draft && (
+                      <div className="space-y-3">
+                        <label className="block">
+                          <span className="mb-1 block text-[0.65rem] font-semibold tracking-wide text-text-faint">
+                            NAME
+                          </span>
+                          <input
+                            value={draft.name}
+                            onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+                            className="h-11 w-full rounded-md border border-border bg-background px-3 text-body text-text-primary"
+                          />
+                        </label>
+                        <label className="block">
+                          <span className="mb-1 block text-[0.65rem] font-semibold tracking-wide text-text-faint">
+                            MUSCLE GROUP
+                          </span>
+                          <input
+                            value={draft.muscle_group ?? ''}
+                            onChange={(e) => setDraft({ ...draft, muscle_group: e.target.value })}
+                            placeholder="Must be a shared term"
+                            className="h-11 w-full rounded-md border border-border bg-background px-3 text-body text-text-primary placeholder:text-text-faint"
+                          />
+                        </label>
+                        <label className="block">
+                          <span className="mb-1 block text-[0.65rem] font-semibold tracking-wide text-text-faint">
+                            FORM CUE
+                          </span>
+                          <input
+                            value={draft.default_cue ?? ''}
+                            onChange={(e) => setDraft({ ...draft, default_cue: e.target.value })}
+                            className="h-11 w-full rounded-md border border-border bg-background px-3 text-body text-text-primary"
+                          />
+                        </label>
 
-                {editing?.id === ex.id ? (
-                  <div className="mt-3 space-y-2">
-                    <input
-                      value={editing.name}
-                      onChange={(e) => setEditing({ ...editing, name: e.target.value })}
-                      aria-label="Name"
-                      className="h-11 w-full rounded-md border border-border bg-background px-3 text-body text-text-primary"
-                    />
-                    <input
-                      value={editing.muscle_group ?? ''}
-                      onChange={(e) => setEditing({ ...editing, muscle_group: e.target.value })}
-                      placeholder="Muscle group (must be a shared term)"
-                      aria-label="Muscle group"
-                      className="h-11 w-full rounded-md border border-border bg-background px-3 text-body text-text-primary placeholder:text-text-faint"
-                    />
-                    <input
-                      value={editing.default_cue ?? ''}
-                      onChange={(e) => setEditing({ ...editing, default_cue: e.target.value })}
-                      placeholder="Form cue"
-                      aria-label="Form cue"
-                      className="h-11 w-full rounded-md border border-border bg-background px-3 text-body text-text-primary placeholder:text-text-faint"
-                    />
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          const ok = await act(ex.id, 'edit', {
-                            name: editing.name,
-                            muscle_group: editing.muscle_group,
-                            default_cue: editing.default_cue,
-                          });
-                          if (ok) setEditing(null);
-                        }}
-                        className="h-9 flex-1 rounded-md bg-accent text-caption font-semibold text-on-accent"
-                      >
-                        Save
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setEditing(null)}
-                        className="h-9 flex-1 rounded-md border border-border text-caption text-text-muted"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {ex.archived_at ? (
-                        <button
-                          type="button"
-                          onClick={() => act(ex.id, 'restore')}
-                          className="h-9 rounded-md border border-accent px-3 text-caption font-semibold text-accent"
-                        >
-                          Restore
-                        </button>
-                      ) : (
-                        <>
+                        <ScopeSelect
+                          value={ex.is_global ? GLOBAL : (ex.tenant_id ?? GLOBAL)}
+                          gyms={gyms}
+                          onChange={(next) => changeScope(ex, next)}
+                        />
+
+                        <div className="flex gap-2 pt-1">
                           <button
                             type="button"
-                            onClick={() => setEditing(ex)}
-                            className="h-9 rounded-md border border-border px-3 text-caption text-text-primary"
+                            onClick={async () => {
+                              if (
+                                await act(ex.id, 'edit', {
+                                  name: draft.name,
+                                  muscle_group: draft.muscle_group,
+                                  default_cue: draft.default_cue,
+                                })
+                              ) {
+                                setOpenId(null);
+                              }
+                            }}
+                            className="h-11 flex-1 rounded-md bg-accent text-caption font-semibold text-on-accent"
                           >
-                            Edit
+                            Save
                           </button>
-                          {!ex.is_global && (
-                            <button
-                              type="button"
-                              onClick={() => act(ex.id, 'promote')}
-                              className="h-9 rounded-md border border-accent px-3 text-caption font-semibold text-accent"
-                            >
-                              ↑ Make shared
-                            </button>
-                          )}
                           <button
                             type="button"
                             onClick={() => remove(ex)}
-                            className="h-9 rounded-md border border-border px-3 text-caption text-destructive"
+                            className="h-11 rounded-md border border-border px-4 text-caption text-destructive"
                           >
-                            {usage(ex) ? 'Archive' : 'Delete'}
+                            {usageLabel(ex) ? 'Archive' : 'Delete'}
                           </button>
-                        </>
-                      )}
-                    </div>
-
-                    {/* Demote: hand a shared move to one gym. Blocked if others rely on it. */}
-                    {ex.is_global && !ex.archived_at && (
-                      <div className="mt-2 flex gap-2">
-                        <select
-                          value={moveTarget[ex.id] ?? ''}
-                          onChange={(e) => setMoveTarget((m) => ({ ...m, [ex.id]: e.target.value }))}
-                          aria-label={`Give ${ex.name} to a gym`}
-                          className="h-9 flex-1 rounded-md border border-border bg-background px-2 text-caption text-text-primary"
-                        >
-                          <option value="">↓ Give to one gym…</option>
-                          {gyms.map((g) => (
-                            <option key={g.id} value={g.id}>
-                              {g.name}
-                            </option>
-                          ))}
-                        </select>
-                        <button
-                          type="button"
-                          disabled={!moveTarget[ex.id]}
-                          onClick={() => act(ex.id, 'demote', { tenantId: moveTarget[ex.id] })}
-                          className="h-9 rounded-md border border-border px-3 text-caption font-semibold text-text-primary disabled:opacity-40"
-                        >
-                          Move
-                        </button>
+                        </div>
                       </div>
-                    )}
-                  </>
-                )}
-              </li>
-            ))}
-          </ul>
+                    )
+                  )}
+                </LifecycleRow>
+              ))}
+            </ul>
+          </>
         )}
       </main>
     </div>

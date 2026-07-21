@@ -10,6 +10,7 @@ import { workoutParams, FOCUS_CHOICES, lengthToCount, DEFAULT_LENGTH, LENGTH_MIN
 import { EQUIPMENT_ORDER, EQUIPMENT_LABEL } from '@/lib/exercises';
 import { isTimed, exerciseMode, modeWorkLabel } from '@/lib/exercise-mode';
 import { syncrofitRunUrl } from '@/lib/syncrofit';
+import { TAG_CATEGORIES, TAG_CATEGORY_LABEL } from '@/lib/vocabulary';
 import { hashString, seededRng } from '@/lib/seed';
 import ExerciseThumb from '@/components/workout/ExerciseThumb';
 import PrintButton from '@/components/PrintButton';
@@ -19,7 +20,7 @@ import TenantNav from '@/components/layout/TenantNav';
 import SaveCircuitBox from '@/components/workout/SaveCircuitBox';
 import SyncroFitButton from '@/components/workout/SyncroFitButton';
 import TenantBuilderControls from '@/components/workout/TenantBuilderControls';
-import { filterByFacets, tagsInCategory, type TagCategory } from '@/lib/tags';
+import { filterByFacets, tagsInCategory } from '@/lib/tags';
 import { tenantEquipmentSlugs } from '@/lib/tenant-equipment';
 import { currentTrainer } from '@/lib/current-tenant';
 
@@ -259,11 +260,7 @@ export default async function TenantBuild({
 
         {/* Narrow the pool the generator draws from — same facets as Pick my own */}
         <div className="mb-6 print:hidden">
-          {([
-            { id: 'goal' as TagCategory, label: 'GOAL' },
-            { id: 'stage' as TagCategory, label: 'STAGE' },
-            { id: 'pattern' as TagCategory, label: 'MOVEMENT' },
-          ])
+          {TAG_CATEGORIES.map((id) => ({ id, label: TAG_CATEGORY_LABEL[id].toUpperCase() }))
             .map((cat) => ({ ...cat, items: tagsInCategory(cat.id).filter((t) => usedTagIds.has(t.id)) }))
             .filter((cat) => cat.items.length > 0)
             .map((cat) => (

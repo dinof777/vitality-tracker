@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import type { Equipment } from '@/lib/database.types';
 import { EQUIPMENT_LABEL } from '@/lib/exercises';
 import { TAG_BY_ID, tagsInCategory, filterByFacets, type TagCategory } from '@/lib/tags';
+import { TAG_CATEGORIES, TAG_CATEGORY_LABEL } from '@/lib/vocabulary';
 import ExerciseThumb from './ExerciseThumb';
 
 export interface PickerItem {
@@ -26,11 +27,10 @@ interface Props {
   onToggle: (id: string) => void;
 }
 
-const CATEGORIES: Array<{ id: TagCategory; label: string }> = [
-  { id: 'goal', label: 'Goal' },
-  { id: 'stage', label: 'Stage' },
-  { id: 'pattern', label: 'Movement' },
-];
+const CATEGORIES: Array<{ id: TagCategory; label: string }> = TAG_CATEGORIES.map((id) => ({
+  id,
+  label: TAG_CATEGORY_LABEL[id],
+}));
 
 // Search + tag/equipment filters over an exercise list. Shared by the gym builder
 // and the personal builder so the filtering behaves identically in both.

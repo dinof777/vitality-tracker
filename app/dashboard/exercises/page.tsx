@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { tagsInCategory, TAG_BY_ID, type TagCategory } from '@/lib/tags';
+import { tagsInCategory, TAG_BY_ID } from '@/lib/tags';
+import { TAG_CATEGORIES, TAG_CATEGORY_LABEL } from '@/lib/vocabulary';
 import Link from 'next/link';
 import { EQUIPMENT_CHOICES } from '@/lib/profile';
 import { SAMPLE_EXERCISES, EQUIPMENT_LABEL } from '@/lib/exercises';
@@ -310,10 +311,10 @@ export default function CustomExercises() {
             <p className="mb-1 text-caption text-text-muted">
               Tags <span className="text-text-faint">(optional — makes it findable when building workouts)</span>
             </p>
-            {(['goal', 'stage', 'pattern'] as TagCategory[]).map((cat) => (
+            {TAG_CATEGORIES.map((cat) => (
               <div key={cat} className="mb-1.5">
                 <p className="mb-1 text-[0.65rem] font-semibold tracking-wide text-text-faint">
-                  {cat === 'pattern' ? 'MOVEMENT' : cat.toUpperCase()}
+                  {TAG_CATEGORY_LABEL[cat].toUpperCase()}
                 </p>
                 <div className="flex flex-wrap gap-1.5">
                   {tagsInCategory(cat).map((t) => {
