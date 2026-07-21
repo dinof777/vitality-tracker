@@ -39,10 +39,11 @@ routes, tables, or integrations change.
 | `/sign-in`, `/sign-up` | Clerk auth |
 | `/onboarding` | Create a gym → Clerk Organization + tenant row + slug |
 | `/dashboard` | Trainer home |
-| `/dashboard/exercises` | Custom exercises + per-gym renames (aliases) |
+| `/dashboard/exercises` | Custom exercises + per-gym renames (aliases); governed muscle-group/tag pickers |
 | `/dashboard/equipment` | Custom equipment (dedup + "did you mean?") |
 | `/g/<slug>/branding` | Brand autopilot (paste URL → logo/colors/name) + pickers |
 | `/admin/equipment` | Global equipment-catalog moderation (admins only) |
+| `/admin/taxonomy` | Muscle-group + tag moderation, ranked by gyms proposing (admins only) |
 
 ### Vitality Pro — public tenant surfaces
 | Route | What it is |
@@ -56,7 +57,11 @@ routes, tables, or integrations change.
 
 ---
 
-## Data model (Neon Postgres — `supabase/schema.sql`)
+## Data model (Neon Postgres)
+
+`supabase/schema.sql` is the full current state — run it to stand up a fresh
+database. `supabase/migrations/NNNN_*.sql` are the incremental steps for a
+database that already exists; every change lands in both so they can't drift.
 
 - **exercises** — the master library. `is_global` rows = shared 168; a gym's
   custom moves carry `tenant_id`. `equipment` is the 9-value enum;
@@ -68,6 +73,9 @@ routes, tables, or integrations change.
 - **exercise_aliases** — per-tenant local renames.
 - **equipment_catalog** + **tenant_equipment** — global deduped equipment
   taxonomy (status: core/approved/pending/rejected/merged) + per-gym usage.
+- **taxonomy_terms** + **tenant_terms** — the same governed model for every other
+  vocabulary a trainer can extend (muscle groups, tags). `exercises.muscle_group`
+  and `exercises.tags` hold display values validated against it on write.
 - **syncrofit_events** — inbound import/completion feedback from SyncroFit.
 
 Multi-tenancy: app-level scoping — every tenant query filters by
@@ -93,5 +101,18 @@ mandatory query helper; isolation is unit-tested.
 `exercises` (the 168 + equipment order/labels) · `workout-generator`
 (time-budgeted, accepts a custom pool + seeded RNG) · `exercise-mode` /
 `exercise-intensity` / `pillars` (classifiers) · `tenant` / `current-tenant` /
-`tenant-library` / `scoped-db` (multi-tenancy) · `equipment-normalize` (dedup) ·
+`tenant-library` / `scoped-db` (multi-tenancy) · `taxonomy` (the vocabulary
+governance engine — normalize, synonym folding, fuzzy dedup, promotion rules) /
+`taxonomy-db` (its server-side reads/writes) / `equipment-normalize` (a shim over
+it) · `exercise-dedup` (near-duplicate move names → offer the alias, never fork) ·
 `syncrofit` / `syncrofit-events` (integration) · `profile` (params + choices).
+
+### How a trainer-extensible field stays clean
+
+Every vocabulary a trainer can extend runs the same four rules (`lib/taxonomy`):
+normalize → fold known synonyms → fuzzy-match for typos → tier the result as
+**canon** (curated, global), **proposed** (live for that gym now, `pending`
+globally), or **local** (an alias, never leaves the gym). Trainers are never
+blocked — only promotion to the shared vocabulary is gated, and a term
+`PROMOTION_THRESHOLD` gyms propose independently promotes itself, so the review
+queue stays small. Merges rewrite the referencing exercises, so nothing orphans.

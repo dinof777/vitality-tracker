@@ -1,0 +1,186 @@
+import { getSql } from './db';
+import {
+  findTermDuplicate,
+  normalizeTerm,
+  termSlug,
+  MAX_CUSTOM_TERMS_PER_TENANT,
+  MAX_TERM_LENGTH,
+  PROMOTION_THRESHOLD,
+  type TermKind,
+  type TermRef,
+  type TermStatus,
+} from './taxonomy';
+
+// Server-side taxonomy access. Every read is scoped to what one gym is allowed
+// to use; every write goes through the dedup engine first. Server-only.
+
+export interface TaxonomyTerm {
+  id: string;
+  name: string;
+  normalized: string;
+  category: string | null;
+  status: TermStatus;
+  /** Part of the curated/shared vocabulary (vs. this gym's own proposal). */
+  is_canon: boolean;
+  /** Proposed by this gym. */
+  is_mine: boolean;
+}
+
+/**
+ * Everything one gym may use for a kind: the curated canon, anything promoted
+ * from another gym's proposal, plus this gym's own pending terms. Canon first,
+ * then alphabetical — the order the picker shows.
+ */
+export async function tenantTerms(tenantId: string, kind: TermKind): Promise<TaxonomyTerm[]> {
+  const sql = getSql();
+  if (!sql) return [];
+  const rows = await sql`
+    select t.id, t.name, t.normalized, t.category, t.status,
+           (t.status in ('core', 'approved')) as is_canon,
+           (t.created_by_tenant_id = ${tenantId}) as is_mine
+    from taxonomy_terms t
+    where t.kind = ${kind}
+      and t.status <> 'rejected'
+      and t.status <> 'merged'
+      and (t.status in ('core', 'approved')
+           or t.created_by_tenant_id = ${tenantId}
+           or exists (select 1 from tenant_terms tt
+                      where tt.term_id = t.id and tt.tenant_id = ${tenantId}))
+    order by (t.status in ('core', 'approved')) desc, t.name
+  `;
+  return rows as TaxonomyTerm[];
+}
+
+export type ResolveResult =
+  | { ok: true; term: TaxonomyTerm; folded: boolean }
+  | { ok: false; kind: 'duplicate'; match: TermRef; reason: 'exact' | 'synonym' | 'fuzzy' }
+  | { ok: false; kind: 'invalid'; message: string }
+  | { ok: false; kind: 'limit'; message: string };
+
+/**
+ * Add a term to a gym's vocabulary.
+ *
+ * An exact or synonym match FOLDS silently — the gym just gets the existing term
+ * ("abs" selects "Core"), because there's nothing to decide. A fuzzy match is
+ * only a guess, so it comes back as a duplicate for the trainer to confirm; pass
+ * `force` to create it anyway when they say it's genuinely different.
+ *
+ * A genuinely-new term is created as a global `pending` proposal AND linked to
+ * this gym immediately, so the trainer is never blocked waiting on review.
+ */
+export async function addTerm(
+  tenantId: string,
+  kind: TermKind,
+  rawName: string,
+  opts: { category?: string | null; force?: boolean } = {},
+): Promise<ResolveResult> {
+  const sql = getSql();
+  if (!sql) return { ok: false, kind: 'invalid', message: 'No database' };
+
+  const name = rawName.trim().slice(0, MAX_TERM_LENGTH);
+  const normalized = normalizeTerm(name);
+  if (!normalized) return { ok: false, kind: 'invalid', message: 'Give it a real name.' };
+
+  // Tags drive faceted filtering, which groups by category — one without a
+  // category would be silently dropped from every filter.
+  const category = kind === 'tag' ? (opts.category ?? null) : null;
+  if (kind === 'tag' && !['goal', 'stage', 'pattern'].includes(category ?? '')) {
+    return { ok: false, kind: 'invalid', message: 'Pick what kind of tag this is.' };
+  }
+
+  const available = await tenantTerms(tenantId, kind);
+  const dup = findTermDuplicate(kind, name, available);
+
+  if (dup.match && (dup.reason !== 'fuzzy' || !opts.force)) {
+    const existing = available.find((t) => t.id === dup.match!.id)!;
+    // Certain match → fold silently and make sure this gym is linked to it.
+    if (dup.reason === 'exact' || dup.reason === 'synonym') {
+      await linkTerm(tenantId, existing.id);
+      return { ok: true, term: existing, folded: normalizeTerm(name) !== existing.normalized };
+    }
+    // Fuzzy → a guess. Let the trainer confirm.
+    return { ok: false, kind: 'duplicate', match: dup.match, reason: 'fuzzy' };
+  }
+
+  const mine = await sql`
+    select count(*)::int as n from taxonomy_terms
+    where kind = ${kind} and created_by_tenant_id = ${tenantId} and status <> 'rejected'
+  `;
+  if ((mine[0]?.n ?? 0) >= MAX_CUSTOM_TERMS_PER_TENANT) {
+    return {
+      ok: false,
+      kind: 'limit',
+      message: `You've added the maximum of ${MAX_CUSTOM_TERMS_PER_TENANT}. Merge or remove one first.`,
+    };
+  }
+
+  // New term → global proposal, live for this gym now.
+  const created = await sql`
+    insert into taxonomy_terms (kind, name, normalized, category, status, created_by_tenant_id)
+    values (${kind}, ${name}, ${normalized}, ${category}, 'pending', ${tenantId})
+    on conflict (kind, normalized) do update set name = taxonomy_terms.name
+    returning id, name, normalized, category, status,
+              (status in ('core','approved')) as is_canon, true as is_mine
+  `;
+  const term = created[0] as TaxonomyTerm;
+  await linkTerm(tenantId, term.id);
+  await promoteIfPopular(term.id);
+  return { ok: true, term, folded: false };
+}
+
+/** Record that a gym uses a term. Drives the promotion count. */
+export async function linkTerm(tenantId: string, termId: string): Promise<void> {
+  const sql = getSql();
+  if (!sql) return;
+  await sql`
+    insert into tenant_terms (tenant_id, term_id) values (${tenantId}, ${termId})
+    on conflict do nothing
+  `;
+}
+
+/** Stop offering a term to this gym. Never deletes the global term. */
+export async function unlinkTerm(tenantId: string, termId: string): Promise<void> {
+  const sql = getSql();
+  if (!sql) return;
+  await sql`delete from tenant_terms where tenant_id = ${tenantId} and term_id = ${termId}`;
+}
+
+/**
+ * A pending term that PROMOTION_THRESHOLD independent gyms landed on is a real
+ * gap in the canon, not one gym's local naming — promote it without waiting on
+ * a human. This is what keeps the review queue small enough to actually review.
+ */
+export async function promoteIfPopular(termId: string): Promise<boolean> {
+  const sql = getSql();
+  if (!sql) return false;
+  const rows = await sql`
+    update taxonomy_terms set status = 'approved'
+    where id = ${termId}
+      and status = 'pending'
+      and (select count(*) from tenant_terms where term_id = ${termId}) >= ${PROMOTION_THRESHOLD}
+    returning id
+  `;
+  return rows.length > 0;
+}
+
+/**
+ * Validate a display value the client sent against what this gym may use.
+ * Returns the term's canonical name (so casing/spelling is always stored the one
+ * way), or null when it isn't an allowed term.
+ */
+export async function resolveTermName(
+  tenantId: string,
+  kind: TermKind,
+  value: string,
+): Promise<string | null> {
+  const norm = normalizeTerm(value);
+  if (!norm) return null;
+  const available = await tenantTerms(tenantId, kind);
+  return available.find((t) => t.normalized === norm)?.name ?? null;
+}
+
+/** Tag id → term, for every tag this gym may put on an exercise. */
+export async function tenantTagIds(tenantId: string): Promise<Map<string, TaxonomyTerm>> {
+  const terms = await tenantTerms(tenantId, 'tag');
+  return new Map(terms.map((t) => [termSlug(t.normalized), t]));
+}

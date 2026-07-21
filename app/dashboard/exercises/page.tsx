@@ -1,10 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { tagsInCategory, type TagCategory } from '@/lib/tags';
+import { tagsInCategory, TAG_BY_ID, type TagCategory } from '@/lib/tags';
 import Link from 'next/link';
 import { EQUIPMENT_CHOICES } from '@/lib/profile';
 import { SAMPLE_EXERCISES, EQUIPMENT_LABEL } from '@/lib/exercises';
+import { termSlug } from '@/lib/taxonomy';
+import TermPicker, { type Term } from '@/components/dashboard/TermPicker';
 import type { Equipment } from '@/lib/database.types';
 
 interface CustomExercise {
@@ -35,6 +37,10 @@ export default function CustomExercises() {
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [aliasQuery, setAliasQuery] = useState('');
   const [customEquip, setCustomEquip] = useState<CustomEquip[]>([]);
+  /** The gym's own tags, on top of the built-in registry. */
+  const [gymTags, setGymTags] = useState<Term[]>([]);
+  /** A library move this one looks like — offer the rename before forking it. */
+  const [similar, setSimilar] = useState<{ id: string; name: string; message: string } | null>(null);
 
   const load = () =>
     fetch('/api/tenant/exercises')
@@ -49,6 +55,16 @@ export default function CustomExercises() {
       .then((r) => (r.ok ? r.json() : { equipment: [] }))
       .then((d) => setCustomEquip((d.equipment ?? []).filter((e: CustomEquip) => !e.is_core)))
       .catch(() => {});
+  }, []);
+
+  const loadGymTags = () =>
+    fetch('/api/tenant/taxonomy?kind=tag')
+      .then((r) => (r.ok ? r.json() : { terms: [] }))
+      .then((d) => setGymTags((d.terms ?? []).filter((t: Term) => !TAG_BY_ID[termSlug(t.normalized)])))
+      .catch(() => {});
+
+  useEffect(() => {
+    loadGymTags();
   }, []);
 
   const equipLabel = (ex: CustomExercise) =>
@@ -83,7 +99,17 @@ export default function CustomExercises() {
     ? SAMPLE_EXERCISES.filter((ex) => ex.name.toLowerCase().includes(aliasQuery.trim().toLowerCase())).slice(0, 8)
     : [];
 
-  const add = async () => {
+  const resetForm = () => {
+    setName('');
+    setMuscle('');
+    setCue('');
+    setTags([]);
+    setSimilar(null);
+  };
+
+  // confirmDistinct = the trainer has seen the near-match and says this really is
+  // a different movement, so skip the check and add it.
+  const add = async (confirmDistinct = false) => {
     if (!name.trim()) return setError('Name is required.');
     setSaving(true);
     setError(null);
@@ -91,23 +117,45 @@ export default function CustomExercises() {
       const r = await fetch('/api/tenant/exercises', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), muscle_group: muscle.trim(), equipment, default_cue: cue.trim(), tags }),
+        body: JSON.stringify({
+          name: name.trim(),
+          muscle_group: muscle.trim(),
+          equipment,
+          default_cue: cue.trim(),
+          tags,
+          confirmDistinct,
+        }),
       });
       const j = await r.json();
+      if (r.status === 409 && j.similar) {
+        setSimilar({ ...j.similar, message: j.message });
+        return;
+      }
       if (!r.ok) {
         setError(j.error ?? 'Could not add.');
         return;
       }
-      setName('');
-      setMuscle('');
-      setCue('');
-      setTags([]);
+      resetForm();
       setList((prev) => [j.exercise, ...prev]);
     } catch {
       setError('Network error.');
     } finally {
       setSaving(false);
     }
+  };
+
+  // The better path when the library already has the move: rename it locally
+  // instead of adding a second copy, so logged history stays on one exercise.
+  const renameInstead = async () => {
+    if (!similar) return;
+    const local = name.trim();
+    setAliases((prev) => ({ ...prev, [similar.id]: local }));
+    await fetch('/api/tenant/aliases', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ exerciseId: similar.id, name: local }),
+    });
+    resetForm();
   };
 
   const remove = async (ex: CustomExercise) => {
@@ -136,11 +184,12 @@ export default function CustomExercises() {
             className="h-11 w-full rounded-md border border-border bg-background px-3 text-body text-text-primary placeholder:text-text-faint"
           />
           <div className="flex gap-2">
-            <input
+            <TermPicker
+              kind="muscle_group"
               value={muscle}
-              onChange={(e) => setMuscle(e.target.value)}
+              onChange={setMuscle}
               placeholder="Muscle group"
-              className="h-11 flex-1 rounded-md border border-border bg-background px-3 text-body text-text-primary placeholder:text-text-faint"
+              className="flex-1"
             />
             <select
               value={equipment}
@@ -200,11 +249,71 @@ export default function CustomExercises() {
                 </div>
               </div>
             ))}
+
+            {/* The gym's own tags — proposed here, shared once enough gyms agree */}
+            <div className="mb-1.5">
+              <p className="mb-1 text-[0.65rem] font-semibold tracking-wide text-text-faint">YOUR GYM</p>
+              {gymTags.length > 0 && (
+                <div className="mb-2 flex flex-wrap gap-1.5">
+                  {gymTags.map((t) => {
+                    const id = termSlug(t.normalized);
+                    const on = tags.includes(id);
+                    return (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => setTags(on ? tags.filter((x) => x !== id) : [...tags, id])}
+                        className={`rounded-full border px-2.5 py-1 text-caption transition ${
+                          on ? 'border-accent bg-accent text-on-accent' : 'border-border bg-background text-text-muted'
+                        }`}
+                      >
+                        {t.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              <TermPicker
+                kind="tag"
+                value=""
+                onChange={() => {}}
+                onTermAdded={(t) => {
+                  loadGymTags();
+                  setTags((prev) => [...prev, termSlug(t.normalized)]);
+                }}
+                requireCategory
+                placeholder="Add a tag…"
+              />
+            </div>
           </div>
+
+          {/* Near-duplicate of a library move → offer the rename before forking it */}
+          {similar && (
+            <div className="rounded-lg border border-accent bg-background p-3">
+              <p className="mb-2 text-caption text-text-muted">{similar.message}</p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={renameInstead}
+                  className="h-9 flex-1 rounded-md bg-accent px-3 text-caption font-semibold text-on-accent"
+                >
+                  Rename it “{name.trim()}”
+                </button>
+                <button
+                  type="button"
+                  onClick={() => add(true)}
+                  disabled={saving}
+                  className="h-9 flex-1 rounded-md border border-border px-3 text-caption text-text-primary disabled:opacity-50"
+                >
+                  It’s a different move
+                </button>
+              </div>
+            </div>
+          )}
 
           <button
             type="button"
-            onClick={add}
+            onClick={() => add()}
             disabled={saving || !name.trim()}
             className="h-12 w-full rounded-md bg-accent text-label text-on-accent disabled:opacity-50"
           >

@@ -110,13 +110,21 @@ export interface Facets {
  *     that are both.
  *
  * Equipment and muscle group are each their own OR facet, AND-ed in the same way.
+ *
+ * `registry` extends the built-in tags with a gym's own (see lib/taxonomy-db).
+ * A tag missing from the registry has no category to group by, so it would be
+ * silently dropped from filtering — it's treated as its own group instead, which
+ * filters correctly rather than doing nothing.
  */
-export function filterByFacets<T extends FacetFilterable>(list: T[], f: Facets): T[] {
+export function filterByFacets<T extends FacetFilterable>(
+  list: T[],
+  f: Facets,
+  registry: Record<string, { category: TagCategory }> = TAG_BY_ID,
+): T[] {
   // Group the selected tags by their category so each group can OR internally.
-  const byCategory = new Map<TagCategory, string[]>();
+  const byCategory = new Map<TagCategory | string, string[]>();
   for (const id of f.tags ?? []) {
-    const cat = TAG_BY_ID[id]?.category;
-    if (!cat) continue;
+    const cat: TagCategory | string = registry[id]?.category ?? `unknown:${id}`;
     byCategory.set(cat, [...(byCategory.get(cat) ?? []), id]);
   }
   const groups = Array.from(byCategory.values());

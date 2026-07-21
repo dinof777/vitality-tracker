@@ -3,6 +3,8 @@ import { getSql } from '@/lib/db';
 import { currentTenant } from '@/lib/current-tenant';
 import { TAG_BY_ID } from '@/lib/tags';
 import { EQUIPMENT_ORDER } from '@/lib/exercises';
+import { resolveTermName, tenantTagIds } from '@/lib/taxonomy-db';
+import { findSimilarExercise } from '@/lib/exercise-dedup';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -12,6 +14,10 @@ const VALID_EQUIP = new Set<string>(EQUIPMENT_ORDER);
 // A gym's own custom exercises (on top of the global library). All routes are
 // scoped to the signed-in trainer's tenant. Equipment is either one of the 9
 // core slugs, or "cat:<catalogId>" for the gym's own custom equipment.
+//
+// Every vocabulary field is governed (see lib/taxonomy): muscle group must
+// resolve to a term this gym may use, and tags to the registry or the gym's own.
+// The name is checked for near-duplicates but never blocked — see POST.
 
 export async function GET() {
   const tenant = await currentTenant();
@@ -35,7 +41,15 @@ export async function POST(req: Request) {
   const sql = getSql();
   if (!sql) return NextResponse.json({ error: 'No database' }, { status: 500 });
 
-  let body: { name?: string; muscle_group?: string; equipment?: string; default_cue?: string; tags?: string[] };
+  let body: {
+    name?: string;
+    muscle_group?: string;
+    equipment?: string;
+    default_cue?: string;
+    tags?: string[];
+    /** Set once the trainer has confirmed this really is a different movement. */
+    confirmDistinct?: boolean;
+  };
   try {
     body = await req.json();
   } catch {
@@ -46,7 +60,18 @@ export async function POST(req: Request) {
   const rawEquip = (body.equipment ?? '').trim();
   if (!name) return NextResponse.json({ error: 'Name is required.' }, { status: 400 });
 
-  const muscle = (body.muscle_group ?? '').trim().slice(0, 40) || null;
+  // Muscle group must be a term this gym may use — the picker adds new ones via
+  // /api/tenant/taxonomy, which dedupes first. Store the term's canonical name so
+  // casing and spelling are always the one way.
+  let muscle: string | null = null;
+  const rawMuscle = (body.muscle_group ?? '').trim();
+  if (rawMuscle) {
+    muscle = await resolveTermName(tenant.id, 'muscle_group', rawMuscle);
+    if (!muscle) {
+      return NextResponse.json({ error: 'Pick a muscle group from the list, or add it first.' }, { status: 400 });
+    }
+  }
+
   const cue = (body.default_cue ?? '').trim().slice(0, 200) || null;
 
   // Resolve equipment: a core slug, or this gym's custom equipment (cat:<id>).
@@ -69,8 +94,33 @@ export async function POST(req: Request) {
     equipment = rawEquip;
   }
 
-  // Only accept tags from the known registry — no free-text tag sprawl.
-  const tags = Array.isArray(body.tags) ? body.tags.filter((t) => TAG_BY_ID[t]).slice(0, 12) : [];
+  // Tags: the built-in registry plus any this gym has added. No free-text sprawl.
+  const gymTags = await tenantTagIds(tenant.id);
+  const tags = Array.isArray(body.tags)
+    ? body.tags.filter((t) => TAG_BY_ID[t] || gymTags.has(t)).slice(0, 12)
+    : [];
+
+  // Near-duplicate name → offer the alias instead of forking the library. This is
+  // a suggestion, not a rule: the trainer can confirm it's a different movement.
+  if (!body.confirmDistinct) {
+    const existing = await sql`
+      select e.id, coalesce(a.name, e.name) as name
+      from exercises e
+      left join exercise_aliases a on a.exercise_id = e.id and a.tenant_id = ${tenant.id}
+      where e.is_global or e.tenant_id = ${tenant.id}
+    `;
+    const similar = findSimilarExercise(name, existing as Array<{ id: string; name: string }>);
+    if (similar.match) {
+      return NextResponse.json(
+        {
+          similar: similar.match,
+          reason: similar.reason,
+          message: `The library already has “${similar.match.name}”. Rename it for your gym instead of adding a second copy — that keeps everyone's logged history on one move.`,
+        },
+        { status: 409 },
+      );
+    }
+  }
 
   const rows = await sql`
     insert into exercises (name, muscle_group, equipment, equipment_catalog_id, default_cue, tenant_id, is_global, tags)

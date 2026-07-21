@@ -39,6 +39,7 @@ export async function GET(): Promise<Response> {
     "- Brand autopilot: paste your website and we pull your logo, colors, and name.",
     '- Custom exercises and per-gym renames (call a move whatever your gym calls it).',
     '- Custom equipment with duplicate detection, plus a shared, moderated global catalog.',
+    '- Custom muscle groups and tags with the same duplicate detection: gym slang and typos fold into the existing term, and a term enough gyms add becomes part of the shared vocabulary.',
     '- Printable workouts with a QR code clients scan to load the workout and run it in SyncroFit.',
     '- SyncroFit reports back when a workout is imported or completed, so trainers see client engagement.',
     '',
