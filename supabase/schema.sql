@@ -5,6 +5,16 @@
 -- Postgres 15 (Supabase) — uses gen_random_uuid() from the built-in pgcrypto.
 -- =============================================================================
 
+-- schema_migrations: which supabase/migrations/*.sql files have been applied
+-- to this database, and when. Recorded by scripts/run-migrations.mjs (npm run
+-- migrate) — see supabase/migrations/README.md for the process. Not itself a
+-- migration step here; a fresh install via this file already has every
+-- migration's changes baked in.
+create table if not exists schema_migrations (
+  filename   text primary key,
+  applied_at timestamptz not null default now()
+);
+
 -- tenants: white-label orgs (gyms / trainers). Phase 0 multi-tenancy.
 -- branding jsonb overrides the default theme tokens (accent, logo, brand name…).
 -- Resolved path-based at /g/<slug>; subdomains/custom domains added later.
