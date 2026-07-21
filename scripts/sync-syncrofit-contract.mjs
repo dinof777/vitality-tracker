@@ -23,7 +23,7 @@ import { join } from 'node:path';
 
 const URL_SRC = process.env.SYNCROFIT_CONTRACT_URL || 'https://www.mysyncrofit.com/.well-known/syncrofit-integration.json';
 const REPO = process.env.SYNCROFIT_REPO || join(homedir(), 'dev', 'syncrofit');
-const LOCAL_SRC = join(REPO, 'integration-contract.json');
+const LOCAL_SRC = join(REPO, 'www', 'integration-contract.json');
 const dest = new URL('../contracts/syncrofit.json', import.meta.url).pathname;
 
 async function loadCanonical() {
