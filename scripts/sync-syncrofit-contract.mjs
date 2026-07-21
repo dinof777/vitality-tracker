@@ -8,7 +8,7 @@
 //   1. The hosted contract  — SYNCROFIT_CONTRACT_URL, default:
 //      https://www.mysyncrofit.com/.well-known/syncrofit-integration.json
 //   2. The local SyncroFit repo — SYNCROFIT_REPO/integration-contract.json
-//      (default ~/Developer/IntervalTimer-Source), used until the URL is published.
+//      (default ~/dev/syncrofit), used until the URL is published.
 //
 // We sync here rather than fetching at build/test time on purpose: the build stays
 // hermetic (no network dependency in CI), while contracts/syncrofit.json remains the
@@ -22,7 +22,7 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 
 const URL_SRC = process.env.SYNCROFIT_CONTRACT_URL || 'https://www.mysyncrofit.com/.well-known/syncrofit-integration.json';
-const REPO = process.env.SYNCROFIT_REPO || join(homedir(), 'Developer', 'IntervalTimer-Source');
+const REPO = process.env.SYNCROFIT_REPO || join(homedir(), 'dev', 'syncrofit');
 const LOCAL_SRC = join(REPO, 'integration-contract.json');
 const dest = new URL('../contracts/syncrofit.json', import.meta.url).pathname;
 

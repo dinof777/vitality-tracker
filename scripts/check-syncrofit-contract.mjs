@@ -14,7 +14,7 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 
 const URL_SRC = process.env.SYNCROFIT_CONTRACT_URL || 'https://www.mysyncrofit.com/.well-known/syncrofit-integration.json';
-const REPO = process.env.SYNCROFIT_REPO || join(homedir(), 'Developer', 'IntervalTimer-Source');
+const REPO = process.env.SYNCROFIT_REPO || join(homedir(), 'dev', 'syncrofit');
 const LOCAL_SRC = join(REPO, 'integration-contract.json');
 const strict = process.argv.includes('--strict');
 
