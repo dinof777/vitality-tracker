@@ -53,6 +53,12 @@ create table if not exists exercises (
   is_global    boolean not null default false,
   equipment_catalog_id uuid references equipment_catalog(id) on delete set null, -- custom-equipment moves (equipment null then)
   tags         text[] not null default '{}',
+  -- Retired, not gone. routine_exercises and log_entries CASCADE off this row,
+  -- so hard-deleting a move that has been trained destroys its own history —
+  -- anything in use archives instead. Archived rows drop out of pickers and
+  -- generation but still resolve for existing routines and logs.
+  archived_at  timestamptz,
+  archived_by  text,
   created_at   timestamptz not null default now()
 );
 
@@ -78,6 +84,8 @@ create table if not exists taxonomy_terms (
                 check (status in ('core', 'approved', 'pending', 'rejected', 'merged')),
   merged_into uuid references taxonomy_terms(id) on delete set null,
   created_by_tenant_id uuid references tenants(id) on delete set null,
+  archived_at timestamptz,   -- retired but still resolvable; see exercises.archived_at
+  archived_by text,
   created_at  timestamptz not null default now(),
   unique (kind, normalized),
   -- Tags drive faceted filtering, which groups by category.
@@ -217,6 +225,9 @@ create index if not exists idx_taxonomy_kind_status on taxonomy_terms (kind, sta
 create index if not exists idx_taxonomy_proposer    on taxonomy_terms (created_by_tenant_id);
 create index if not exists idx_tenant_terms_tenant  on tenant_terms (tenant_id);
 create index if not exists idx_tenant_terms_term    on tenant_terms (term_id);
+-- Every picker/generator query filters archived_at is null.
+create index if not exists idx_exercises_live on exercises (tenant_id) where archived_at is null;
+create index if not exists idx_taxonomy_live  on taxonomy_terms (kind, status) where archived_at is null;
 
 -- -----------------------------------------------------------------------------
 -- Seed the canon muscle groups + the built-in tag registry as 'core' terms.

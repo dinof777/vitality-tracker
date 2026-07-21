@@ -19,8 +19,11 @@ const EQUIP = EQUIPMENT_ORDER.length;
 
 const SKIP_DIRS = new Set(['node_modules', '.next', '.git', '.design', 'public', 'screenshots']);
 
-// The source of truth itself, and this test, are allowed to say the number.
-const ALLOWED = new Set(['lib/exercises.ts', 'lib/library-counts.test.ts']);
+// The source of truth itself is allowed to say the number. Tests are too — they
+// assert on fixture counts ("2 exercises"), which is not shipped copy and not
+// the drift this guards against.
+const ALLOWED = new Set(['lib/exercises.ts']);
+const isTest = (rel: string) => /\.test\.tsx?$/.test(rel);
 
 function walk(dir: string, ext: RegExp, out: string[] = []): string[] {
   for (const entry of readdirSync(dir)) {
@@ -48,7 +51,7 @@ describe('library counts never drift', () => {
     const offenders: string[] = [];
     for (const file of walk(ROOT, /\.tsx?$/)) {
       const rel = relative(ROOT, file);
-      if (ALLOWED.has(rel)) continue;
+      if (ALLOWED.has(rel) || isTest(rel)) continue;
       for (const { phrase } of countPhrases(readFileSync(file, 'utf8'))) {
         offenders.push(`${rel}: "${phrase}"`);
       }

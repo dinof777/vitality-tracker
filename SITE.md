@@ -43,7 +43,8 @@ routes, tables, or integrations change.
 | `/dashboard/equipment` | Custom equipment (dedup + "did you mean?") |
 | `/g/<slug>/branding` | Brand autopilot (paste URL → logo/colors/name) + pickers |
 | `/admin/equipment` | Global equipment-catalog moderation (admins only) |
-| `/admin/taxonomy` | Muscle-group + tag moderation, ranked by gyms proposing (admins only) |
+| `/admin/taxonomy` | Muscle-group + tag lifecycle — rename, archive, delete, promote/demote scope (admins only) |
+| `/admin/exercises` | Exercise lifecycle at both scopes — edit any move, move it between shared and gym-owned (admins only) |
 
 ### Vitality Pro — public tenant surfaces
 | Route | What it is |
@@ -106,6 +107,26 @@ governance engine — normalize, synonym folding, fuzzy dedup, promotion rules) 
 `taxonomy-db` (its server-side reads/writes) / `equipment-normalize` (a shim over
 it) · `exercise-dedup` (near-duplicate move names → offer the alias, never fork) ·
 `syncrofit` / `syncrofit-events` (integration) · `profile` (params + choices).
+
+### Lifecycle: add · update · delete · move scope
+
+Everything a trainer or admin owns (exercises, muscle groups, tags) has the same
+four operations, governed by `lib/lifecycle`:
+
+- **Delete means archive when it's in use.** `routine_exercises` and `log_entries`
+  CASCADE off `exercises`, so hard-deleting a trained move destroys the history
+  it's the evidence for. Unused records are really deleted; anything referenced
+  sets `archived_at` — it leaves pickers, filters and generation but every
+  routine and logged set still resolves, and it can be restored.
+- **Scope moves both ways.** Promoting (one gym → shared) is always allowed:
+  strictly more people can see it. **Demoting is blocked while other gyms depend
+  on it**, and the refusal names them — merge first, then move.
+- Renaming a term carries its exercises with it (muscle groups are stored by
+  display value, tags by slug), so a rename can't orphan anything.
+
+Trainers get add/update/delete for their own gym's moves at
+`/dashboard/exercises`; admins get all four plus scope at `/admin/exercises` and
+`/admin/taxonomy`.
 
 ### How a trainer-extensible field stays clean
 

@@ -37,7 +37,10 @@ export async function tenantLibrary(tenantId: string): Promise<LibraryExercise[]
       on a.exercise_id = e.id and a.tenant_id = ${tenantId}
     left join equipment_catalog ec
       on ec.id = e.equipment_catalog_id
-    where e.is_global or e.tenant_id = ${tenantId}
+    where (e.is_global or e.tenant_id = ${tenantId})
+      -- Archived moves stay resolvable for existing routines and logs, but drop
+      -- out of the library the gym builds new workouts from.
+      and e.archived_at is null
     order by coalesce(a.name, e.name)
   `;
   return rows as LibraryExercise[];

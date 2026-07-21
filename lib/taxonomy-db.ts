@@ -42,6 +42,7 @@ export async function tenantTerms(tenantId: string, kind: TermKind): Promise<Tax
     where t.kind = ${kind}
       and t.status <> 'rejected'
       and t.status <> 'merged'
+      and t.archived_at is null
       and (t.status in ('core', 'approved')
            or t.created_by_tenant_id = ${tenantId}
            or exists (select 1 from tenant_terms tt
@@ -177,6 +178,55 @@ export async function resolveTermName(
   if (!norm) return null;
   const available = await tenantTerms(tenantId, kind);
   return available.find((t) => t.normalized === norm)?.name ?? null;
+}
+
+/**
+ * Rename a term. The new name must still be unique for its kind, and renaming a
+ * muscle group has to carry the exercises with it — they store the display value,
+ * so leaving them behind would orphan every exercise using the old spelling.
+ */
+export async function renameTerm(
+  termId: string,
+  rawName: string,
+): Promise<{ ok: true; term: TaxonomyTerm } | { ok: false; message: string }> {
+  const sql = getSql();
+  if (!sql) return { ok: false, message: 'No database' };
+
+  const name = rawName.trim().slice(0, MAX_TERM_LENGTH);
+  const normalized = normalizeTerm(name);
+  if (!normalized) return { ok: false, message: 'Give it a real name.' };
+
+  const term = (await sql`select id, kind, name, normalized from taxonomy_terms where id = ${termId}`)[0];
+  if (!term) return { ok: false, message: 'Unknown term.' };
+
+  const clash = (await sql`
+    select id, name from taxonomy_terms
+    where kind = ${term.kind} and normalized = ${normalized} and id <> ${termId}
+  `)[0];
+  if (clash) return { ok: false, message: `“${clash.name}” already uses that name — merge into it instead.` };
+
+  // Muscle groups are stored on exercises by display value; move them together.
+  if (term.kind === 'muscle_group' && name !== term.name) {
+    await sql`update exercises set muscle_group = ${name} where muscle_group = ${term.name}`;
+  }
+  // Tags are stored by slug, which is derived from `normalized` — rewrite those too.
+  if (term.kind === 'tag' && normalized !== term.normalized) {
+    const from = termSlug(String(term.normalized));
+    const to = termSlug(normalized);
+    await sql`
+      update exercises
+      set tags = (select array_agg(distinct x) from unnest(array_replace(tags, ${from}, ${to})) as x)
+      where ${from} = any(tags)
+    `;
+  }
+
+  const rows = await sql`
+    update taxonomy_terms set name = ${name}, normalized = ${normalized}
+    where id = ${termId}
+    returning id, name, normalized, category, status,
+              (status in ('core','approved')) as is_canon, false as is_mine
+  `;
+  return { ok: true, term: rows[0] as TaxonomyTerm };
 }
 
 /** Tag id → term, for every tag this gym may put on an exercise. */

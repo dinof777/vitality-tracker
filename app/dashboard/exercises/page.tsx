@@ -16,6 +16,12 @@ interface CustomExercise {
   equipment: string | null;
   custom_equip_name?: string | null;
   default_cue: string | null;
+  tags?: string[];
+  archived_at?: string | null;
+  /** What points at this move — decides whether delete removes or archives it. */
+  routines?: number;
+  log_entries?: number;
+  aliases?: number;
 }
 interface CustomEquip {
   id: string;
@@ -41,6 +47,8 @@ export default function CustomExercises() {
   const [gymTags, setGymTags] = useState<Term[]>([]);
   /** A library move this one looks like — offer the rename before forking it. */
   const [similar, setSimilar] = useState<{ id: string; name: string; message: string } | null>(null);
+  /** Non-null when the form is editing an existing move rather than adding one. */
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const load = () =>
     fetch('/api/tenant/exercises')
@@ -158,10 +166,87 @@ export default function CustomExercises() {
     resetForm();
   };
 
+  // Load a move back into the form to edit it in place, instead of the old
+  // delete-and-retype (which used to destroy its logged history).
+  const startEdit = (ex: CustomExercise) => {
+    setEditingId(ex.id);
+    setName(ex.name);
+    setMuscle(ex.muscle_group ?? '');
+    setEquipment(ex.equipment ?? (ex.custom_equip_name ? equipment : equipment));
+    setCue(ex.default_cue ?? '');
+    setTags(ex.tags ?? []);
+    setSimilar(null);
+    setError(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    resetForm();
+  };
+
+  const saveEdit = async (confirmDistinct = false) => {
+    if (!editingId || !name.trim()) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const r = await fetch('/api/tenant/exercises', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: editingId,
+          name: name.trim(),
+          muscle_group: muscle.trim(),
+          equipment,
+          default_cue: cue.trim(),
+          tags,
+          confirmDistinct,
+        }),
+      });
+      const j = await r.json();
+      if (r.status === 409 && j.similar) return setSimilar({ ...j.similar, message: j.message });
+      if (!r.ok) return setError(j.error ?? 'Could not save.');
+      setList((prev) => prev.map((x) => (x.id === editingId ? { ...x, ...j.exercise } : x)));
+      cancelEdit();
+    } catch {
+      setError('Network error.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const usageOf = (ex: CustomExercise) =>
+    (ex.routines ?? 0) + (ex.log_entries ?? 0) + (ex.aliases ?? 0);
+
+  // Delete tells the truth about what it will do: unused moves are removed,
+  // used ones are archived so their routines and logged sets survive.
   const remove = async (ex: CustomExercise) => {
-    if (!window.confirm(`Delete “${ex.name}”?`)) return;
-    setList((prev) => prev.filter((x) => x.id !== ex.id));
-    await fetch(`/api/tenant/exercises?id=${ex.id}`, { method: 'DELETE' });
+    const parts = [
+      ex.log_entries ? `${ex.log_entries} logged set${ex.log_entries === 1 ? '' : 's'}` : '',
+      ex.routines ? `${ex.routines} routine${ex.routines === 1 ? '' : 's'}` : '',
+      ex.aliases ? `${ex.aliases} local rename${ex.aliases === 1 ? '' : 's'}` : '',
+    ].filter(Boolean);
+    const msg = parts.length
+      ? `“${ex.name}” is used by ${parts.join(' · ')}.\n\nIt will be archived, not deleted — it leaves the library but everything using it keeps working. You can restore it any time.`
+      : `Delete “${ex.name}”? Nothing uses it, so it will be removed completely.`;
+    if (!window.confirm(msg)) return;
+
+    const r = await fetch(`/api/tenant/exercises?id=${ex.id}`, { method: 'DELETE' });
+    const j = await r.json().catch(() => ({}));
+    if (j.effect === 'archived') {
+      setList((prev) => prev.map((x) => (x.id === ex.id ? { ...x, archived_at: new Date().toISOString() } : x)));
+    } else {
+      setList((prev) => prev.filter((x) => x.id !== ex.id));
+    }
+  };
+
+  const restore = async (ex: CustomExercise) => {
+    const r = await fetch('/api/tenant/exercises', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: ex.id, restore: true }),
+    });
+    if (r.ok) setList((prev) => prev.map((x) => (x.id === ex.id ? { ...x, archived_at: null } : x)));
   };
 
   return (
@@ -307,7 +392,7 @@ export default function CustomExercises() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => add(true)}
+                  onClick={() => (editingId ? saveEdit(true) : add(true))}
                   disabled={saving}
                   className="h-9 flex-1 rounded-md border border-border px-3 text-caption text-text-primary disabled:opacity-50"
                 >
@@ -319,12 +404,21 @@ export default function CustomExercises() {
 
           <button
             type="button"
-            onClick={() => add()}
+            onClick={() => (editingId ? saveEdit() : add())}
             disabled={saving || !name.trim()}
             className="h-12 w-full rounded-md bg-accent text-label text-on-accent disabled:opacity-50"
           >
-            {saving ? 'ADDING…' : '+ ADD EXERCISE'}
+            {saving ? (editingId ? 'SAVING…' : 'ADDING…') : editingId ? 'SAVE CHANGES' : '+ ADD EXERCISE'}
           </button>
+          {editingId && (
+            <button
+              type="button"
+              onClick={cancelEdit}
+              className="h-11 w-full rounded-md border border-border text-caption text-text-muted"
+            >
+              Cancel
+            </button>
+          )}
           {error && <p className="text-center text-caption text-destructive">{error}</p>}
         </div>
 
@@ -338,21 +432,57 @@ export default function CustomExercises() {
         ) : (
           <ul className="space-y-2">
             {list.map((ex) => (
-              <li key={ex.id} className="flex items-center justify-between gap-2 rounded-lg border border-border bg-surface p-3">
+              <li
+                key={ex.id}
+                className={`flex items-center justify-between gap-2 rounded-lg border p-3 ${
+                  ex.archived_at ? 'border-dashed border-border bg-background' : 'border-border bg-surface'
+                }`}
+              >
                 <div className="min-w-0">
-                  <p className="truncate text-body font-semibold text-text-primary">{ex.name}</p>
+                  <p
+                    className={`truncate text-body font-semibold ${
+                      ex.archived_at ? 'text-text-faint line-through' : 'text-text-primary'
+                    }`}
+                  >
+                    {ex.name}
+                  </p>
                   <p className="truncate text-caption text-text-muted">
-                    {[ex.muscle_group, equipLabel(ex)].filter(Boolean).join(' · ')}
+                    {[
+                      ex.archived_at ? 'Archived' : null,
+                      ex.muscle_group,
+                      equipLabel(ex),
+                      usageOf(ex) ? `in use by ${usageOf(ex)}` : null,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')}
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => remove(ex)}
-                  aria-label={`Delete ${ex.name}`}
-                  className="shrink-0 text-caption text-destructive"
-                >
-                  Delete
-                </button>
+                <div className="flex shrink-0 items-center gap-3">
+                  {ex.archived_at ? (
+                    <button type="button" onClick={() => restore(ex)} className="text-caption text-accent">
+                      Restore
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => startEdit(ex)}
+                        aria-label={`Edit ${ex.name}`}
+                        className="text-caption text-text-muted"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => remove(ex)}
+                        aria-label={`Delete ${ex.name}`}
+                        className="text-caption text-destructive"
+                      >
+                        Delete
+                      </button>
+                    </>
+                  )}
+                </div>
               </li>
             ))}
           </ul>
