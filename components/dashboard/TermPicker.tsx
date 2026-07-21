@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 
 // Picker for a governed vocabulary field (muscle group, tag).
 //
@@ -29,11 +29,17 @@ interface Props {
   kind: 'muscle_group' | 'tag';
   value: string;
   onChange: (name: string) => void;
+  /** Accessible name — there's no visible label in the compact add form. */
+  label: string;
   placeholder?: string;
   /** Tags must declare a category — the faceted filter groups by it. */
   requireCategory?: boolean;
   /** Called after a new term is created, so the parent can refresh its list. */
   onTermAdded?: (term: Term) => void;
+  /** Fires for any pick, new or existing — the full term, not just its name. */
+  onSelect?: (term: Term) => void;
+  /** Reset to empty after a pick, for add-another-one controls. */
+  clearOnSelect?: boolean;
   className?: string;
 }
 
@@ -41,9 +47,12 @@ export default function TermPicker({
   kind,
   value,
   onChange,
+  label,
   placeholder = 'Search…',
   requireCategory = false,
   onTermAdded,
+  onSelect,
+  clearOnSelect = false,
   className = '',
 }: Props) {
   const [terms, setTerms] = useState<Term[]>([]);
@@ -53,9 +62,12 @@ export default function TermPicker({
   const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [category, setCategory] = useState('goal');
+  /** Index of the arrow-key-highlighted option; -1 = none. */
+  const [active, setActive] = useState(-1);
   /** A fuzzy near-match the server wants confirmed before creating anything. */
   const [confirmDup, setConfirmDup] = useState<{ name: string; id: string } | null>(null);
   const boxRef = useRef<HTMLDivElement>(null);
+  const listId = useId();
 
   const load = () =>
     fetch(`/api/tenant/taxonomy?kind=${kind}`)
@@ -89,11 +101,35 @@ export default function TermPicker({
 
   const select = (t: Term) => {
     onChange(t.name);
-    setQuery(t.name);
+    onSelect?.(t);
+    setQuery(clearOnSelect ? '' : t.name);
     setOpen(false);
+    setActive(-1);
     setNote(null);
     setError(null);
     setConfirmDup(null);
+  };
+
+  // Keyboard parity with the native <select> this replaced: arrows move, Enter
+  // picks (or adds when nothing is highlighted), Escape closes.
+  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Escape') {
+      setOpen(false);
+      setActive(-1);
+      return;
+    }
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (!open) return setOpen(true);
+      const delta = e.key === 'ArrowDown' ? 1 : -1;
+      setActive((i) => (matches.length === 0 ? -1 : (i + delta + matches.length) % matches.length));
+      return;
+    }
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (active >= 0 && matches[active]) select(matches[active]);
+      else if (canAdd) add(false);
+    }
   };
 
   const add = async (force = false) => {
@@ -141,11 +177,19 @@ export default function TermPicker({
         onChange={(e) => {
           setQuery(e.target.value);
           setOpen(true);
+          setActive(-1);
           setConfirmDup(null);
           setNote(null);
         }}
         onFocus={() => setOpen(true)}
+        onKeyDown={onKeyDown}
         placeholder={placeholder}
+        role="combobox"
+        aria-label={label}
+        aria-expanded={open}
+        aria-controls={listId}
+        aria-autocomplete="list"
+        aria-activedescendant={active >= 0 && matches[active] ? `${listId}-${matches[active].id}` : undefined}
         className="h-11 w-full rounded-md border border-border bg-background px-3 text-body text-text-primary placeholder:text-text-faint"
       />
 
@@ -153,13 +197,24 @@ export default function TermPicker({
       {error && <p className="mt-1 text-caption text-destructive">{error}</p>}
 
       {open && (
-        <div className="absolute z-20 mt-1 max-h-72 w-full overflow-y-auto rounded-md border border-border bg-surface shadow-lg">
-          {matches.map((t) => (
+        <div
+          id={listId}
+          role="listbox"
+          aria-label={label}
+          className="absolute z-20 mt-1 max-h-72 w-full overflow-y-auto rounded-md border border-border bg-surface-raised shadow-lg"
+        >
+          {matches.map((t, i) => (
             <button
               key={t.id}
+              id={`${listId}-${t.id}`}
               type="button"
+              role="option"
+              aria-selected={i === active}
               onClick={() => select(t)}
-              className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-body text-text-primary hover:bg-background"
+              onMouseEnter={() => setActive(i)}
+              className={`flex min-h-11 w-full items-center justify-between gap-2 px-3 py-2 text-left text-body text-text-primary ${
+                i === active ? 'bg-background' : ''
+              }`}
             >
               <span className="truncate">{t.name}</span>
               {!t.is_canon && <span className="shrink-0 text-caption text-text-faint">your gym</span>}

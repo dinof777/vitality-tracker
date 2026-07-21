@@ -172,7 +172,7 @@ export default function CustomExercises() {
         </Link>
         <h1 className="mb-1 mt-2 text-h1 text-text-primary">Your exercises</h1>
         <p className="mb-6 text-body text-text-muted">
-          Add moves we don’t have. They join the 168-move library only for your gym.
+          Add moves we don’t have. They join the {SAMPLE_EXERCISES.length}-move library only for your gym.
         </p>
 
         {/* Add form */}
@@ -186,6 +186,7 @@ export default function CustomExercises() {
           <div className="flex gap-2">
             <TermPicker
               kind="muscle_group"
+              label="Muscle group"
               value={muscle}
               onChange={setMuscle}
               placeholder="Muscle group"
@@ -275,12 +276,17 @@ export default function CustomExercises() {
               )}
               <TermPicker
                 kind="tag"
+                label="Add a tag"
                 value=""
                 onChange={() => {}}
-                onTermAdded={(t) => {
-                  loadGymTags();
-                  setTags((prev) => [...prev, termSlug(t.normalized)]);
+                // Fires for an existing tag as well as a newly created one — the
+                // chips above only cover tags already on this exercise.
+                onSelect={(t) => {
+                  const id = termSlug(t.normalized);
+                  setTags((prev) => (prev.includes(id) ? prev : [...prev, id]));
                 }}
+                onTermAdded={loadGymTags}
+                clearOnSelect
                 requireCategory
                 placeholder="Add a tag…"
               />
@@ -361,7 +367,7 @@ export default function CustomExercises() {
           <input
             value={aliasQuery}
             onChange={(e) => setAliasQuery(e.target.value)}
-            placeholder="Search the 168-move library…"
+            placeholder={`Search the ${SAMPLE_EXERCISES.length}-move library…`}
             className="h-11 w-full rounded-md border border-border bg-surface px-3 text-body text-text-primary placeholder:text-text-faint"
           />
           {aliasQuery.trim() && (
