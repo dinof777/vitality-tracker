@@ -49,11 +49,18 @@ export default function SettingsPage() {
   const [history, setHistory] = useState<WorkoutRow[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [favorites, setFavorites] = useState<RoutineWithExercises[]>([]);
+  // Admin status comes from the server (/api/me) — the client never sees the
+  // allowlist, so a non-admin can't flip this on. Defaults false until it loads.
+  const [admin, setAdmin] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setAccount(loadAccount());
     setProfile(loadProfile());
+    fetch('/api/me')
+      .then((r) => (r.ok ? r.json() : { admin: false }))
+      .then((d) => setAdmin(!!d.admin))
+      .catch(() => setAdmin(false));
     fetch('/api/workouts')
       .then((r) => r.json())
       .then((d) => setHistory(Array.isArray(d.workouts) ? d.workouts : []))
@@ -102,6 +109,30 @@ export default function SettingsPage() {
         <p className="text-label text-accent">LIVE ELEVATED</p>
         <h1 className="text-h1 text-text-primary">Profile</h1>
       </header>
+
+      {/* Platform-admin shortcut — only rendered for an admin (server-checked). */}
+      {admin && (
+        <div className="mb-6 rounded-xl border border-accent/40 bg-accent/5 p-4">
+          <p className="mb-1 text-label text-accent">GLOBAL ADMIN</p>
+          <p className="mb-3 text-caption text-text-muted">The shared library and vocabulary across every gym.</p>
+          <div className="space-y-2">
+            {[
+              { href: '/admin/exercises', title: 'Moves' },
+              { href: '/admin/taxonomy', title: 'Muscle groups & tags' },
+              { href: '/admin/equipment', title: 'Equipment' },
+            ].map((l) => (
+              <Link
+                key={l.href}
+                href={l.href}
+                className="flex items-center justify-between rounded-lg border border-border bg-background p-3 active:bg-surface-raised"
+              >
+                <span className="text-body font-semibold text-text-primary">{l.title}</span>
+                <span className="text-text-faint">›</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Avatar */}
       <div className="mb-6 flex flex-col items-center">
