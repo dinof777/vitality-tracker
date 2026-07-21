@@ -71,8 +71,13 @@ export default function TermPicker({
   const [active, setActive] = useState(-1);
   /** A fuzzy near-match the server wants confirmed before creating anything. */
   const [confirmDup, setConfirmDup] = useState<{ name: string; id: string } | null>(null);
+  /** Flip the dropdown above the input when there isn't room below (short
+   *  viewport, input scrolled low) — checked fresh each time it opens. */
+  const [openUpward, setOpenUpward] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const listId = useId();
+  const DROPDOWN_MAX_HEIGHT = 288; // px — matches max-h-72 below
 
   const load = () =>
     fetch(`/api/tenant/taxonomy?kind=${kind}`)
@@ -86,6 +91,19 @@ export default function TermPicker({
   }, [kind]);
 
   useEffect(() => setQuery(value), [value]);
+
+  // Decide which way the dropdown opens, measured fresh each time it opens —
+  // on a short screen with the input scrolled low, opening downward would push
+  // most of the panel below the fold.
+  useEffect(() => {
+    if (!open) return;
+    const el = inputRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const spaceBelow = document.documentElement.clientHeight - rect.bottom;
+    const spaceAbove = rect.top;
+    setOpenUpward(spaceBelow < DROPDOWN_MAX_HEIGHT && spaceAbove > spaceBelow);
+  }, [open]);
 
   // Close on an outside click so the dropdown doesn't trap the form.
   useEffect(() => {
@@ -183,6 +201,7 @@ export default function TermPicker({
   return (
     <div ref={boxRef} className={`relative ${className}`}>
       <input
+        ref={inputRef}
         value={query}
         onChange={(e) => {
           setQuery(e.target.value);
@@ -211,7 +230,9 @@ export default function TermPicker({
           id={listId}
           role="listbox"
           aria-label={label}
-          className="absolute z-20 mt-1 max-h-72 w-full overflow-y-auto rounded-md border border-border bg-surface-raised shadow-lg"
+          className={`absolute z-20 max-h-72 w-full overflow-y-auto rounded-md border border-border bg-surface-raised shadow-lg ${
+            openUpward ? 'bottom-full mb-1' : 'mt-1'
+          }`}
         >
           {matches.map((t, i) => (
             <button
