@@ -3,8 +3,19 @@ import { UserButton } from '@clerk/nextjs';
 import { currentTrainer } from '@/lib/current-tenant';
 import { tenantEquipmentSlugs } from '@/lib/tenant-equipment';
 import { EQUIPMENT_LABEL, SAMPLE_EXERCISES } from '@/lib/exercises';
+import { isAdmin } from '@/lib/is-admin';
 
 export const dynamic = 'force-dynamic';
+
+// The platform-admin surfaces — global, across every gym. Distinct from a gym
+// OWNER (t.isOwner): admin is the platform gate (isAdmin / ADMIN_EMAILS), owner
+// is per-gym. The /admin pages and their APIs enforce isAdmin server-side too;
+// hiding the link is convenience + defense-in-depth, not the only gate.
+const ADMIN_LINKS = [
+  { href: '/admin/exercises', title: 'Moves', hint: 'Every gym’s moves + the shared library' },
+  { href: '/admin/taxonomy', title: 'Muscle groups & tags', hint: 'The governed vocabulary, all gyms' },
+  { href: '/admin/equipment', title: 'Equipment', hint: 'Approve, reject or merge proposed gear' },
+];
 
 // Protected trainer home. If the signed-in user belongs to a gym, show its
 // management hub; otherwise prompt them to create one (or get invited).
@@ -12,6 +23,7 @@ export default async function Dashboard() {
   const t = await currentTrainer();
   const gym = t?.tenant;
   const gear = gym ? await tenantEquipmentSlugs(gym.id) : [];
+  const admin = await isAdmin();
 
   return (
     <div className="min-h-dvh bg-background text-text-primary">
@@ -23,6 +35,32 @@ export default async function Dashboard() {
           </div>
           <UserButton />
         </div>
+
+        {/* Platform admin — global scope, only rendered for an admin. Sits above
+            the per-gym content because it spans every gym, not just this one. */}
+        {admin && (
+          <div className="mb-6 rounded-xl border border-accent/40 bg-accent/5 p-4">
+            <p className="mb-1 text-label text-accent">GLOBAL ADMIN</p>
+            <p className="mb-3 text-caption text-text-muted">
+              The shared library and vocabulary across every gym — not just yours.
+            </p>
+            <div className="space-y-2">
+              {ADMIN_LINKS.map((l) => (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  className="flex items-center justify-between rounded-lg border border-border bg-background p-3 active:bg-surface-raised"
+                >
+                  <span>
+                    <span className="block text-body font-semibold text-text-primary">{l.title}</span>
+                    <span className="block text-caption text-text-muted">{l.hint}</span>
+                  </span>
+                  <span className="text-text-faint">›</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
 
         {!gym ? (
           <>
