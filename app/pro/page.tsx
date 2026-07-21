@@ -2,6 +2,12 @@
 
 import Link from 'next/link';
 import { motion, type Variants } from 'framer-motion';
+import { SAMPLE_EXERCISES, EQUIPMENT_ORDER } from '@/lib/exercises';
+
+// Counts come from the library module itself — the same source /llms.txt reads,
+// so marketing copy can never drift from what's actually shipped.
+const MOVES = SAMPLE_EXERCISES.length;
+const EQUIP = EQUIPMENT_ORDER.length;
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 24 },
@@ -60,7 +66,7 @@ function PhoneMock() {
 
 const FEATURES = [
   { icon: '🎨', title: 'Brand autopilot', body: 'Paste your website — we pull your logo, colors, and name automatically. Your app, looking like you, in seconds.' },
-  { icon: '🏋️', title: 'Your own library', body: '168 illustrated movements, plus your own custom moves and the names your gym actually uses.' },
+  { icon: '🏋️', title: 'Your own library', body: `${MOVES} illustrated movements, plus your own custom moves and the names your gym actually uses.` },
   { icon: '📲', title: 'Build & share', body: 'Generate a workout, print it with a QR code, and your client scans to load and run it.' },
   { icon: '⏱️', title: 'SyncroFit built in', body: 'Push workouts straight to the SyncroFit interval timer — no copying, no fuss.' },
   { icon: '📊', title: 'Real engagement', body: 'See which routines your clients import and finish — with durations — not just guesses.' },
@@ -116,8 +122,8 @@ export default function ProLanding() {
               Your gym&rsquo;s training app. <span className="text-accent">Branded as yours.</span>
             </motion.h1>
             <motion.p variants={fadeUp} className="mx-auto mt-5 max-w-xl text-body text-text-muted sm:text-lg lg:mx-0">
-              Give your members a fully-branded workout app — your logo, your colors, your URL. Build from a
-              168-move illustrated library, share by QR, push to SyncroFit, and see who actually trained.
+              Give your members a fully-branded workout app — your logo, your colors, your URL. Build from a{' '}
+              {MOVES}-move illustrated library, share by QR, push to SyncroFit, and see who actually trained.
             </motion.p>
             <motion.div variants={fadeUp} className="mt-8 flex flex-col items-center gap-3 sm:flex-row lg:justify-start">
               <Link href="/sign-up" className="flex h-13 w-full items-center justify-center rounded-md bg-accent px-7 py-3 text-label text-on-accent transition active:scale-[0.98] sm:w-auto">
@@ -128,7 +134,7 @@ export default function ProLanding() {
               </Link>
             </motion.div>
             <motion.p variants={fadeUp} className="mt-6 text-caption text-text-faint">
-              168 illustrated moves · 9 equipment types · SyncroFit-connected
+              {MOVES} illustrated moves · {EQUIP} equipment types · SyncroFit-connected
             </motion.p>
           </motion.div>
           <motion.div variants={fadeUp} initial="hidden" animate="show" className="flex justify-center">
@@ -242,7 +248,7 @@ export default function ProLanding() {
             <p className="my-2 text-display text-text-primary">$0</p>
             <ul className="space-y-1.5 text-body text-text-muted">
               <li>✓ Your branded /g/ space</li>
-              <li>✓ Full 168-move library</li>
+              <li>✓ Full {MOVES}-move library</li>
               <li>✓ Custom exercises &amp; equipment</li>
               <li>✓ QR + SyncroFit sharing</li>
             </ul>

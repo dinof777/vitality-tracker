@@ -96,9 +96,12 @@ tag. Both are fixed below.
    whole row conflicts with DESIGN.md's touch-target rule and should be settled
    system-wide, not per-component.
 
-8. **The other "168" references are still stale** — `app/pro/page.tsx` has four
-   ("168 illustrated movements", "Full 168-move library", etc.) on the public
-   marketing page. Out of scope for this change but wrong in front of prospects.
+8. ~~**The other "168" references are still stale**~~ — **fixed in a follow-up.**
+   `app/pro/page.tsx` (×4), `app/dashboard/page.tsx`, `SITE.md` (×3) and a
+   `lib/tenant-library.ts` comment all now derive from or match
+   `SAMPLE_EXERCISES.length` / `EQUIPMENT_ORDER.length`, the same source
+   `/llms.txt` already read. `lib/library-counts.test.ts` now fails the build if
+   any code hardcodes a count or any markdown quotes a stale one.
 
 ## Could improve
 

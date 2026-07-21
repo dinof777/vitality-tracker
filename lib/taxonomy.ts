@@ -265,8 +265,8 @@ export function duplicateMessage(reason: DuplicateResult['reason'], matchName: s
 // ── Canon ────────────────────────────────────────────────────────────────────
 
 /**
- * The curated muscle groups — every value in use across the 188-move library.
- * Seeded as `core` status; these are what the picker offers first.
+ * The curated muscle groups — every value in use across the shipped library
+ * (see SAMPLE_EXERCISES). Seeded as `core`; what the picker offers first.
  */
 export const CANON_MUSCLE_GROUPS = [
   'Arms',

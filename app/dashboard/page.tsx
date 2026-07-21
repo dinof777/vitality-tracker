@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { UserButton } from '@clerk/nextjs';
 import { currentTrainer } from '@/lib/current-tenant';
 import { tenantEquipmentSlugs } from '@/lib/tenant-equipment';
-import { EQUIPMENT_LABEL } from '@/lib/exercises';
+import { EQUIPMENT_LABEL, SAMPLE_EXERCISES } from '@/lib/exercises';
 
 export const dynamic = 'force-dynamic';
 
@@ -180,7 +180,7 @@ export default async function Dashboard() {
             START TODAY&rsquo;S WORKOUT
           </Link>
           <Link href="/exercises" className="mt-2 block text-center text-caption text-text-muted">
-            or browse all 188 exercises ›
+            or browse all {SAMPLE_EXERCISES.length} exercises ›
           </Link>
         </div>
       </main>
