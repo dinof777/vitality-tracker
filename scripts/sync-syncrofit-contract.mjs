@@ -7,7 +7,7 @@
 // Source resolution (first that works wins):
 //   1. The hosted contract  — SYNCROFIT_CONTRACT_URL, default:
 //      https://www.mysyncrofit.com/.well-known/syncrofit-integration.json
-//   2. The local SyncroFit repo — SYNCROFIT_REPO/integration-contract.json
+//   2. The local SyncroFit repo — SYNCROFIT_REPO/www/integration-contract.json
 //      (default ~/dev/syncrofit), used until the URL is published.
 //
 // We sync here rather than fetching at build/test time on purpose: the build stays
