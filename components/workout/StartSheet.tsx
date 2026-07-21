@@ -21,14 +21,19 @@ interface StartSheetProps {
 // or hand it to the SyncroFit interval timer as a timed circuit.
 export default function StartSheet({ exercises, params, name, onLogInApp, onClose }: StartSheetProps) {
   const [sent, setSent] = useState(false);
-  const [useV2, setUseV2] = useState(false);
+  // Images-on is the default — every other SyncroFit hand-off surface (gym
+  // build, share, routines, dashboard) already sends the image format
+  // unconditionally, so this sheet matches them. Only a trainer who has
+  // explicitly turned it OFF keeps the classic no-image format.
+  const [useV2, setUseV2] = useState(true);
   const est = totalSeconds(exercises, params);
 
   useEffect(() => {
     try {
-      setUseV2(window.localStorage.getItem(V2_KEY) === '1');
+      const stored = window.localStorage.getItem(V2_KEY);
+      if (stored !== null) setUseV2(stored === '1'); // honor an explicit prior choice; default on otherwise
     } catch {
-      /* localStorage unavailable */
+      /* localStorage unavailable — keep the on-by-default */
     }
   }, []);
 
@@ -103,7 +108,9 @@ export default function StartSheet({ exercises, params, name, onLogInApp, onClos
         >
           <span className="pr-3">
             <span className="block text-caption font-semibold text-text-primary">Send move images</span>
-            <span className="block text-caption text-text-muted">Needs the updated SyncroFit build (new import)</span>
+            <span className="block text-caption text-text-muted">
+              On by default. Turn off only for an older SyncroFit build.
+            </span>
           </span>
           <span
             className={`flex h-6 w-11 shrink-0 items-center rounded-full p-0.5 transition-colors ${
