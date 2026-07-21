@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import LifecycleRow from '@/components/admin/LifecycleRow';
 import ScopeSelect, { GLOBAL, type Gym } from '@/components/admin/ScopeSelect';
-import { PROMOTION_THRESHOLD } from '@/lib/taxonomy';
+import { promotionThreshold } from '@/lib/taxonomy';
 import { FIELD_LABEL_PLURAL, MOVE, SCOPE, plural, tagCategoryLabel } from '@/lib/vocabulary';
 
 // Admin lifecycle for the vocabulary — muscle groups and tags — at both scopes.
@@ -334,7 +334,8 @@ export default function VocabularyAdmin() {
             </ul>
             {filter !== 'archived' && (
               <p className="mt-4 text-caption text-text-faint">
-                A term {PROMOTION_THRESHOLD} gyms add independently promotes itself to the shared library.
+                A term {promotionThreshold(gyms.length)} gyms add independently promotes itself to the shared
+                library. That bar scales as more gyms join.
               </p>
             )}
           </>

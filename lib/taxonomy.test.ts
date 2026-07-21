@@ -4,6 +4,9 @@ import {
   canonicalTerm,
   findTermDuplicate,
   termSlug,
+  promotionThreshold,
+  PROMOTION_FLOOR,
+  PROMOTION_FRACTION,
   CANON_MUSCLE_GROUPS,
   type TermRef,
 } from './taxonomy';
@@ -66,6 +69,45 @@ describe('findTermDuplicate — muscle groups', () => {
       const others = MUSCLES.filter((m) => m.id !== term.id);
       expect(findTermDuplicate('muscle_group', term.name, others).match).toBeNull();
     }
+  });
+});
+
+describe('promotionThreshold', () => {
+  // Replaces the old flat PROMOTION_THRESHOLD = 3: a floor that carries the
+  // "is this even signal" job while the platform is small, handing off to a
+  // fraction once a fixed count would become a rounding error. These cases
+  // document exactly where that handoff happens.
+  it('at today\'s platform size, behaves exactly like the old flat constant — unanimity', () => {
+    expect(promotionThreshold(3)).toBe(3);
+  });
+
+  it('the floor still dominates all the way to 30 tenants', () => {
+    expect(promotionThreshold(30)).toBe(3);
+  });
+
+  it('the fraction takes over one tenant later, at 31', () => {
+    expect(promotionThreshold(31)).toBe(4);
+  });
+
+  it('scales as a flat 10% once well past the floor', () => {
+    expect(promotionThreshold(100)).toBe(10);
+  });
+
+  it('never drops below the floor for degenerate/empty platforms', () => {
+    expect(promotionThreshold(0)).toBe(PROMOTION_FLOOR);
+    expect(promotionThreshold(1)).toBe(PROMOTION_FLOOR);
+  });
+
+  it('clamps negative tenant counts instead of going negative or throwing', () => {
+    // A live `count(*)` can never actually be negative, but the function
+    // shouldn't silently misbehave (e.g. return a threshold of 0, which
+    // would auto-promote anything with zero adopters) if it ever were.
+    expect(promotionThreshold(-5)).toBe(PROMOTION_FLOOR);
+  });
+
+  it('derives from the exported PROMOTION_FLOOR / PROMOTION_FRACTION constants, not inline magic numbers', () => {
+    const n = 250;
+    expect(promotionThreshold(n)).toBe(Math.max(PROMOTION_FLOOR, Math.ceil(PROMOTION_FRACTION * n)));
   });
 });
 

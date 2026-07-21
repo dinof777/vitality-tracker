@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { getSql } from './db';
-import { PROMOTION_THRESHOLD } from './taxonomy';
+import { promotionThreshold, PROMOTION_FLOOR } from './taxonomy';
 import { renameTerm, promoteIfPopular, addTerm, tenantTerms } from './taxonomy-db';
 
 // The gap this file closes: lib/taxonomy.test.ts only proves the PURE
@@ -13,7 +13,8 @@ import { renameTerm, promoteIfPopular, addTerm, tenantTerms } from './taxonomy-d
 // and in the most depth. promoteIfPopular (the auto-promotion threshold) and
 // addTerm's fold-vs-create branching are the next highest-value paths: they
 // are the two production guarantees this module claims ("trainers are never
-// blocked" / "promotion is gated on PROMOTION_THRESHOLD independent gyms").
+// blocked" / "promotion is gated on promotionThreshold(tenantCount) independent
+// gyms, scaling with the platform rather than a flat magic number").
 //
 // No live database. `./db` is mocked; `sql` is a fake tagged-template
 // function keyed off the literal SQL text — same pattern as
@@ -191,20 +192,45 @@ describe('promoteIfPopular', () => {
     expect(await promoteIfPopular('term-1')).toBe(false);
   });
 
-  it('gates promotion on the shared PROMOTION_THRESHOLD constant, not a hardcoded number', async () => {
+  it('reads the live tenant count and gates promotion on promotionThreshold(count), not a hardcoded number', async () => {
+    // 40 tenants deliberately exercises the FRACTION branch (promotionThreshold(40)
+    // === 4), not just the floor — so this test would fail if taxonomy-db.ts ever
+    // reverted to the old flat constant (3) instead of deriving from the live count.
+    const mockedTenantCount = 40;
     const { sql, calls } = fakeSql([
+      (text) => (text.includes('from tenants') ? [{ n: mockedTenantCount }] : undefined),
       (text) => (text.includes('update taxonomy_terms set status') ? [{ id: 'term-1' }] : undefined),
     ]);
     vi.mocked(getSql).mockReturnValue(sql as unknown as SqlOrNull);
 
     const promoted = await promoteIfPopular('term-1');
     expect(promoted).toBe(true);
-    expect(calls[0].text).toContain("status = 'pending'");
-    expect(calls[0].values).toContain(PROMOTION_THRESHOLD);
+
+    expect(calls.some((c) => c.text.includes('from tenants'))).toBe(true); // live count, not cached
+
+    const updateQuery = calls.find((c) => c.text.includes('update taxonomy_terms set status'))!;
+    expect(updateQuery.text).toContain("status = 'pending'");
+    expect(updateQuery.values).toContain(promotionThreshold(mockedTenantCount));
+    expect(updateQuery.values).toContain(4); // sanity: NOT the old flat PROMOTION_THRESHOLD of 3
+  });
+
+  it('falls back to 0 tenants (and so the floor) when the tenant count query returns no row', async () => {
+    const { sql, calls } = fakeSql([
+      (text) => (text.includes('from tenants') ? [] : undefined),
+      (text) => (text.includes('update taxonomy_terms set status') ? [{ id: 'term-1' }] : undefined),
+    ]);
+    vi.mocked(getSql).mockReturnValue(sql as unknown as SqlOrNull);
+
+    await promoteIfPopular('term-1');
+    const updateQuery = calls.find((c) => c.text.includes('update taxonomy_terms set status'))!;
+    expect(updateQuery.values).toContain(PROMOTION_FLOOR);
   });
 
   it('returns false when the update matches no rows (not yet popular enough, or not pending)', async () => {
-    const { sql } = fakeSql([(text) => (text.includes('update taxonomy_terms set status') ? [] : undefined)]);
+    const { sql } = fakeSql([
+      (text) => (text.includes('from tenants') ? [{ n: 3 }] : undefined),
+      (text) => (text.includes('update taxonomy_terms set status') ? [] : undefined),
+    ]);
     vi.mocked(getSql).mockReturnValue(sql as unknown as SqlOrNull);
 
     expect(await promoteIfPopular('term-1')).toBe(false);
@@ -273,6 +299,7 @@ describe('addTerm', () => {
           ? [{ id: 'term-new', name: 'Hamstrigs', normalized: 'hamstrigs', category: null, status: 'pending', is_canon: false, is_mine: true }]
           : undefined,
       (text) => (text.includes('insert into tenant_terms') ? [{}] : undefined),
+      (text) => (text.includes('from tenants') ? [{ n: 3 }] : undefined),
       (text) => (text.includes('update taxonomy_terms set status') ? [] : undefined),
     ]);
     vi.mocked(getSql).mockReturnValue(sql as unknown as SqlOrNull);
@@ -303,6 +330,7 @@ describe('addTerm', () => {
           ? [{ id: 'term-new', name: 'Rotator Cuff', normalized: 'rotator cuff', category: null, status: 'pending', is_canon: false, is_mine: true }]
           : undefined,
       (text) => (text.includes('insert into tenant_terms') ? [{}] : undefined),
+      (text) => (text.includes('from tenants') ? [{ n: 3 }] : undefined),
       (text) => (text.includes('update taxonomy_terms set status') ? [] : undefined),
     ]);
     vi.mocked(getSql).mockReturnValue(sql as unknown as SqlOrNull);

@@ -297,8 +297,35 @@ export const CANON_MUSCLE_GROUPS = [
  * into the shared vocabulary. Real signal that the canon has a gap — as opposed
  * to one gym's local naming — and it keeps the review queue to the handful of
  * terms that actually matter.
+ *
+ * This is a SIGNAL-DETECTION bar, not a democratic-consensus one: the question is
+ * "did enough independent parties converge on this for it to mean something,"
+ * not "does the platform majority want it."
+ *
+ * It used to be a flat 3, which held its count but not its meaning as the
+ * platform grows — at 3 gyms that's unanimity, at 30 it's a 10% minority
+ * deciding everyone's shared vocabulary. A pure fraction fails the opposite way:
+ * demanding a majority means realistically nothing ever promotes, the review
+ * queue grows, and the mechanism stops doing its job.
+ *
+ * So: a floor that carries the "is this even signal" job while the platform is
+ * small, and a fraction that only takes over once a fixed count really has
+ * become a rounding error. Deliberately no upper cap — that would be designing
+ * for a scale this product isn't near.
  */
-export const PROMOTION_THRESHOLD = 3;
+export const PROMOTION_FLOOR = 3;
+export const PROMOTION_FRACTION = 0.1;
+
+/**
+ * Gyms required for auto-promotion at a given platform size.
+ *
+ * The floor dominates all the way to 30 tenants, so near-term behaviour is
+ * unchanged; at today's 3 gyms this is still unanimity.
+ *   3 → 3 (every gym)   30 → 3   31 → 4   100 → 10
+ */
+export function promotionThreshold(tenantCount: number): number {
+  return Math.max(PROMOTION_FLOOR, Math.ceil(PROMOTION_FRACTION * Math.max(0, tenantCount)));
+}
 
 /**
  * Per-gym ceiling on custom terms of one kind. Far above what any real gym

@@ -5,7 +5,7 @@ import {
   termSlug,
   MAX_CUSTOM_TERMS_PER_TENANT,
   MAX_TERM_LENGTH,
-  PROMOTION_THRESHOLD,
+  promotionThreshold,
   type TermKind,
   type TermRef,
   type TermStatus,
@@ -147,18 +147,26 @@ export async function unlinkTerm(tenantId: string, termId: string): Promise<void
 }
 
 /**
- * A pending term that PROMOTION_THRESHOLD independent gyms landed on is a real
- * gap in the canon, not one gym's local naming — promote it without waiting on
- * a human. This is what keeps the review queue small enough to actually review.
+ * A pending term that enough independent gyms landed on is a real gap in the
+ * canon, not one gym's local naming — promote it without waiting on a human.
+ * This is what keeps the review queue small enough to actually review.
+ *
+ * The bar scales with the platform (see promotionThreshold). The tenant count is
+ * read live rather than cached: this runs only from addTerm — i.e. when a trainer
+ * writes a new term, never on a picker/read path — so the extra count costs
+ * nothing measurable, and a live count can't go stale the way a hand-maintained
+ * number does. That staleness is the exact failure this change exists to remove.
  */
 export async function promoteIfPopular(termId: string): Promise<boolean> {
   const sql = getSql();
   if (!sql) return false;
+  const tenantCount = (await sql`select count(*)::int as n from tenants`)[0]?.n ?? 0;
+  const threshold = promotionThreshold(tenantCount);
   const rows = await sql`
     update taxonomy_terms set status = 'approved'
     where id = ${termId}
       and status = 'pending'
-      and (select count(*) from tenant_terms where term_id = ${termId}) >= ${PROMOTION_THRESHOLD}
+      and (select count(*) from tenant_terms where term_id = ${termId}) >= ${threshold}
     returning id
   `;
   return rows.length > 0;
