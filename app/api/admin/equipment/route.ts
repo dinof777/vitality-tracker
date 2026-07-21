@@ -20,7 +20,7 @@ export async function GET() {
   const items = await sql`
     select c.id, c.name, c.normalized, c.status, c.created_at,
       t.name as proposed_by,
-      (select count(*) from tenant_equipment te where te.catalog_id = c.id) as gyms_using
+      (select count(*) from tenant_equipment te where te.catalog_id = c.id)::int as gyms_using
     from equipment_catalog c
     left join tenants t on t.id = c.created_by_tenant_id
     where c.status not in ('rejected', 'merged')
