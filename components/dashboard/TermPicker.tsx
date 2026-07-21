@@ -61,7 +61,9 @@ export default function TermPicker({
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [category, setCategory] = useState('goal');
+  // No default: a tag's group decides how it filters, so the trainer picks it
+  // deliberately rather than inheriting whichever option happened to be first.
+  const [category, setCategory] = useState<string | null>(null);
   /** Index of the arrow-key-highlighted option; -1 = none. */
   const [active, setActive] = useState(-1);
   /** A fuzzy near-match the server wants confirmed before creating anything. */
@@ -98,6 +100,9 @@ export default function TermPicker({
   );
   const exact = terms.some((t) => t.name.toLowerCase() === q);
   const canAdd = q.length > 0 && !exact;
+  const chosen = CATEGORIES.find((c) => c.value === category);
+  /** Waiting on step 1 — the name is typed but no group is picked yet. */
+  const blockedOnCategory = requireCategory && !category;
 
   const select = (t: Term) => {
     onChange(t.name);
@@ -133,6 +138,7 @@ export default function TermPicker({
   };
 
   const add = async (force = false) => {
+    if (requireCategory && !category) return;
     setBusy(true);
     setError(null);
     try {
@@ -154,6 +160,7 @@ export default function TermPicker({
       await load();
       onTermAdded?.(j.term);
       select(j.term);
+      setCategory(null); // the next tag picks its own group
       // The server folded a synonym into an existing term — say so, so the
       // trainer isn't confused about why the name changed under them.
       if (j.folded) setNote(`We call that “${j.term.name}”.`);
@@ -253,18 +260,19 @@ export default function TermPicker({
               ) : (
                 <>
                   {requireCategory && (
-                    <div className="mb-2">
-                      <p className="mb-1 text-[0.65rem] font-semibold tracking-wide text-text-faint">
-                        WHAT KIND OF TAG?
-                      </p>
+                    <fieldset className="mb-2">
+                      <legend className="mb-1 text-[0.65rem] font-semibold tracking-wide text-text-faint">
+                        1 · WHICH GROUP DOES “{query.trim().toUpperCase()}” BELONG TO?
+                      </legend>
                       <div className="flex flex-wrap gap-1.5">
                         {CATEGORIES.map((c) => (
                           <button
                             key={c.value}
                             type="button"
                             title={c.hint}
+                            aria-pressed={category === c.value}
                             onClick={() => setCategory(c.value)}
-                            className={`rounded-full border px-2.5 py-1 text-caption transition ${
+                            className={`min-h-11 rounded-full border px-3 py-1 text-caption transition ${
                               category === c.value
                                 ? 'border-accent bg-accent text-on-accent'
                                 : 'border-border bg-background text-text-muted'
@@ -274,15 +282,24 @@ export default function TermPicker({
                           </button>
                         ))}
                       </div>
-                    </div>
+                      <p className="mt-1 text-caption text-text-faint">
+                        {chosen
+                          ? chosen.hint
+                          : 'The group decides how the tag filters — pick one to continue.'}
+                      </p>
+                    </fieldset>
                   )}
                   <button
                     type="button"
                     onClick={() => add(false)}
-                    disabled={busy}
-                    className="h-9 w-full rounded-md border border-accent px-3 text-caption font-semibold text-accent disabled:opacity-50"
+                    disabled={busy || blockedOnCategory}
+                    className="min-h-11 w-full rounded-md border border-accent px-3 text-caption font-semibold text-accent disabled:cursor-not-allowed disabled:border-border disabled:text-text-faint disabled:opacity-100"
                   >
-                    {busy ? 'Adding…' : `+ Add “${query.trim()}”`}
+                    {busy
+                      ? 'Adding…'
+                      : blockedOnCategory
+                        ? 'Pick a group first'
+                        : `${requireCategory ? '2 · ' : ''}+ Add “${query.trim()}”${chosen ? ` to ${chosen.label}` : ''}`}
                   </button>
                   <p className="mt-1.5 text-caption text-text-faint">
                     Available to your gym right away. Shared with everyone once enough gyms add it too.
