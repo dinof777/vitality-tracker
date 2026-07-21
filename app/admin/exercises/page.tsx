@@ -132,18 +132,18 @@ export default function ExerciseAdmin() {
         <p className="mb-4 text-body text-text-muted">
           Every {MOVE.one} in the library. Tap one to edit it, change where it lives, or retire it.
         </p>
-        <p className="mb-5 text-caption text-text-muted">
-          <Link href="/admin/taxonomy" className="text-accent">
+        <nav className="mb-5 flex items-center text-caption text-text-muted">
+          <Link href="/admin/taxonomy" className="inline-flex h-8 items-center font-semibold text-accent">
             Muscle groups &amp; tags →
           </Link>
-        </p>
+        </nav>
 
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder={`Search ${MOVE.many}…`}
           aria-label={`Search ${MOVE.many}`}
-          className="mb-3 h-11 w-full rounded-md border border-border bg-surface px-3 text-body text-text-primary placeholder:text-text-faint"
+          className="mb-3 h-12 w-full rounded-md bg-surface-raised px-4 text-body text-text-primary outline-none placeholder:text-text-faint focus:ring-2 focus:ring-accent"
         />
 
         <div className="mb-4 flex flex-wrap gap-2">
@@ -176,16 +176,19 @@ export default function ExerciseAdmin() {
         ) : (
           <>
             <p className="mb-2 text-caption text-text-faint">{plural(shown.length, MOVE.one, MOVE.many)}</p>
-            <ul className="space-y-1.5">
+            <ul className="space-y-2">
               {shown.map((ex) => (
                 <LifecycleRow
                   key={ex.id}
                   title={ex.name}
-                  badge={{
-                    label: ex.is_global ? SCOPE.global.badge : (ex.gym_name ?? SCOPE.tenant.badge),
-                    tone: ex.is_global ? 'shared' : 'local',
-                  }}
-                  meta={[ex.muscle_group, usageLabel(ex) || 'unused'].filter(Boolean).join(' · ')}
+                  badge={
+                    ex.archived_at
+                      ? { label: 'Archived', tone: 'local' }
+                      : ex.is_global
+                        ? null
+                        : { label: ex.gym_name ?? SCOPE.tenant.badge, tone: 'local' }
+                  }
+                  meta={[ex.muscle_group, usageLabel(ex) || null].filter(Boolean).join(' · ')}
                   archived={!!ex.archived_at}
                   open={openId === ex.id}
                   onToggle={() => {
@@ -198,7 +201,7 @@ export default function ExerciseAdmin() {
                     <button
                       type="button"
                       onClick={() => act(ex.id, 'restore')}
-                      className="h-11 w-full rounded-md border border-accent text-caption font-semibold text-accent"
+                      className="h-12 w-full rounded-md border border-accent text-caption font-semibold text-accent"
                     >
                       Restore to the library
                     </button>
@@ -206,68 +209,64 @@ export default function ExerciseAdmin() {
                     draft && (
                       <div className="space-y-3">
                         <label className="block">
-                          <span className="mb-1 block text-[0.65rem] font-semibold tracking-wide text-text-faint">
-                            NAME
-                          </span>
+                          <span className="mb-1 block text-label uppercase text-text-faint">Name</span>
                           <input
                             value={draft.name}
                             onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-                            className="h-11 w-full rounded-md border border-border bg-background px-3 text-body text-text-primary"
+                            className="h-12 w-full rounded-md border border-border bg-surface-raised px-3 text-body text-text-primary"
                           />
                         </label>
                         <label className="block">
-                          <span className="mb-1 block text-[0.65rem] font-semibold tracking-wide text-text-faint">
-                            MUSCLE GROUP
-                          </span>
+                          <span className="mb-1 block text-label uppercase text-text-faint">Muscle group</span>
                           <input
                             value={draft.muscle_group ?? ''}
                             onChange={(e) => setDraft({ ...draft, muscle_group: e.target.value })}
                             placeholder="Must be a shared term"
-                            className="h-11 w-full rounded-md border border-border bg-background px-3 text-body text-text-primary placeholder:text-text-faint"
+                            className="h-12 w-full rounded-md border border-border bg-surface-raised px-3 text-body text-text-primary placeholder:text-text-faint"
                           />
                         </label>
                         <label className="block">
-                          <span className="mb-1 block text-[0.65rem] font-semibold tracking-wide text-text-faint">
-                            FORM CUE
-                          </span>
+                          <span className="mb-1 block text-label uppercase text-text-faint">Form cue</span>
                           <input
                             value={draft.default_cue ?? ''}
                             onChange={(e) => setDraft({ ...draft, default_cue: e.target.value })}
-                            className="h-11 w-full rounded-md border border-border bg-background px-3 text-body text-text-primary"
+                            className="h-12 w-full rounded-md border border-border bg-surface-raised px-3 text-body text-text-primary"
                           />
                         </label>
 
-                        <ScopeSelect
-                          value={ex.is_global ? GLOBAL : (ex.tenant_id ?? GLOBAL)}
-                          gyms={gyms}
-                          onChange={(next) => changeScope(ex, next)}
-                        />
+                        <div className="space-y-3 border-t border-border pt-3">
+                          <ScopeSelect
+                            value={ex.is_global ? GLOBAL : (ex.tenant_id ?? GLOBAL)}
+                            gyms={gyms}
+                            onChange={(next) => changeScope(ex, next)}
+                          />
 
-                        <div className="flex gap-2 pt-1">
-                          <button
-                            type="button"
-                            onClick={async () => {
-                              if (
-                                await act(ex.id, 'edit', {
-                                  name: draft.name,
-                                  muscle_group: draft.muscle_group,
-                                  default_cue: draft.default_cue,
-                                })
-                              ) {
-                                setOpenId(null);
-                              }
-                            }}
-                            className="h-11 flex-1 rounded-md bg-accent text-caption font-semibold text-on-accent"
-                          >
-                            Save
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => remove(ex)}
-                            className="h-11 rounded-md border border-border px-4 text-caption text-destructive"
-                          >
-                            {usageLabel(ex) ? 'Archive' : 'Delete'}
-                          </button>
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                if (
+                                  await act(ex.id, 'edit', {
+                                    name: draft.name,
+                                    muscle_group: draft.muscle_group,
+                                    default_cue: draft.default_cue,
+                                  })
+                                ) {
+                                  setOpenId(null);
+                                }
+                              }}
+                              className="h-12 flex-1 rounded-md bg-accent text-caption font-semibold text-on-accent"
+                            >
+                              Save
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => remove(ex)}
+                              className="h-12 rounded-md border border-border px-4 text-caption text-destructive"
+                            >
+                              {usageLabel(ex) ? 'Archive' : 'Delete'}
+                            </button>
+                          </div>
                         </div>
                       </div>
                     )

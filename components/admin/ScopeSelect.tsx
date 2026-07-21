@@ -26,14 +26,12 @@ export const GLOBAL = 'global';
 export default function ScopeSelect({ value, gyms, onChange, disabled = false, label = 'Lives in' }: Props) {
   return (
     <label className="block">
-      <span className="mb-1 block text-[0.65rem] font-semibold tracking-wide text-text-faint">
-        {label.toUpperCase()}
-      </span>
+      <span className="mb-1 block text-label uppercase text-text-faint">{label}</span>
       <select
         value={value}
         disabled={disabled}
         onChange={(e) => onChange(e.target.value)}
-        className="h-11 w-full rounded-md border border-border bg-background px-2 text-body text-text-primary disabled:opacity-50"
+        className="h-12 w-full rounded-md border border-border bg-surface-raised px-3 text-body text-text-primary disabled:opacity-50"
       >
         <option value={GLOBAL}>Shared library — every gym</option>
         {gyms.map((g) => (

@@ -89,14 +89,14 @@ export default function EquipmentModeration() {
                   <button
                     type="button"
                     onClick={() => act(p.id, 'approve')}
-                    className="h-9 rounded-md bg-accent px-4 text-caption font-semibold text-on-accent"
+                    className="h-12 rounded-md bg-accent px-4 text-caption font-semibold text-on-accent"
                   >
                     Approve
                   </button>
                   <button
                     type="button"
                     onClick={() => act(p.id, 'reject')}
-                    className="h-9 rounded-md border border-border px-4 text-caption text-destructive"
+                    className="h-12 rounded-md border border-border px-4 text-caption text-destructive"
                   >
                     Reject
                   </button>
@@ -105,7 +105,7 @@ export default function EquipmentModeration() {
                   <select
                     value={mergeTarget[p.id] ?? ''}
                     onChange={(e) => setMergeTarget((m) => ({ ...m, [p.id]: e.target.value }))}
-                    className="h-9 flex-1 rounded-md border border-border bg-background px-2 text-caption text-text-primary"
+                    className="h-12 flex-1 rounded-md border border-border bg-surface-raised px-3 text-caption text-text-primary"
                   >
                     <option value="">Merge into…</option>
                     {canonical.map((c) => (
@@ -118,7 +118,7 @@ export default function EquipmentModeration() {
                     type="button"
                     onClick={() => act(p.id, 'merge')}
                     disabled={!mergeTarget[p.id]}
-                    className="h-9 rounded-md border border-border px-4 text-caption font-semibold text-text-primary disabled:opacity-40"
+                    className="h-12 rounded-md border border-border px-4 text-caption font-semibold text-text-primary disabled:opacity-40"
                   >
                     Merge
                   </button>

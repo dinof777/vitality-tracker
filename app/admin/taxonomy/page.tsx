@@ -54,6 +54,7 @@ export default function VocabularyAdmin() {
   const [openId, setOpenId] = useState<string | null>(null);
   const [draftName, setDraftName] = useState('');
   const [mergeInto, setMergeInto] = useState('');
+  const [mergeOpen, setMergeOpen] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -142,15 +143,14 @@ export default function VocabularyAdmin() {
         <p className="mb-4 text-body text-text-muted">
           The words gyms can file a {MOVE.one} under. Tap one to rename it, change where it lives, merge or retire it.
         </p>
-        <p className="mb-5 text-caption text-text-muted">
-          <Link href="/admin/exercises" className="text-accent">
+        <nav className="mb-5 flex flex-wrap items-center gap-x-4 text-caption text-text-muted">
+          <Link href="/admin/exercises" className="inline-flex h-8 items-center font-semibold text-accent">
             Moves →
           </Link>
-          <span className="mx-2 text-text-faint">·</span>
-          <Link href="/admin/equipment" className="text-accent">
+          <Link href="/admin/equipment" className="inline-flex h-8 items-center font-semibold text-accent">
             Equipment →
           </Link>
-        </p>
+        </nav>
 
         <div className="mb-3 flex gap-2">
           {KINDS.map((k) => (
@@ -184,7 +184,7 @@ export default function VocabularyAdmin() {
             >
               {f.label}
               {f.value === 'review' && reviewCount > 0 && (
-                <span className="ml-1.5 text-text-faint">{reviewCount}</span>
+                <span className="ml-2 text-text-faint">{reviewCount}</span>
               )}
             </button>
           ))}
@@ -208,20 +208,23 @@ export default function VocabularyAdmin() {
               {plural(shown.length, 'term')}
               {filter === 'all' && reviewCount > 0 && ` · ${reviewCount} awaiting review`}
             </p>
-            <ul className="space-y-1.5">
+            <ul className="space-y-2">
               {shown.map((t) => (
                 <LifecycleRow
                   key={t.id}
                   title={t.name}
-                  badge={{
-                    label: t.is_global ? SCOPE.global.badge : (t.proposed_by ?? SCOPE.tenant.badge),
-                    tone: t.is_global ? 'shared' : 'local',
-                  }}
+                  badge={
+                    t.archived_at
+                      ? { label: 'Archived', tone: 'local' }
+                      : t.is_global
+                        ? null
+                        : { label: t.proposed_by ?? SCOPE.tenant.badge, tone: 'local' }
+                  }
                   meta={
                     [
                       t.status === 'pending' ? 'Awaiting review' : null,
                       tagCategoryLabel(t.category),
-                      usageLabel(t) || 'unused',
+                      usageLabel(t) || null,
                     ]
                       .filter(Boolean)
                       .join(' · ')
@@ -234,33 +237,32 @@ export default function VocabularyAdmin() {
                     setOpenId(next);
                     setDraftName(next ? t.name : '');
                     setMergeInto('');
+                    setMergeOpen(false);
                   }}
                 >
                   {t.archived_at ? (
                     <button
                       type="button"
                       onClick={() => act(t.id, 'restore')}
-                      className="h-11 w-full rounded-md border border-accent text-caption font-semibold text-accent"
+                      className="h-12 w-full rounded-md border border-accent text-caption font-semibold text-accent"
                     >
                       Restore
                     </button>
                   ) : (
                     <div className="space-y-3">
                       <label className="block">
-                        <span className="mb-1 block text-[0.65rem] font-semibold tracking-wide text-text-faint">
-                          NAME
-                        </span>
+                        <span className="mb-1 block text-label uppercase text-text-faint">Name</span>
                         <div className="flex gap-2">
                           <input
                             value={draftName}
                             onChange={(e) => setDraftName(e.target.value)}
-                            className="h-11 flex-1 rounded-md border border-border bg-background px-3 text-body text-text-primary"
+                            className="h-12 flex-1 rounded-md border border-border bg-surface-raised px-3 text-body text-text-primary"
                           />
                           <button
                             type="button"
                             disabled={!draftName.trim() || draftName === t.name}
                             onClick={() => act(t.id, 'rename', { name: draftName })}
-                            className="h-11 rounded-md bg-accent px-4 text-caption font-semibold text-on-accent disabled:opacity-40"
+                            className="h-12 rounded-md bg-accent px-4 text-caption font-semibold text-on-accent disabled:opacity-40"
                           >
                             Rename
                           </button>
@@ -273,46 +275,58 @@ export default function VocabularyAdmin() {
                         onChange={(next) => changeScope(t, next)}
                       />
 
-                      <label className="block">
-                        <span className="mb-1 block text-[0.65rem] font-semibold tracking-wide text-text-faint">
-                          MERGE INTO
-                        </span>
-                        <div className="flex gap-2">
-                          <select
-                            value={mergeInto}
-                            onChange={(e) => setMergeInto(e.target.value)}
-                            className="h-11 flex-1 rounded-md border border-border bg-background px-2 text-body text-text-primary"
-                          >
-                            <option value="">Keep separate</option>
-                            {canonical
-                              .filter((c) => c.id !== t.id)
-                              .map((c) => (
-                                <option key={c.id} value={c.id}>
-                                  {c.name}
-                                </option>
-                              ))}
-                          </select>
+                      <div className="space-y-3 border-t border-border pt-3">
+                        {mergeOpen ? (
+                          <label className="block">
+                            <span className="mb-1 block text-label uppercase text-text-faint">Merge into</span>
+                            <div className="flex gap-2">
+                              <select
+                                value={mergeInto}
+                                onChange={(e) => setMergeInto(e.target.value)}
+                                className="h-12 flex-1 rounded-md border border-border bg-surface-raised px-3 text-body text-text-primary"
+                              >
+                                <option value="">Keep separate</option>
+                                {canonical
+                                  .filter((c) => c.id !== t.id)
+                                  .map((c) => (
+                                    <option key={c.id} value={c.id}>
+                                      {c.name}
+                                    </option>
+                                  ))}
+                              </select>
+                              <button
+                                type="button"
+                                disabled={!mergeInto}
+                                onClick={() => act(t.id, 'merge', { mergeInto })}
+                                className="h-12 rounded-md border border-border px-4 text-caption font-semibold text-text-primary disabled:opacity-40"
+                              >
+                                Merge
+                              </button>
+                            </div>
+                            <span className="mt-1 block text-caption text-text-faint">
+                              Rewrites every {MOVE.one} using “{t.name}” onto the target — nothing is orphaned.
+                            </span>
+                          </label>
+                        ) : (
                           <button
                             type="button"
-                            disabled={!mergeInto}
-                            onClick={() => act(t.id, 'merge', { mergeInto })}
-                            className="h-11 rounded-md border border-border px-4 text-caption font-semibold text-text-primary disabled:opacity-40"
+                            onClick={() => setMergeOpen(true)}
+                            className="flex h-11 items-center text-caption font-semibold text-text-muted"
                           >
-                            Merge
+                            Merge into another term…
+                          </button>
+                        )}
+
+                        <div className="flex justify-end">
+                          <button
+                            type="button"
+                            onClick={() => remove(t)}
+                            className="h-12 rounded-md border border-border px-5 text-caption text-destructive"
+                          >
+                            {usageLabel(t) ? 'Archive' : 'Delete'}
                           </button>
                         </div>
-                        <span className="mt-1 block text-caption text-text-faint">
-                          Rewrites every {MOVE.one} using “{t.name}” onto the target — nothing is orphaned.
-                        </span>
-                      </label>
-
-                      <button
-                        type="button"
-                        onClick={() => remove(t)}
-                        className="h-11 w-full rounded-md border border-border text-caption text-destructive"
-                      >
-                        {usageLabel(t) ? 'Archive' : 'Delete'}
-                      </button>
+                      </div>
                     </div>
                   )}
                 </LifecycleRow>

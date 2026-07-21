@@ -18,7 +18,12 @@ export interface RowBadge {
 
 interface Props {
   title: string;
-  badge: RowBadge;
+  /**
+   * Omit (or pass null) for the common case — a shared, live item. A badge is
+   * a claim that a row is an EXCEPTION to the default; when every row carries
+   * one it stops meaning anything. Reserve it for gym-owned and archived rows.
+   */
+  badge?: RowBadge | null;
   /** Second line — muscle group, what depends on it, etc. */
   meta: string;
   archived?: boolean;
@@ -55,7 +60,7 @@ export default function LifecycleRow({
         onClick={onToggle}
         aria-expanded={open}
         aria-controls={panelId}
-        className="flex w-full items-center gap-3 px-3 py-2.5 text-left"
+        className="flex w-full items-center gap-3 px-3 py-3 text-left"
       >
         <div className="min-w-0 flex-1">
           <p
@@ -67,14 +72,21 @@ export default function LifecycleRow({
           </p>
           <p className="truncate text-caption text-text-muted">{meta}</p>
         </div>
+        {badge && (
+          <span
+            className={`shrink-0 rounded-full px-2 py-1 text-caption ${
+              badge.tone === 'shared' ? 'bg-accent/15 text-accent' : 'bg-surface-raised text-text-muted'
+            }`}
+          >
+            {badge.label}
+          </span>
+        )}
         <span
-          className={`shrink-0 rounded-full px-2 py-0.5 text-caption ${
-            badge.tone === 'shared' ? 'bg-accent/15 text-accent' : 'bg-surface-raised text-text-muted'
+          aria-hidden
+          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-surface-raised text-sm font-bold transition-all duration-150 ${
+            open ? 'rotate-180 bg-accent/15 text-accent' : 'text-text-muted'
           }`}
         >
-          {badge.label}
-        </span>
-        <span aria-hidden className={`shrink-0 text-text-faint transition-transform ${open ? 'rotate-180' : ''}`}>
           ⌄
         </span>
       </button>
