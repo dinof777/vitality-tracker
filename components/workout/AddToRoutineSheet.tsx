@@ -7,6 +7,7 @@ import {
   saveRoutineExercises,
   type RoutineWithExercises,
 } from '@/lib/routines';
+import { MOVE } from '@/lib/vocabulary';
 
 interface AddToRoutineSheetProps {
   exerciseId: string;
@@ -14,9 +15,9 @@ interface AddToRoutineSheetProps {
   onClose: () => void;
 }
 
-// Bottom sheet: add one exercise to an existing routine/circuit, or spin up a
-// new routine containing it. saveRoutineExercises replaces the whole list, so
-// we re-send the routine's current exercises plus the new one.
+// Bottom sheet: add one move to an existing routine, or spin up a new routine
+// containing it. saveRoutineExercises replaces the whole list, so we re-send
+// the routine's current exercises plus the new one.
 export default function AddToRoutineSheet({ exerciseId, exerciseName, onClose }: AddToRoutineSheetProps) {
   const [routines, setRoutines] = useState<RoutineWithExercises[]>([]);
   const [loading, setLoading] = useState(true);
@@ -94,7 +95,7 @@ export default function AddToRoutineSheet({ exerciseId, exerciseName, onClose }:
                     <span>
                       <span className="block text-body font-semibold text-text-primary">{r.name}</span>
                       <span className="block text-caption text-text-muted">
-                        {r.exercises.length} exercise{r.exercises.length === 1 ? '' : 's'}
+                        {r.exercises.length} {r.exercises.length === 1 ? MOVE.one : MOVE.many}
                       </span>
                     </span>
                     <span className={`text-label ${added ? 'text-accent' : 'text-text-faint'}`}>

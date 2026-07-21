@@ -45,8 +45,8 @@ export default async function TenantBuild({
   const library = await tenantLibrary(tenant.id);
   const name = tenant.branding.brandName ?? tenant.name;
 
-  // Only build with gear the gym actually has. Empty = not set up yet, so fall
-  // back to everything rather than producing an empty workout.
+  // Only build with equipment the gym actually has. Empty = not set up yet, so
+  // fall back to everything rather than producing an empty workout.
   const gymEquipment = await tenantEquipmentSlugs(tenant.id);
   const equipmentSet = gymEquipment.length > 0;
   const allowedEquipment = equipmentSet ? gymEquipment : EQUIPMENT_ORDER;
@@ -183,7 +183,7 @@ export default async function TenantBuild({
           <p className="mb-5 text-caption text-text-faint print:hidden">
             {equipmentSet ? (
               <>
-                Using your gear: {gymEquipment.map((e) => EQUIPMENT_LABEL[e]).join(', ')} ·{' '}
+                Using your equipment: {gymEquipment.map((e) => EQUIPMENT_LABEL[e]).join(', ')} ·{' '}
                 <Link href="/dashboard/equipment" className="text-accent">
                   Change
                 </Link>
@@ -238,8 +238,8 @@ export default async function TenantBuild({
             isMyGym ? (
               <p className="text-caption text-text-faint">
                 {equipmentSet
-                  ? `Using your gear: ${gymEquipment.map((e) => EQUIPMENT_LABEL[e]).join(', ')}`
-                  : 'Using all equipment — set your gear in the dashboard.'}
+                  ? `Using your equipment: ${gymEquipment.map((e) => EQUIPMENT_LABEL[e]).join(', ')}`
+                  : 'Using all equipment — set your equipment in the dashboard.'}
               </p>
             ) : null
           }

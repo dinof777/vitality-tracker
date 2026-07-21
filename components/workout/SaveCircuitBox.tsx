@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import type { ShareExercise, ShareParams } from '@/lib/share';
 
-// Name a workout and keep it in the gym's circuit library. Used by both builder
-// modes — generated and pick-your-own.
+// Name a workout and keep it in the gym's saved-workout library. Used by both
+// builder modes — generated and pick-your-own.
 export default function SaveCircuitBox({
   exercises,
   params,
@@ -53,12 +53,12 @@ export default function SaveCircuitBox({
 
   return (
     <div className="mt-3 rounded-lg border border-border bg-background p-3 print:hidden">
-      <p className="mb-2 text-caption text-text-muted">Save this circuit to your library to reuse it</p>
+      <p className="mb-2 text-caption text-text-muted">Save this workout to your library to reuse it</p>
       <div className="flex gap-2">
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Name this circuit"
+          placeholder="Name this workout"
           className="h-10 min-w-0 flex-1 rounded-md border border-border bg-surface px-2 text-body text-text-primary placeholder:text-text-faint"
         />
         <button

@@ -15,8 +15,8 @@ import CreateShareFromWorkout from '@/components/workout/CreateShareFromWorkout'
 
 export const dynamic = 'force-dynamic';
 
-// One saved circuit: run it, share it, print it as a PDF with a QR, or drop it on
-// your website. Everything a trainer wants to do with a workout they built.
+// One saved workout: run it, share it, print it as a PDF with a QR, or drop it
+// on your website. Everything a trainer wants to do with a workout they built.
 export default async function WorkoutDetail({ params }: { params: { id: string } }) {
   const t = await currentTrainer();
   if (!t) notFound();
@@ -38,7 +38,7 @@ export default async function WorkoutDetail({ params }: { params: { id: string }
   const host = h.get('host') ?? 'vitality-tracker-mauve.vercel.app';
   const proto = h.get('x-forwarded-proto') ?? (host.includes('localhost') ? 'http' : 'https');
 
-  // SyncroFit straight from the saved circuit — its id is the circuit id.
+  // SyncroFit straight from the saved workout — its id is the SyncroFit circuit id.
   const exForSf: Exercise[] = exercises.map((e) => ({
     id: '',
     name: e.name,
@@ -50,7 +50,7 @@ export default async function WorkoutDetail({ params }: { params: { id: string }
   }));
   const sfUrl = syncrofitRunUrl(workout.name, exForSf, wp, '', workout.id);
 
-  // The newest share link is the circuit's public address — QR, PDF and embed
+  // The newest share link is the workout's public address — QR, PDF and embed
   // all point at it.
   const primary = shares[0];
   const shareUrl = primary ? `${proto}://${host}/s/${primary.token}` : null;
@@ -71,7 +71,7 @@ export default async function WorkoutDetail({ params }: { params: { id: string }
     <div className="min-h-dvh bg-background text-text-primary">
       <main className="shell px-5 pb-20 pt-10">
         <Link href="/dashboard/workouts" className="text-caption text-text-muted print:hidden">
-          ← Your circuits
+          ← Your workouts
         </Link>
 
         {/* Printed header */}
@@ -130,7 +130,7 @@ export default async function WorkoutDetail({ params }: { params: { id: string }
 
             <section className="mt-6 print:hidden">
               <p className="mb-1 text-label text-accent">ADD TO YOUR SITE</p>
-              <p className="mb-2 text-caption text-text-muted">A button linking straight to this circuit.</p>
+              <p className="mb-2 text-caption text-text-muted">A button linking straight to this workout.</p>
               <CopyField value={embed} multiline />
             </section>
           </>

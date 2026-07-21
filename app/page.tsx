@@ -19,6 +19,7 @@ import {
 } from '@/lib/profile';
 import { DAY_LABELS, fetchRoutines, type RoutineWithExercises } from '@/lib/routines';
 import { generateWorkout } from '@/lib/workout-generator';
+import { MOVE } from '@/lib/vocabulary';
 
 function greeting(hour: number): string {
   if (hour < 12) return 'Good morning';
@@ -128,7 +129,7 @@ export default function Home() {
                 <div key={r.id} className="mb-2 rounded-lg border border-accent/40 bg-accent/10 p-4">
                   <p className="text-h3 text-text-primary">{r.name}</p>
                   <p className="mb-3 text-caption text-text-muted">
-                    {r.exercises.length} exercise{r.exercises.length === 1 ? '' : 's'} · from your weekly plan
+                    {r.exercises.length} {r.exercises.length === 1 ? MOVE.one : MOVE.many} · from your weekly plan
                   </p>
                   <Link
                     href={`/workout/active?routine=${r.id}`}

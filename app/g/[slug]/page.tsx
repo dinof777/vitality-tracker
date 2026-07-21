@@ -18,8 +18,8 @@ import { syncrofitRunUrl } from '@/lib/syncrofit';
 export const dynamic = 'force-dynamic';
 
 // A gym's front door. Everything shown here is REAL: the suggestion below is
-// generated from this gym's own library and the gear they've registered, seeded
-// by the date so it's stable for the day.
+// generated from this gym's own library and the equipment they've registered,
+// seeded by the date so it's stable for the day.
 export default async function TenantHome({
   params,
   searchParams,
@@ -106,7 +106,7 @@ export default async function TenantHome({
         {/* Hero */}
         <p className="text-label text-accent">YOUR TRAINING APP</p>
         <h1 className="mb-2 text-h2 text-text-primary">Train at {name}.</h1>
-        <p className="mb-4 text-body text-text-muted">Your coach’s workouts, built around your gear and time.</p>
+        <p className="mb-4 text-body text-text-muted">Your coach’s workouts, built around your equipment and time.</p>
         <Link
           href={`/g/${tenant.slug}/build`}
           className="flex h-14 w-full items-center justify-center rounded-md bg-accent text-label text-on-accent transition-all active:scale-[0.97] active:bg-accent-press"

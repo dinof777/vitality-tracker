@@ -11,6 +11,7 @@ import {
   type Intensity,
 } from '@/lib/profile';
 import LengthDial from '@/components/home/LengthDial';
+import { MOVE } from '@/lib/vocabulary';
 
 export interface BuilderValue {
   focus: string;
@@ -25,7 +26,7 @@ export interface BuilderValue {
 interface Props {
   value: BuilderValue;
   onChange: (patch: Partial<BuilderValue>) => void;
-  /** Hide the equipment row where gear is set elsewhere (a gym's registered kit). */
+  /** Hide the equipment row where equipment is set elsewhere (a gym's registered kit). */
   showEquipment?: boolean;
   /** Replaces the equipment row with a read-only summary + link. */
   equipmentNote?: React.ReactNode;
@@ -84,7 +85,7 @@ export default function BuilderControls({ value, onChange, showEquipment = true,
           <span className="block text-caption text-text-muted">INTENSITY</span>
           <span className="block text-h3 text-text-primary">{ip.label}</span>
           <span className="block text-caption text-text-muted nums">
-            ≈ {estCount} exercises · {sets} × {reps} · {restSec}s rest
+            ≈ {estCount} {estCount === 1 ? MOVE.one : MOVE.many} · {sets} × {reps} · {restSec}s rest
           </span>
         </span>
         <span className="text-text-faint">Change ›</span>

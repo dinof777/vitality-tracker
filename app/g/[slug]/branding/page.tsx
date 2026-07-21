@@ -205,7 +205,7 @@ export default function BrandingSettings({ params }: { params: { slug: string } 
             <Link href="/dashboard" className="flex items-center justify-between rounded-lg border border-border bg-background p-3 active:bg-surface-raised">
               <span>
                 <span className="block text-body font-semibold text-text-primary">Back to your dashboard</span>
-                <span className="block text-caption text-text-muted">Exercises, equipment, clients — edit any time</span>
+                <span className="block text-caption text-text-muted">Moves, equipment, clients — edit any time</span>
               </span>
               <span className="text-text-faint">›</span>
             </Link>

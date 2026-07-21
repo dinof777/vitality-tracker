@@ -8,11 +8,55 @@ import type { TagCategory } from './tags';
 // trainer dashboard but as the raw "pattern" in admin. A trainer and an admin
 // talking about the same thing had no shared word for it.
 //
+// Round two (M2) swept the rest of the app for the same disease. Two more
+// synonym pairs turned out to be pure drift and got collapsed to one word:
+//   - "gear" / "kit"  → always "equipment" now (FIELD_LABEL.equipment).
+//   - "circuit" (for a trainer's saved, shareable session) → always "workout"
+//     (WORKOUT below). "Circuit" survives ONLY where the copy is specifically
+//     describing SyncroFit's side of a hand-off (e.g. "send as a timed circuit
+//     to SyncroFit") — that's SyncroFit's word for its own concept, not ours,
+//     and collapsing it would blur two genuinely different things.
+// One pair turned out to be a real distinction, not drift, and was left alone
+// on purpose — see the FOCUS vs MUSCLE GROUP note below.
+//
 // Import from here rather than typing a label. lib/vocabulary.test.ts fails the
 // build if a surface hardcodes one of these instead.
 
-/** A single exercise, as the product says it out loud. */
+/** A single exercise, as the product says it out loud. Never "exercise" or
+ *  "movement" in user-facing copy — those were the pre-M2 synonyms. */
 export const MOVE = { one: 'move', many: 'moves' } as const;
+
+/**
+ * A trainer's saved, shareable session (`tenant_workouts` / `/api/tenant/workouts`) —
+ * the thing SaveCircuitBox creates and `/dashboard/workouts` lists, tracked with
+ * shares/opens/completions. Distinct from a Routine (see below) and from
+ * SyncroFit's "circuit" (see the file header note) — say "workout" on every
+ * Vitality-native surface.
+ */
+export const WORKOUT = { one: 'workout', many: 'workouts' } as const;
+
+/**
+ * A named, reusable, day-of-week-assignable, favoritable exercise list
+ * (`routines` table, `/routines`) — the weekly-plan blueprint. Already said the
+ * same way everywhere it appears, so there's no drift to guard here; noted for
+ * contrast with WORKOUT and SyncroFit's "circuit."
+ */
+export const ROUTINE = { one: 'routine', many: 'routines' } as const;
+
+/**
+ * "Focus" (lib/profile.ts FOCUS_CHOICES) and "Muscle group" (FIELD_LABEL.muscle_group,
+ * below) are two different things wearing similar clothes — deliberately NOT
+ * unified:
+ *   - Muscle group is a single exercise's taxonomy value ("Chest", "Legs"),
+ *     governed in admin/taxonomy and shown under every move.
+ *   - Focus is a curated session preset a trainee picks on Home / Build. Some
+ *     focuses map 1:1 onto a set of muscle groups ("Upper Body"), but others
+ *     draw from pillars ("Cardio", "Balance") or a tagged rehab pool ("Physical
+ *     Therapy", "Knee") instead — a focus is not always reducible to muscle
+ *     groups at all. Renaming one to the other would erase that.
+ */
+export const FOCUS_VS_MUSCLE_GROUP_NOTE =
+  'Focus is a curated session preset; Muscle group is a single exercise’s taxonomy value. Not the same thing — see lib/vocabulary.ts.';
 
 /** Everything on offer, as the product says it out loud. */
 export const LIBRARY = 'library';

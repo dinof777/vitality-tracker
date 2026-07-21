@@ -102,7 +102,7 @@ export default function ExerciseFilterPicker({ items, pickedIds, onToggle }: Pro
       <input
         value={q}
         onChange={(e) => setQ(e.target.value)}
-        placeholder="Search exercises or muscle group…"
+        placeholder="Search moves or muscle group…"
         className="mb-3 h-11 w-full rounded-md border border-border bg-surface px-3 text-body text-text-primary placeholder:text-text-faint"
       />
 

@@ -152,7 +152,7 @@ export default function GymEquipment() {
         {/* Pick what you actually have */}
         <p className="mb-1 text-label text-accent">WHAT YOU HAVE</p>
         <p className="mb-3 text-caption text-text-muted">
-          Tap to select. Workouts only use gear you&rsquo;ve got. These names match the SyncroFit app.
+          Tap to select. Workouts only use equipment you&rsquo;ve got. These names match the SyncroFit app.
         </p>
         <ul className="space-y-2">
           {list.map((e) => {
@@ -180,7 +180,7 @@ export default function GymEquipment() {
                   <span className="min-w-0">
                     <span className="block truncate text-body font-semibold text-text-primary">{e.name}</span>
                     {!usable && (
-                      <span className="block text-caption text-text-faint">On SyncroFit — no exercises here yet</span>
+                      <span className="block text-caption text-text-faint">On SyncroFit — no moves here yet</span>
                     )}
                     {e.status === 'pending' && (
                       <span className="block text-caption text-energy">In review</span>

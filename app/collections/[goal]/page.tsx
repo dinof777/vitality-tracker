@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { SAMPLE_EXERCISES, EQUIPMENT_LABEL } from '@/lib/exercises';
 import { TAG_BY_ID, groupByTag, hasTag, tagsInCategory, REHAB_DISCLAIMER } from '@/lib/tags';
 import ExerciseThumb from '@/components/workout/ExerciseThumb';
+import { MOVE, plural } from '@/lib/vocabulary';
 
 // A tagged collection rendered as a staged program. Generic over any `goal` tag —
 // /collections/knee-pt today, any future program for free.
@@ -23,13 +24,13 @@ export default function Collection({ params }: { params: { goal: string } }) {
   return (
     <main className="shell min-h-dvh px-4 pb-28 pt-8">
       <Link href="/exercises" className="text-caption text-text-muted">
-        ← Exercises
+        ← Moves
       </Link>
       <header className="mb-5 mt-2">
         <p className="text-label text-accent">COLLECTION</p>
         <h1 className="text-h1 text-text-primary">{goal.label}</h1>
         <p className="mt-1 text-body text-text-muted">{goal.description}</p>
-        <p className="mt-1 text-caption text-text-faint nums">{items.length} movements</p>
+        <p className="mt-1 text-caption text-text-faint nums">{plural(items.length, MOVE.one, MOVE.many)}</p>
       </header>
 
       {goal.clinical && (

@@ -1,6 +1,6 @@
 import type { Equipment, Exercise } from './database.types';
 
-// Exercise library (188) — seeded into the Neon `exercises` table (same UUIDs).
+// Move library (188) — seeded into the Neon `exercises` table (same UUIDs).
 // EQUIPMENT CONSTRAINT: every movement uses ONLY dumbbells, a kettlebell, a tube
 // band (long/handled), a loop band (mini/booty band), a pull-up bar, a medicine
 // ball, a jump rope, or bodyweight (floor/wall). No benches, boxes, racks, or

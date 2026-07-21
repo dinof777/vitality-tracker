@@ -89,7 +89,7 @@ const SEGMENTS = [
 const FAQ = [
   { q: 'Do my clients need to download anything or sign up?', a: 'No. Clients open a workout from a link or QR code — no account, no login. To run the timer, they use the free SyncroFit app.' },
   { q: 'Do I need to be technical?', a: "Not at all. Paste your website, we grab your branding, and you're sharing workouts within minutes." },
-  { q: 'Can I add my own exercises and equipment?', a: "Yes — add custom moves, rename library moves to your gym's language, and register your own equipment (we dedupe so the list stays clean)." },
+  { q: 'Can I add my own moves and equipment?', a: "Yes — add custom moves, rename library moves to your gym's language, and register your own equipment (we dedupe so the list stays clean)." },
   { q: 'What is the SyncroFit part?', a: 'SyncroFit is the interval timer your workouts run on. Send a workout in one tap; it reports back when a client imports or finishes it, so you see real engagement.' },
   { q: 'Can I use my own domain?', a: 'You start at vitalitypro.app/g/yourgym for free. Custom domains come with Pro.' },
   { q: 'Is it really free?', a: 'Yes — the core platform is free to start. Pro adds custom domains, client analytics, and more coaches.' },
@@ -203,7 +203,7 @@ export default function ProLanding() {
           <div className="mx-auto mt-6 grid max-w-2xl gap-3 text-left sm:grid-cols-3">
             <div className="rounded-lg border border-border bg-background p-3">
               <p className="text-body font-semibold text-text-primary">Equipment-aware</p>
-              <p className="text-caption text-text-muted">Each move’s gear tags through, so your workouts filter correctly in SyncroFit’s browser.</p>
+              <p className="text-caption text-text-muted">Each move’s equipment tags through, so your workouts filter correctly in SyncroFit’s browser.</p>
             </div>
             <div className="rounded-lg border border-border bg-background p-3">
               <p className="text-body font-semibold text-text-primary">Your cues travel</p>
@@ -249,7 +249,7 @@ export default function ProLanding() {
             <ul className="space-y-1.5 text-body text-text-muted">
               <li>✓ Your branded /g/ space</li>
               <li>✓ Full {MOVES}-move library</li>
-              <li>✓ Custom exercises &amp; equipment</li>
+              <li>✓ Custom moves &amp; equipment</li>
               <li>✓ QR + SyncroFit sharing</li>
             </ul>
           </Reveal>

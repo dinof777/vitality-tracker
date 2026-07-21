@@ -40,7 +40,7 @@ export default function SavedWorkouts() {
         <Link href="/dashboard" className="text-caption text-text-muted">
           ← Dashboard
         </Link>
-        <h1 className="mb-1 mt-2 text-h1 text-text-primary">Your circuits</h1>
+        <h1 className="mb-1 mt-2 text-h1 text-text-primary">Your workouts</h1>
         <p className="mb-6 text-body text-text-muted">
           Saved workouts you can re-share, print, or push to SyncroFit any time.
         </p>
@@ -49,7 +49,7 @@ export default function SavedWorkouts() {
           <div className="h-20 animate-pulse rounded-lg bg-surface" />
         ) : list.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border p-6 text-center">
-            <p className="mb-3 text-body text-text-muted">No saved circuits yet.</p>
+            <p className="mb-3 text-body text-text-muted">No saved workouts yet.</p>
             <Link href="/dashboard" className="text-caption text-accent">
               Build one from your gym page ›
             </Link>

@@ -267,10 +267,10 @@ export default function SettingsPage() {
           <p className="mb-2 text-caption text-text-muted">VITALITY PRO</p>
           <div className="mb-5 grid grid-cols-2 gap-2">
             {[
-              { href: '/dashboard/workouts', label: 'Circuits', hint: 'Saved workouts' },
+              { href: '/dashboard/workouts', label: 'Workouts', hint: 'Saved & shareable' },
               { href: '/dashboard/clients', label: 'Clients', hint: 'Engagement' },
-              { href: '/dashboard/equipment', label: 'Equipment', hint: 'Your gear' },
-              { href: '/dashboard/exercises', label: 'Exercises', hint: 'Custom + renames' },
+              { href: '/dashboard/equipment', label: 'Equipment', hint: 'Your equipment' },
+              { href: '/dashboard/exercises', label: 'Moves', hint: 'Custom + renames' },
               { href: '/dashboard/embed', label: 'Add to site', hint: 'Button, embed, QR' },
               { href: '/dashboard', label: 'Dashboard', hint: 'Everything else' },
             ].map((t) => (
@@ -290,7 +290,7 @@ export default function SettingsPage() {
           <p className="text-body font-semibold text-text-primary">Train other people?</p>
           <p className="mb-3 text-caption text-text-muted">
             Switch your role to <span className="text-text-primary">trainer</span> above to unlock Vitality Pro — your
-            own branded app, clients and shareable circuits.
+            own branded app, clients and shareable workouts.
           </p>
           <Link href="/pro" className="text-caption text-accent">
             See what it does ›

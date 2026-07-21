@@ -58,7 +58,7 @@ export default function CustomExercises() {
       .catch(() => {})
       .finally(() => setLoading(false));
 
-  // The gym's own (non-core) equipment, to offer in the exercise's equipment picker.
+  // The gym's own (non-core) equipment, to offer in the move's equipment picker.
   useEffect(() => {
     fetch('/api/tenant/equipment')
       .then((r) => (r.ok ? r.json() : { equipment: [] }))
@@ -256,7 +256,7 @@ export default function CustomExercises() {
         <Link href="/dashboard" className="text-caption text-text-muted">
           ← Dashboard
         </Link>
-        <h1 className="mb-1 mt-2 text-h1 text-text-primary">Your exercises</h1>
+        <h1 className="mb-1 mt-2 text-h1 text-text-primary">Your moves</h1>
         <p className="mb-6 text-body text-text-muted">
           Add moves we don’t have. They join the {SAMPLE_EXERCISES.length}-move library only for your gym.
         </p>
@@ -266,7 +266,7 @@ export default function CustomExercises() {
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Exercise name"
+            placeholder="Move name"
             className="h-11 w-full rounded-md border border-border bg-background px-3 text-body text-text-primary placeholder:text-text-faint"
           />
           <div className="flex gap-2">
@@ -409,7 +409,7 @@ export default function CustomExercises() {
             disabled={saving || !name.trim()}
             className="h-12 w-full rounded-md bg-accent text-label text-on-accent disabled:opacity-50"
           >
-            {saving ? (editingId ? 'SAVING…' : 'ADDING…') : editingId ? 'SAVE CHANGES' : '+ ADD EXERCISE'}
+            {saving ? (editingId ? 'SAVING…' : 'ADDING…') : editingId ? 'SAVE CHANGES' : '+ ADD MOVE'}
           </button>
           {editingId && (
             <button
@@ -428,7 +428,7 @@ export default function CustomExercises() {
           <div className="h-16 animate-pulse rounded-lg bg-surface" />
         ) : list.length === 0 ? (
           <p className="rounded-lg border border-dashed border-border p-6 text-center text-body text-text-muted">
-            No custom exercises yet.
+            No custom moves yet.
           </p>
         ) : (
           <ul className="space-y-2">

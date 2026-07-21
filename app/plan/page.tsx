@@ -87,7 +87,7 @@ export default function PlanPage() {
           <p className="text-body text-text-muted">Strength · Cardio · Balance · Flexibility</p>
         </div>
         <Link href="/setup" className="mt-1 text-caption text-text-muted underline">
-          Level &amp; gear
+          Level &amp; equipment
         </Link>
       </header>
 

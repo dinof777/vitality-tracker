@@ -64,6 +64,11 @@ export const EQUIPMENT_CHOICES: { value: Equipment; label: string; hint: string;
   { value: 'stretch', label: 'Stretching', hint: 'Mobility & recovery', emoji: '🧘' },
 ];
 
+// Focus vs Muscle group: deliberately two different words for two different
+// things (not drift) — see FOCUS_VS_MUSCLE_GROUP_NOTE in lib/vocabulary.ts.
+// A muscle group is a single move's taxonomy value ("Chest"); a Focus is a
+// curated session preset that sometimes maps onto muscle groups (`groups`
+// below) and sometimes doesn't (`pillars`, `tags`, `mobility` instead).
 export interface FocusChoice {
   /** Draw only from exercises carrying one of these tags (see lib/tags). */
   tags?: string[];

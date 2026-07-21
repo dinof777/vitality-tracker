@@ -63,7 +63,7 @@ export default async function Dashboard() {
                     <span className="block text-caption text-text-muted">
                       {gear.length
                         ? gear.map((e) => EQUIPMENT_LABEL[e]).join(', ')
-                        : 'Workouts only use gear you actually have — set this first'}
+                        : 'Workouts only use equipment you actually have — set this first'}
                     </span>
                   </span>
                   <span className="text-text-faint">›</span>
@@ -99,7 +99,7 @@ export default async function Dashboard() {
               className="mt-3 flex items-center justify-between rounded-xl border border-border bg-surface p-4 active:bg-surface-raised"
             >
               <span>
-                <span className="block text-body font-semibold text-text-primary">Exercises</span>
+                <span className="block text-body font-semibold text-text-primary">Moves</span>
                 <span className="block text-caption text-text-muted">Custom moves + renames (shared gym library)</span>
               </span>
               <span className="text-text-faint">›</span>
@@ -111,7 +111,7 @@ export default async function Dashboard() {
             >
               <span>
                 <span className="block text-body font-semibold text-text-primary">Equipment</span>
-                <span className="block text-caption text-text-muted">Gear your gym has (shared)</span>
+                <span className="block text-caption text-text-muted">Equipment your gym has (shared)</span>
               </span>
               <span className="text-text-faint">›</span>
             </Link>
@@ -121,8 +121,8 @@ export default async function Dashboard() {
               className="mt-3 flex items-center justify-between rounded-xl border border-border bg-surface p-4 active:bg-surface-raised"
             >
               <span>
-                <span className="block text-body font-semibold text-text-primary">Your circuits</span>
-                <span className="block text-caption text-text-muted">Saved workouts — re-share, print, embed</span>
+                <span className="block text-body font-semibold text-text-primary">Your workouts</span>
+                <span className="block text-caption text-text-muted">Saved — re-share, print, embed</span>
               </span>
               <span className="text-text-faint">›</span>
             </Link>

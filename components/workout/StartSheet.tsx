@@ -102,7 +102,7 @@ export default function StartSheet({ exercises, params, name, onLogInApp, onClos
           className="mt-3 flex w-full items-center justify-between rounded-md border border-border bg-surface p-3 text-left"
         >
           <span className="pr-3">
-            <span className="block text-caption font-semibold text-text-primary">Send exercise images</span>
+            <span className="block text-caption font-semibold text-text-primary">Send move images</span>
             <span className="block text-caption text-text-muted">Needs the updated SyncroFit build (new import)</span>
           </span>
           <span
@@ -121,7 +121,7 @@ export default function StartSheet({ exercises, params, name, onLogInApp, onClos
         ) : (
           <p className="mt-3 text-caption text-text-muted">
             {useV2
-              ? 'New format: sends sets, reps, rest + exercise images (where available).'
+              ? 'New format: sends sets, reps, rest + move images (where available).'
               : 'Classic format: sends sets, reps, hold & rest (no images on the old build).'}
           </p>
         )}

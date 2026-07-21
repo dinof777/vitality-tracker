@@ -10,13 +10,13 @@ import ExerciseThumb from '@/components/workout/ExerciseThumb';
 import ExerciseDetailSheet from '@/components/workout/ExerciseDetailSheet';
 import AddToRoutineSheet from '@/components/workout/AddToRoutineSheet';
 
-// Exercise library — browse / search all movements, tap for detail (with the
-// recent progressive-overload trend), or + to add to a routine / circuit.
+// Move library — browse / search all moves, tap for detail (with the recent
+// progressive-overload trend), or + to add to a routine / saved workout.
 export default function ExercisesPage() {
   const [query, setQuery] = useState('');
   const [detail, setDetail] = useState<Exercise | null>(null);
   const [addTarget, setAddTarget] = useState<Exercise | null>(null);
-  // Saved circuits become filters — "show me just what's in Knee Rehab Week 1".
+  // Saved workouts become filters — "show me just what's in Knee Rehab Week 1".
   const [circuits, setCircuits] = useState<Array<{ id: string; name: string; names: string[] }>>([]);
   const [circuitId, setCircuitId] = useState<string | null>(null);
 
@@ -57,7 +57,7 @@ export default function ExercisesPage() {
       <header className="mb-4 flex items-start justify-between">
         <div>
           <p className="text-label text-accent">LIBRARY</p>
-          <h1 className="text-h1 text-text-primary">Exercises</h1>
+          <h1 className="text-h1 text-text-primary">Moves</h1>
           <p className="text-body text-text-muted">Tap for detail, or + to add to a routine.</p>
         </div>
         <Link href="/routines" className="mt-1 shrink-0 text-caption text-text-muted underline">
@@ -80,7 +80,7 @@ export default function ExercisesPage() {
 
       {circuits.length > 0 && (
         <div className="mb-3">
-          <p className="mb-1 text-[0.65rem] font-semibold tracking-wide text-text-faint">MY CIRCUITS</p>
+          <p className="mb-1 text-[0.65rem] font-semibold tracking-wide text-text-faint">MY WORKOUTS</p>
           <div className="flex gap-2 overflow-x-auto pb-1">
             {circuits.map((c) => {
               const on = circuitId === c.id;
@@ -104,13 +104,13 @@ export default function ExercisesPage() {
       <input
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search exercises…"
+        placeholder="Search moves…"
         className="mb-4 h-12 w-full rounded-md bg-surface-raised px-4 text-body text-text-primary outline-none focus:ring-2 focus:ring-accent"
       />
 
       {total === 0 ? (
         <p className="rounded-md border border-dashed border-border p-6 text-center text-body text-text-muted">
-          No exercises match “{query}”.
+          No moves match “{query}”.
         </p>
       ) : (
         <div className="space-y-5">

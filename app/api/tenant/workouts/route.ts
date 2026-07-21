@@ -6,7 +6,7 @@ import type { ShareExercise, ShareParams } from '@/lib/share';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-// The gym's saved workout circuits. Scoped per-trainer: you see your own, the gym
+// The gym's saved workouts. Scoped per-trainer: you see your own, the gym
 // owner sees every trainer's.
 
 export async function GET() {
@@ -28,9 +28,9 @@ export async function POST(req: Request) {
   }
 
   const name = (body.name ?? '').trim().slice(0, 80);
-  if (!name) return NextResponse.json({ error: 'Give the circuit a name.' }, { status: 400 });
+  if (!name) return NextResponse.json({ error: 'Give the workout a name.' }, { status: 400 });
   const exercises = Array.isArray(body.exercises) ? body.exercises.slice(0, 30) : [];
-  if (exercises.length === 0) return NextResponse.json({ error: 'No exercises to save.' }, { status: 400 });
+  if (exercises.length === 0) return NextResponse.json({ error: 'No moves to save.' }, { status: 400 });
   if (!body.params || typeof body.params.sets !== 'number') {
     return NextResponse.json({ error: 'Missing workout params.' }, { status: 400 });
   }

@@ -11,13 +11,13 @@ import { loadProfile } from '@/lib/profile';
 import { EQUIPMENT_LABEL } from '@/lib/exercises';
 import type { Equipment } from '@/lib/database.types';
 
-// Build your own session: search the whole library, filter by goal/stage/movement
-// or gear, order the moves, then run it. Same session engine as a generated
+// Build your own session: search the whole library, filter by goal/stage/pattern
+// or equipment, order the moves, then run it. Same session engine as a generated
 // workout — /workout/active takes the exercise ids.
 export default function BuildYourOwn() {
   const router = useRouter();
   const [picked, setPicked] = useState<string[]>([]);
-  // Default to the gear in your profile — with a way out, since you might be
+  // Default to the equipment in your profile — with a way out, since you might be
   // somewhere with different equipment today.
   const [myGear, setMyGear] = useState<Equipment[] | null>(null);
   const [showAll, setShowAll] = useState(false);
@@ -121,7 +121,7 @@ export default function BuildYourOwn() {
       {/* Find moves */}
       <section>
         <div className="mb-2 flex items-baseline justify-between gap-2">
-          <p className="text-label text-accent">ADD EXERCISES</p>
+          <p className="text-label text-accent">ADD MOVES</p>
           {myGear && (
             <button type="button" onClick={() => setShowAll(!showAll)} className="text-caption text-accent">
               {showAll ? 'Just my equipment' : 'Show everything'}
@@ -131,7 +131,7 @@ export default function BuildYourOwn() {
         {myGear && (
           <p className="mb-2 text-caption text-text-faint">
             {showAll
-              ? `Showing the full library — your kit is ${myGear.map((e) => EQUIPMENT_LABEL[e]).join(', ')}.`
+              ? `Showing the full library — your equipment is ${myGear.map((e) => EQUIPMENT_LABEL[e]).join(', ')}.`
               : `Your equipment: ${myGear.map((e) => EQUIPMENT_LABEL[e]).join(', ')}.`}
           </p>
         )}
