@@ -42,8 +42,13 @@ export default function Home() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [ready, setReady] = useState(false);
   const [length, setLength] = useState(DEFAULT_LENGTH);
-  const [focus, setFocus] = useState('full');
   const [intensity, setIntensity] = useState<Intensity>('moderate');
+  // A ONE-workout override of the saved profile's focus — set by tapping a
+  // tile in the builder sheet, cleared on mount and after a workout is
+  // generated & dismissed. Never persisted: refining today's target should
+  // never silently overwrite the default the onboarding drill-down set. Tap
+  // "Set as my default" in the sheet to update the saved profile on purpose.
+  const [refineFocus, setRefineFocus] = useState<string | null>(null);
   const [pending, setPending] = useState<Exercise[] | null>(null);
   const [today, setToday] = useState<RoutineWithExercises[]>([]);
   const [building, setBuilding] = useState(false);
@@ -58,8 +63,8 @@ export default function Home() {
     const p = loadProfile();
     setProfile(p);
     setReady(true);
+    setRefineFocus(null);
     if (p) {
-      setFocus(p.focus);
       setIntensity(p.intensity);
       setLength(p.length ?? DEFAULT_LENGTH);
       const dow = todayDow();
@@ -83,7 +88,8 @@ export default function Home() {
       router.push('/setup');
       return;
     }
-    const ex = generateWorkout(profile, { focus, intensity, targetSeconds: length * 60, focusChoices: regions });
+    const activeFocus = refineFocus ?? profile.focus;
+    const ex = generateWorkout(profile, { focus: activeFocus, intensity, targetSeconds: length * 60, focusChoices: regions });
     if (ex.length) setPending(ex);
   };
 
@@ -91,7 +97,7 @@ export default function Home() {
     if (pending) router.push(`/workout/active?ex=${pending.map((e) => e.id).join(',')}`);
   };
 
-  const fc = resolveFocus(focus, regions);
+  const fc = resolveFocus(refineFocus ?? profile?.focus ?? 'full', regions);
   const params = profile ? workoutParams({ ...profile, intensity }) : null;
 
 
@@ -158,7 +164,7 @@ export default function Home() {
             <>
               <BuilderControls
                 value={{
-                  focus,
+                  focus: refineFocus ?? profile.focus,
                   intensity,
                   minutes: length,
                   equipment: profile?.equipment ?? [],
@@ -169,7 +175,9 @@ export default function Home() {
                 onRegions={setRegions}
                 onChange={(patch) => {
                   if (patch.minutes !== undefined) { setLength(patch.minutes); persist({ length: patch.minutes }); }
-                  if (patch.focus !== undefined) { setFocus(patch.focus); persist({ focus: patch.focus }); }
+                  // Focus is a ONE-workout refine here — never persisted on its
+                  // own. See refineFocus above and onSetDefaultFocus below.
+                  if (patch.focus !== undefined) setRefineFocus(patch.focus);
                   if (patch.intensity !== undefined) setIntensity(patch.intensity);
                   const rest: Partial<Profile> = {};
                   for (const k of ['intensity', 'equipment', 'sets', 'reps', 'restSec'] as const) {
@@ -177,6 +185,14 @@ export default function Home() {
                   }
                   if (Object.keys(rest).length) persist(rest);
                 }}
+                onSetDefaultFocus={
+                  refineFocus
+                    ? () => {
+                        persist({ focus: refineFocus });
+                        setRefineFocus(null);
+                      }
+                    : undefined
+                }
               />
 
               <button type="button" onClick={start}
@@ -194,12 +210,16 @@ export default function Home() {
             ✚ PICK MY OWN EXERCISES
           </Link>
 
-          <Link
-            href="/plan"
-            className="mt-3 flex h-12 w-full items-center justify-center rounded-md border border-border text-label text-text-primary active:bg-surface"
-          >
-            📅 PLAN MY WEEK
-          </Link>
+          {/* Weekly pillar planning doesn't model rehab-stage progression —
+              out of scope for v1, see lib/pillars.ts#GOAL_SEQUENCE. */}
+          {profile.goal !== 'recover_rehab' && (
+            <Link
+              href="/plan"
+              className="mt-3 flex h-12 w-full items-center justify-center rounded-md border border-border text-label text-text-primary active:bg-surface"
+            >
+              📅 PLAN MY WEEK
+            </Link>
+          )}
         </>
       )}
 
@@ -209,7 +229,10 @@ export default function Home() {
           params={params}
           name={`${fc.label} · ${length} min`}
           onLogInApp={logInApp}
-          onClose={() => setPending(null)}
+          onClose={() => {
+            setPending(null);
+            setRefineFocus(null);
+          }}
         />
       )}
     </main>

@@ -48,12 +48,13 @@ export function hasPillar(ex: ExerciseLike, pillar: Pillar): boolean {
 
 // ---- Weekly schedule ----
 
-export type Goal = 'general_health' | 'build_muscle' | 'weight_loss';
+export type Goal = 'general_health' | 'build_muscle' | 'weight_loss' | 'recover_rehab';
 
 export const GOAL_CHOICES: { value: Goal; label: string; emoji: string; hint: string }[] = [
-  { value: 'general_health', label: 'General Health', emoji: '🌱', hint: 'Even 4-pillar balance' },
+  { value: 'general_health', label: 'General Fitness & Mobility', emoji: '🌱', hint: 'Even 4-pillar balance' },
   { value: 'build_muscle', label: 'Build Muscle', emoji: '💪', hint: 'More strength days' },
-  { value: 'weight_loss', label: 'Weight Loss', emoji: '🔥', hint: 'More cardio days' },
+  { value: 'weight_loss', label: 'Lose Weight / Conditioning', emoji: '🔥', hint: 'More cardio days' },
+  { value: 'recover_rehab', label: 'Recover / Rehab an Area', emoji: '🩹', hint: 'Guided by body area & stage' },
 ];
 
 export const DEFAULT_GOAL: Goal = 'general_health';
@@ -83,6 +84,12 @@ const GOAL_SEQUENCE: Record<Goal, DayKind[]> = {
   general_health: ['strength', 'cardio', 'flexibility', 'strength', 'balance', 'cardio'],
   build_muscle: ['strength', 'cardio', 'strength', 'flexibility', 'strength', 'balance'],
   weight_loss: ['cardio', 'strength', 'cardio', 'flexibility', 'cardio', 'balance'],
+  // Rehab doesn't model recovery-stage progression in the weekly pillar planner
+  // (out of scope for v1 — Home hides "Plan my week" for this goal, see
+  // app/page.tsx), so this entry never actually surfaces. It exists only
+  // because Goal is a closed union and every key needs a value — default to
+  // general_health's balance rather than inventing a rehab-specific one.
+  recover_rehab: ['strength', 'cardio', 'flexibility', 'strength', 'balance', 'cardio'],
 };
 
 // Which weekday indexes (1=Mon … 7=Sun) are training days for a given count.

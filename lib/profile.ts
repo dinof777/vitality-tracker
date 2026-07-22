@@ -1,5 +1,6 @@
 import type { Equipment } from './database.types';
 import { CANON_MUSCLE_GROUPS } from './taxonomy';
+import { tagsInCategory } from './tags';
 
 // User training profile — saved once in the setup wizard, then used to generate
 // workouts on the fly. Stored in localStorage (per-device; sync to DB later).
@@ -100,15 +101,41 @@ export const SPECIAL_FOCUSES: FocusChoice[] = [
   { value: 'cardio', label: 'Cardio', emoji: '🏃', desc: 'Heart-rate & conditioning', groups: null, pillars: ['cardio'], section: 'special' },
   { value: 'balance', label: 'Balance', emoji: '🤸', desc: 'Single-leg & stability', groups: null, pillars: ['balance'], section: 'special' },
   { value: 'mobility', label: 'Mobility', emoji: '🧘', desc: 'Stretch, holds & flexibility', groups: null, mobility: true, section: 'special' },
-  // Clinical focuses draw from the tagged rehab pool rather than muscle groups.
-  // Physical Therapy is the umbrella (every rehab area); the per-joint focuses
-  // below narrow to one. A future release nests these under PT properly instead
-  // of listing them flat — see the taxonomy scoping note.
+  // Clinical: Physical Therapy is the umbrella (every rehab area, unnarrowed).
+  // The per-joint focuses that used to be hand-typed here are now generated —
+  // see REHAB_AREA_FOCUSES below — so a new rehab area tag (lib/tags.ts)
+  // reaches a focus automatically instead of needing a matching hand-authored
+  // entry in this array.
   { value: 'physical-therapy', label: 'Physical Therapy', emoji: '🩹', desc: 'Rehab & recovery work', groups: null, tags: ['physical-therapy'], byStage: true, section: 'special' },
-  { value: 'knee', label: 'Knee', emoji: '🦿', desc: 'Bend, straighten & rebuild the knee', groups: null, tags: ['physical-therapy'], areaTags: ['knee'], byStage: true, section: 'special' },
-  { value: 'shoulder', label: 'Shoulder', emoji: '🫱', desc: 'Rotator-cuff, scapular & impingement recovery', groups: null, tags: ['physical-therapy'], areaTags: ['shoulder'], byStage: true, section: 'special' },
-  { value: 'ankle', label: 'Ankle', emoji: '🦶', desc: 'Post-sprain strength, balance & range', groups: null, tags: ['physical-therapy'], areaTags: ['ankle'], byStage: true, section: 'special' },
 ];
+
+// Best-available emoji per rehab area (lib/tags#tagsInCategory('area')).
+// Thin coverage for the same reason MUSCLE_GROUP_EMOJI below is — v1 is only
+// knee/shoulder/ankle, each hand-picked; a future area falls back to 🩹.
+const REHAB_AREA_EMOJI: Record<string, string> = {
+  knee: '🦿',
+  shoulder: '🫱',
+  ankle: '🦶',
+};
+
+/**
+ * One focus per rehab area tag (lib/tags.ts `category: 'area'`) — generated,
+ * never hand-typed, the same reasoning as MUSCLE_GROUP_FOCUSES below: today
+ * that's exactly knee/shoulder/ankle (v1 scope), and a future area tag reaches
+ * a focus the moment it's added to the tag registry instead of needing a
+ * second hand-authored entry to stay in sync.
+ */
+export const REHAB_AREA_FOCUSES: FocusChoice[] = tagsInCategory('area').map((tag) => ({
+  value: tag.id,
+  label: tag.label,
+  emoji: REHAB_AREA_EMOJI[tag.id] ?? '🩹',
+  desc: tag.description,
+  groups: null,
+  tags: ['physical-therapy'],
+  areaTags: [tag.id],
+  byStage: true,
+  section: 'special' as const,
+}));
 
 // Muscle-group focuses that DON'T get a tile of their own, because a special
 // focus above already owns that exercise pool:
@@ -166,7 +193,7 @@ export const MUSCLE_GROUP_FOCUSES: FocusChoice[] = (CANON_MUSCLE_GROUPS as reado
     section: 'muscle' as const,
   }));
 
-export const FOCUS_CHOICES: FocusChoice[] = [...SPECIAL_FOCUSES, ...MUSCLE_GROUP_FOCUSES];
+export const FOCUS_CHOICES: FocusChoice[] = [...SPECIAL_FOCUSES, ...REHAB_AREA_FOCUSES, ...MUSCLE_GROUP_FOCUSES];
 
 /**
  * Turn one admin-managed region (GET /api/taxonomy/regions — a muscle_group
@@ -181,16 +208,82 @@ export const FOCUS_CHOICES: FocusChoice[] = [...SPECIAL_FOCUSES, ...MUSCLE_GROUP
  * generator, the builder's own display) merges the fetched list in alongside
  * FOCUS_CHOICES instead. See BuilderControls.tsx and
  * app/g/[slug]/build/page.tsx.
+ *
+ * `region.groups` is parent-inclusive (`[region_name, ...children]` — see
+ * fetchRegionHierarchy) so the generated workout draws from the parent's own
+ * tagged exercises too, not just its children. The description only lists the
+ * children, since the region name is already the tile's own label.
  */
 export function regionFocus(region: { region: string; groups: string[] }): FocusChoice {
   return {
     value: `region-${slugifyGroup(region.region)}`,
     label: region.region,
     emoji: '🧭',
-    desc: region.groups.join(', '),
+    desc: region.groups.slice(1).join(', '),
     groups: region.groups,
     section: 'region',
   };
+}
+
+// ── Drill-down tree builders (lib/profile) ──────────────────────────────────
+// Both the trees a MuscleDrillDown instance can show — the muscle-group tree
+// (onboarding goals 1-3 + BuilderControls) and the rehab-area tree (onboarding
+// goal 4). Building them here, once, is what lets onboarding and the
+// per-workout builder share the identical component over the identical data
+// instead of each hand-rolling its own view of the tree.
+
+export interface DrillDownNode {
+  value: string;
+  label: string;
+  emoji: string;
+  children?: { value: string; label: string; emoji: string }[];
+}
+
+/**
+ * Muscle-group tree for MuscleDrillDown: a "Full Body" leaf (the same whole-
+ * session preset as the Full Body special focus), one parent node per
+ * admin-managed region (drilling to its children), then a leaf tile for every
+ * remaining muscle group that isn't part of a region. `regions` is DB state —
+ * pass [] before it's loaded and every muscle group renders flat, which is
+ * the correct fallback (no worse than the old flat picker), not a broken tree.
+ */
+export function muscleDrillDownNodes(regions: { region: string; groups: string[] }[]): DrillDownNode[] {
+  const parentNames = new Set(regions.map((r) => r.region));
+  const byLabel = new Map(MUSCLE_GROUP_FOCUSES.map((f) => [f.label, f]));
+  const full = SPECIAL_FOCUSES.find((f) => f.value === 'full');
+
+  const parents: DrillDownNode[] = regions.map((r) => ({
+    value: `region-${slugifyGroup(r.region)}`,
+    label: r.region,
+    emoji: byLabel.get(r.region)?.emoji ?? '🧭',
+    children: r.groups
+      .filter((name) => name !== r.region)
+      .map((name) => {
+        const f = byLabel.get(name);
+        return f ? { value: f.value, label: f.label, emoji: f.emoji } : { value: slugifyGroup(name), label: name, emoji: '💪' };
+      }),
+  }));
+
+  const leaves: DrillDownNode[] = MUSCLE_GROUP_FOCUSES.filter((f) => !parentNames.has(f.label)).map((f) => ({
+    value: f.value,
+    label: f.label,
+    emoji: f.emoji,
+  }));
+
+  return [...(full ? [{ value: full.value, label: full.label, emoji: full.emoji }] : []), ...parents, ...leaves];
+}
+
+/**
+ * Rehab-area tree for MuscleDrillDown: the Physical Therapy umbrella as the
+ * single "whole area" parent, drilling to the specific joint focuses
+ * (knee/shoulder/ankle in v1, from REHAB_AREA_FOCUSES). Tapping the umbrella
+ * tile alone selects every rehab area; tapping a revealed child narrows to one.
+ */
+export function rehabDrillDownNodes(): DrillDownNode[] {
+  const umbrella = SPECIAL_FOCUSES.find((f) => f.value === 'physical-therapy');
+  const children = REHAB_AREA_FOCUSES.map((f) => ({ value: f.value, label: f.label, emoji: f.emoji }));
+  if (!umbrella) return children;
+  return [{ value: umbrella.value, label: umbrella.label, emoji: umbrella.emoji, children }];
 }
 
 export interface IntensityChoice {

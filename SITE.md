@@ -31,7 +31,7 @@ routes, tables, or integrations change.
 | `/daily5` | Daily mobility checklist + streak |
 | `/log`, `/workout/[workoutId]` | Logging surfaces (progressive-overload spine) |
 | `/settings` | Profile — trainer/trainee, saved routines, history |
-| `/setup` | First-run profile wizard |
+| `/setup` | First-run profile wizard — goals-first: Goal (4 tiles) → Focus drill-down (muscle tree, or rehab areas for the Recover/Rehab goal) → Equipment → Intensity |
 | `GET /api/taxonomy/regions` | Public, no auth — the admin-managed muscle-group region hierarchy (`{ region, groups[] }[]`), for the builder's REGION tiles |
 
 ### Vitality Pro — trainer admin (Clerk-protected)
@@ -82,12 +82,18 @@ database that already exists; every change lands in both so they can't drift.
   other vocabulary a trainer can extend (muscle groups, tags). `exercises.muscle_group`
   and `exercises.tags` hold display values validated against it on write.
   `taxonomy_terms.parent_id` (self-referencing, `muscle_group` kind only) groups
-  muscle groups into an admin-managed region — "Upper Body" is an ordinary
-  `muscle_group` row that happens to have children. Strictly 2 levels, enforced
-  in app code (`checkSetParent` in `lib/taxonomy.ts`), not a DB trigger. The
-  workout builder reads the tree (`fetchRegionHierarchy` in `lib/taxonomy-db.ts`,
-  or `GET /api/taxonomy/regions`) to offer a REGION tile per parent whose
-  `groups` expand to its children — see `lib/profile.ts#regionFocus`.
+  muscle groups into an admin-managed region — "Legs" is an ordinary
+  `muscle_group` row that happens to have children (Quads/Hamstrings/Glutes/
+  Calves/Hip Flexors/Hips), and 0007 seeds the full tree (Core→Obliques,
+  Back→Spine/T-Spine, Shoulders→Rear Delts/Traps, Arms→Biceps/Triceps/Grip,
+  Legs→…) plus the three new canon leaves it introduces (Biceps, Triceps,
+  Obliques). Strictly 2 levels, enforced in app code (`checkSetParent` in
+  `lib/taxonomy.ts`), not a DB trigger. The workout builder reads the tree
+  (`fetchRegionHierarchy` in `lib/taxonomy-db.ts`, or `GET /api/taxonomy/regions`)
+  — `groups` is PARENT-INCLUSIVE (`[region_name, ...children]`, since the
+  parent is itself a real value exercises are tagged to) — and turns it into
+  the goals-first focus picker's parent tiles via `lib/profile.ts#regionFocus`
+  / `#muscleDrillDownNodes`.
 - **syncrofit_events** — inbound import/completion feedback from SyncroFit.
 
 Multi-tenancy: app-level scoping — every tenant query filters by
@@ -120,6 +126,39 @@ it) · `exercise-dedup` (near-duplicate exercise names → offer the alias, neve
 `syncrofit` / `syncrofit-events` (integration) · `profile` (params + choices) ·
 `lifecycle` (add/update/delete/move-scope rules, pure + unit-tested) /
 `lifecycle-db` (its usage-count queries).
+
+### Goals-first profile: goal → focus drill-down → equipment → intensity
+
+`lib/pillars.ts#Goal` is 4 values — `general_health`, `build_muscle`,
+`weight_loss`, `recover_rehab` — surfaced as `GOAL_CHOICES` tiles on `/setup`
+(also reused, minus `recover_rehab`, by `/plan`'s per-plan goal picker;
+`recover_rehab` doesn't model rehab-stage progression in weekly pillar
+planning, so `/plan` filters it out and Home hides "Plan my week" for a
+`recover_rehab` profile). `Profile.focus` narrows WHAT within that goal, via
+ONE shared component — `components/workout/MuscleDrillDown.tsx` — fed one of
+two trees from `lib/profile.ts`:
+
+- `muscleDrillDownNodes(regions)` — the muscle-group tree (a Full Body leaf +
+  one parent tile per admin-managed region, drilling to its children, + every
+  remaining muscle group as a flat leaf). Used by `/setup` (goals 1–3) and by
+  `BuilderControls` (the personal Home builder AND the gym build page, via
+  `TenantBuilderControls` — same component, same tree, never two pickers).
+- `rehabDrillDownNodes()` — the Physical Therapy umbrella as a single parent
+  tile drilling to the per-joint `REHAB_AREA_FOCUSES` (knee/shoulder/ankle in
+  v1, generated from `lib/tags.ts#tagsInCategory('area')`). Used by `/setup`
+  when the goal is `recover_rehab`.
+
+Tapping a parent tile selects the whole area (e.g. all of "Legs") AND reveals
+its children to narrow further; tapping a revealed child narrows the
+selection to just that one.
+
+`Profile.focus` is the SAVED default (set at onboarding, editable via
+`/setup` again). Each generated workout can REFINE it for that one session
+without touching the saved default — `app/page.tsx`'s `refineFocus` state
+patches `BuilderControls`' focus tile locally and is never persisted by
+itself; an explicit "Set as my default" affordance in the sheet
+(`BuilderControls`' `onSetDefaultFocus`) is the only path that writes it back
+to the saved profile.
 
 ### Lifecycle: add · update · delete · move scope
 

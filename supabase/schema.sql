@@ -252,6 +252,7 @@ create index if not exists idx_taxonomy_live  on taxonomy_terms (kind, status) w
 insert into taxonomy_terms (kind, name, normalized, status) values
   ('muscle_group', 'Arms',         'arms',         'core'),
   ('muscle_group', 'Back',         'back',         'core'),
+  ('muscle_group', 'Biceps',       'biceps',       'core'),
   ('muscle_group', 'Calves',       'calves',       'core'),
   ('muscle_group', 'Chest',        'chest',        'core'),
   ('muscle_group', 'Conditioning', 'conditioning', 'core'),
@@ -263,12 +264,14 @@ insert into taxonomy_terms (kind, name, normalized, status) values
   ('muscle_group', 'Hip Flexors',  'hip flexors',  'core'),
   ('muscle_group', 'Hips',         'hips',         'core'),
   ('muscle_group', 'Legs',         'legs',         'core'),
+  ('muscle_group', 'Obliques',     'obliques',     'core'),
   ('muscle_group', 'Quads',        'quads',        'core'),
   ('muscle_group', 'Rear Delts',   'rear delts',   'core'),
   ('muscle_group', 'Shoulders',    'shoulders',    'core'),
   ('muscle_group', 'Spine',        'spine',        'core'),
   ('muscle_group', 'T-Spine',      't spine',      'core'),
-  ('muscle_group', 'Traps',        'traps',        'core')
+  ('muscle_group', 'Traps',        'traps',        'core'),
+  ('muscle_group', 'Triceps',      'triceps',      'core')
 on conflict (kind, normalized) do nothing;
 
 insert into taxonomy_terms (kind, name, normalized, category, status) values
@@ -291,3 +294,37 @@ insert into taxonomy_terms (kind, name, normalized, category, status) values
   ('tag', 'Seated / lying',       'seated lying',   'pattern', 'core'),
   ('tag', 'Weight bearing',       'weight bearing', 'pattern', 'core')
 on conflict (kind, normalized) do nothing;
+
+-- -----------------------------------------------------------------------------
+-- The muscle drill-down tree (parent/child grouping via taxonomy_terms.parent_id
+-- — see the "parent grouping" comment above). Mirrors 0007_muscle_regions.sql:
+--   Core → Obliques · Back → Spine, T-Spine · Shoulders → Rear Delts, Traps
+--   Arms → Biceps, Triceps, Grip · Legs → Quads, Hamstrings, Glutes, Calves,
+--   Hip Flexors, Hips
+-- Chest, Full Body and Conditioning stay leaves.
+-- -----------------------------------------------------------------------------
+with tree (child_normalized, parent_normalized) as (
+  values
+    ('obliques',    'core'),
+    ('spine',       'back'),
+    ('t spine',     'back'),
+    ('rear delts',  'shoulders'),
+    ('traps',       'shoulders'),
+    ('biceps',      'arms'),
+    ('triceps',     'arms'),
+    ('grip',        'arms'),
+    ('quads',       'legs'),
+    ('hamstrings',  'legs'),
+    ('glutes',      'legs'),
+    ('calves',      'legs'),
+    ('hip flexors', 'legs'),
+    ('hips',        'legs')
+)
+update taxonomy_terms child
+set parent_id = parent.id
+from tree, taxonomy_terms parent
+where child.kind = 'muscle_group'
+  and child.normalized = tree.child_normalized
+  and child.parent_id is null
+  and parent.kind = 'muscle_group'
+  and parent.normalized = tree.parent_normalized;

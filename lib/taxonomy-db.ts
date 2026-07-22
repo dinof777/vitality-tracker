@@ -255,6 +255,12 @@ export interface RegionRow {
  * finished building simply doesn't show up. Public data (core muscle groups
  * are global), shared by GET /api/taxonomy/regions and the server-rendered
  * gym build page, so both resolve the exact same tree.
+ *
+ * `groups` is PARENT-INCLUSIVE — `[region_name, ...children]`, not
+ * children-only. "Legs" is itself a real value exercises are tagged to (a
+ * general leg movement that isn't specifically Quads/Hamstrings/etc.);
+ * children-only would silently drop those exercises whenever a caller
+ * generates a workout for the "Legs" region.
  */
 export async function fetchRegionHierarchy(): Promise<RegionRow[]> {
   const sql = getSql();
@@ -272,7 +278,7 @@ export async function fetchRegionHierarchy(): Promise<RegionRow[]> {
   const byParent = new Map<string, RegionRow>();
   for (const r of rows) {
     const key = String(r.parent_id);
-    const entry = byParent.get(key) ?? { region: String(r.region), groups: [] };
+    const entry = byParent.get(key) ?? { region: String(r.region), groups: [String(r.region)] };
     entry.groups.push(String(r.group_name));
     byParent.set(key, entry);
   }

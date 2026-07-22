@@ -4,17 +4,18 @@ import { useEffect, useState } from 'react';
 import type { Equipment } from '@/lib/database.types';
 import {
   SPECIAL_FOCUSES,
-  MUSCLE_GROUP_FOCUSES,
   INTENSITY_CHOICES,
   EQUIPMENT_CHOICES,
   intensityParams,
   lengthToCount,
   regionFocus,
   resolveFocus,
+  muscleDrillDownNodes,
   type FocusChoice,
   type Intensity,
 } from '@/lib/profile';
 import LengthDial from '@/components/home/LengthDial';
+import MuscleDrillDown from '@/components/workout/MuscleDrillDown';
 import { EXERCISE } from '@/lib/vocabulary';
 
 export interface BuilderValue {
@@ -42,6 +43,14 @@ interface Props {
    * Full Body workout.
    */
   onRegions?: (regions: FocusChoice[]) => void;
+  /**
+   * Present only where `value.focus` can be a session-local REFINE of a saved
+   * default (the personal Home page) rather than the source of truth itself
+   * (the gym build page's URL, or a host with no saved profile at all).
+   * Persists the current focus as the new default; the drill-down itself
+   * never does this on its own — see app/page.tsx's refineFocus.
+   */
+  onSetDefaultFocus?: () => void;
 }
 
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
@@ -49,22 +58,30 @@ const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n
 // The workout builder controls — length dial plus summary rows that open sheets.
 // Shared by the personal app and the gym builder so trainers get the same calm,
 // progressive-disclosure experience instead of a wall of pills.
-export default function BuilderControls({ value, onChange, showEquipment = true, equipmentNote, onRegions }: Props) {
+export default function BuilderControls({
+  value,
+  onChange,
+  showEquipment = true,
+  equipmentNote,
+  onRegions,
+  onSetDefaultFocus,
+}: Props) {
   const [sheet, setSheet] = useState<'focus' | 'intensity' | 'equipment' | null>(null);
-  const [regions, setRegions] = useState<FocusChoice[]>([]);
+  const [regionRows, setRegionRows] = useState<{ region: string; groups: string[] }[]>([]);
+  const regions = regionRows.map(regionFocus);
 
-  // Admin-managed regions ("Upper Body" → Chest/Back/Shoulders…) — a region
-  // tile only shows once one actually exists; an empty tree just means the
-  // REGION section doesn't render, no different from any other empty state.
+  // Admin-managed regions ("Legs" → Quads/Hamstrings/Glutes/…) drive the
+  // muscle drill-down's parent tiles — an empty tree just means every muscle
+  // group renders as a flat leaf, no different from any other empty state.
   useEffect(() => {
     let cancelled = false;
     fetch('/api/taxonomy/regions')
       .then((r) => (r.ok ? r.json() : { regions: [] }))
       .then((d) => {
         if (cancelled) return;
-        const built = ((d.regions ?? []) as { region: string; groups: string[] }[]).map(regionFocus);
-        setRegions(built);
-        onRegions?.(built);
+        const rows = (d.regions ?? []) as { region: string; groups: string[] }[];
+        setRegionRows(rows);
+        onRegions?.(rows.map(regionFocus));
       })
       .catch(() => {
         if (!cancelled) onRegions?.([]);
@@ -177,56 +194,32 @@ export default function BuilderControls({ value, onChange, showEquipment = true,
                   </div>
                 </div>
 
-                {regions.length > 0 && (
-                  <div>
-                    <p className="mb-2 text-[0.65rem] font-semibold tracking-wide text-text-faint">REGION</p>
-                    <div className="grid grid-cols-2 gap-2">
-                      {regions.map((f) => {
-                        const on = value.focus === f.value;
-                        return (
-                          <button
-                            key={f.value}
-                            type="button"
-                            onClick={() => {
-                              onChange({ focus: f.value });
-                              setSheet(null);
-                            }}
-                            className={`rounded-lg border p-3 text-left transition-colors ${on ? 'border-accent bg-accent/10' : 'border-border bg-surface'}`}
-                          >
-                            <span className="text-h3">{f.emoji}</span>
-                            <span className="mt-1 block text-body font-semibold text-text-primary">{f.label}</span>
-                            <span className="block truncate text-caption text-text-muted">{f.desc}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
+                <div>
+                  <p className="mb-2 text-[0.65rem] font-semibold tracking-wide text-text-faint">TARGET A MUSCLE</p>
+                  <MuscleDrillDown
+                    nodes={muscleDrillDownNodes(regionRows)}
+                    value={value.focus}
+                    onSelect={(v) => onChange({ focus: v })}
+                  />
+                </div>
+
+                {onSetDefaultFocus && (
+                  <button
+                    type="button"
+                    onClick={onSetDefaultFocus}
+                    className="w-full text-center text-caption text-accent underline underline-offset-2"
+                  >
+                    Set “{fc.label}” as my default focus
+                  </button>
                 )}
 
-                <div>
-                  <p className="mb-2 text-[0.65rem] font-semibold tracking-wide text-text-faint">MUSCLE GROUP</p>
-                  <div className="grid grid-cols-3 gap-2">
-                    {MUSCLE_GROUP_FOCUSES.map((f) => {
-                      const on = value.focus === f.value;
-                      return (
-                        <button
-                          key={f.value}
-                          type="button"
-                          onClick={() => {
-                            onChange({ focus: f.value });
-                            setSheet(null);
-                          }}
-                          className={`rounded-lg border p-2.5 text-center transition-colors ${on ? 'border-accent bg-accent/10' : 'border-border bg-surface'}`}
-                        >
-                          <span className="block text-body">{f.emoji}</span>
-                          <span className="mt-0.5 block text-caption font-semibold leading-tight text-text-primary">
-                            {f.label}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setSheet(null)}
+                  className="flex h-12 w-full items-center justify-center rounded-md bg-accent text-label text-on-accent active:scale-[0.97]"
+                >
+                  DONE
+                </button>
               </div>
             )}
 

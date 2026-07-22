@@ -102,11 +102,11 @@ const MUSCLE_GROUP_SYNONYMS: Record<string, string> = {
   ab: 'core',
   abdominals: 'core',
   abdominal: 'core',
-  obliques: 'core',
-  oblique: 'core',
   stomach: 'core',
   midsection: 'core',
   trunk: 'core',
+  // Obliques — its own canon term as of the muscle-tree split, no longer folds to core.
+  oblique: 'obliques',
   // Quads
   quad: 'quads',
   quadricep: 'quads',
@@ -144,14 +144,14 @@ const MUSCLE_GROUP_SYNONYMS: Record<string, string> = {
   'upper back': 'back',
   'mid back': 'back',
   'middle back': 'back',
-  // Arms
+  // Arms — the umbrella group itself; Biceps/Triceps are their own canon terms
+  // as of the muscle-tree split, so those no longer fold up to Arms. Forearm
+  // isn't a distinct canon term, so it still folds to the parent.
   arm: 'arms',
-  bicep: 'arms',
-  biceps: 'arms',
-  tricep: 'arms',
-  triceps: 'arms',
   forearm: 'arms',
   forearms: 'arms',
+  bicep: 'biceps',
+  tricep: 'triceps',
   // Chest
   pec: 'chest',
   pecs: 'chest',
@@ -271,6 +271,7 @@ export function duplicateMessage(reason: DuplicateResult['reason'], matchName: s
 export const CANON_MUSCLE_GROUPS = [
   'Arms',
   'Back',
+  'Biceps',
   'Calves',
   'Chest',
   'Conditioning',
@@ -282,12 +283,14 @@ export const CANON_MUSCLE_GROUPS = [
   'Hip Flexors',
   'Hips',
   'Legs',
+  'Obliques',
   'Quads',
   'Rear Delts',
   'Shoulders',
   'Spine',
   'T-Spine',
   'Traps',
+  'Triceps',
 ] as const;
 
 // ── Parent grouping (muscle_group only) ─────────────────────────────────────

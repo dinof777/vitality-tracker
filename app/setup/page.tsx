@@ -3,19 +3,28 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Equipment } from '@/lib/database.types';
+import type { Goal } from '@/lib/pillars';
+import { DEFAULT_GOAL, GOAL_CHOICES } from '@/lib/pillars';
 import {
   EQUIPMENT_CHOICES,
-  SPECIAL_FOCUSES,
-  MUSCLE_GROUP_FOCUSES,
   INTENSITY_CHOICES,
   loadProfile,
+  muscleDrillDownNodes,
+  rehabDrillDownNodes,
   saveProfile,
   type Intensity,
 } from '@/lib/profile';
+import MuscleDrillDown from '@/components/workout/MuscleDrillDown';
+
+const STEPS = 4;
+const DEFAULT_MUSCLE_FOCUS = 'full';
+const DEFAULT_REHAB_FOCUS = 'physical-therapy';
 
 export default function SetupPage() {
   const router = useRouter();
   const [step, setStep] = useState(0);
+  const [goal, setGoal] = useState<Goal>(DEFAULT_GOAL);
+  const [focus, setFocus] = useState(DEFAULT_MUSCLE_FOCUS);
   const [equipment, setEquipment] = useState<Equipment[]>([
     'dumbbell',
     'calisthenics',
@@ -24,45 +33,111 @@ export default function SetupPage() {
     'stretch',
   ]);
   // (kettlebell / pull-up bar / medicine ball / jump rope start unchecked — opt in.)
-  const [focus, setFocus] = useState('full');
   const [intensity, setIntensity] = useState<Intensity>('moderate');
+  // Admin-managed regions — the same tree BuilderControls drills through, so
+  // onboarding and the per-workout builder never diverge over what "Legs"
+  // expands to. Empty until loaded; the tree just renders muscle groups flat
+  // until then, same fallback as BuilderControls.
+  const [regionRows, setRegionRows] = useState<{ region: string; groups: string[] }[]>([]);
 
   // Pre-fill from an existing profile (editing).
   useEffect(() => {
     const p = loadProfile();
     if (p) {
+      setGoal(p.goal ?? DEFAULT_GOAL);
       setEquipment(p.equipment);
       setFocus(p.focus);
       setIntensity(p.intensity);
     }
+    fetch('/api/taxonomy/regions')
+      .then((r) => (r.ok ? r.json() : { regions: [] }))
+      .then((d) => setRegionRows((d.regions ?? []) as { region: string; groups: string[] }[]))
+      .catch(() => setRegionRows([]));
   }, []);
+
+  const selectGoal = (g: Goal) => {
+    setGoal(g);
+    // The muscle tree and the rehab tree are unrelated shapes — a focus value
+    // from one isn't valid in the other, so reset to that goal's default
+    // rather than carrying over a value that could resolve to nothing.
+    setFocus(g === 'recover_rehab' ? DEFAULT_REHAB_FOCUS : DEFAULT_MUSCLE_FOCUS);
+  };
 
   const toggleEquip = (v: Equipment) =>
     setEquipment((prev) => (prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]));
 
   const finish = () => {
-    saveProfile({ equipment, focus, intensity });
+    saveProfile({ goal, equipment, focus, intensity });
     router.push('/');
   };
 
-  const canNext = step === 0 ? equipment.length > 0 : true;
+  const canNext = step === 2 ? equipment.length > 0 : true;
+  const isRehab = goal === 'recover_rehab';
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col px-4 pb-28 pt-10">
       {/* progress dots */}
       <div className="mb-6 flex items-center gap-2">
-        {[0, 1, 2].map((i) => (
-          <span
-            key={i}
-            className={`h-1.5 flex-1 rounded-full ${i <= step ? 'bg-accent' : 'bg-surface-raised'}`}
-          />
+        {Array.from({ length: STEPS }, (_, i) => (
+          <span key={i} className={`h-1.5 flex-1 rounded-full ${i <= step ? 'bg-accent' : 'bg-surface-raised'}`} />
         ))}
       </div>
 
       {step === 0 && (
         <section className="space-y-4">
           <div>
-            <p className="text-label text-accent">STEP 1 OF 3</p>
+            <p className="text-label text-accent">STEP 1 OF {STEPS}</p>
+            <h1 className="text-h1 text-text-primary">What&rsquo;s the goal?</h1>
+            <p className="text-body text-text-muted">This shapes how your workouts &amp; weekly plan are weighted.</p>
+          </div>
+          <div className="space-y-2">
+            {GOAL_CHOICES.map((g) => {
+              const on = goal === g.value;
+              return (
+                <button
+                  key={g.value}
+                  type="button"
+                  onClick={() => selectGoal(g.value)}
+                  className={`flex w-full items-center gap-3 rounded-md border p-4 text-left transition-colors ${
+                    on ? 'border-accent bg-accent/10' : 'border-border bg-surface'
+                  }`}
+                >
+                  <span className="text-h2">{g.emoji}</span>
+                  <span className="flex-1">
+                    <span className="block text-body font-semibold text-text-primary">{g.label}</span>
+                    <span className="block text-caption text-text-muted">{g.hint}</span>
+                  </span>
+                  {on && <span className="text-accent">●</span>}
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {step === 1 && (
+        <section className="space-y-4">
+          <div>
+            <p className="text-label text-accent">STEP 2 OF {STEPS}</p>
+            <h1 className="text-h1 text-text-primary">{isRehab ? 'Which area?' : 'Where do you want to focus?'}</h1>
+            <p className="text-body text-text-muted">
+              {isRehab
+                ? 'Pick a joint to narrow, or leave it on Physical Therapy for every area.'
+                : 'Pick a muscle group to narrow, or leave it on Full Body. You can refine any single workout later.'}
+            </p>
+          </div>
+          <MuscleDrillDown
+            nodes={isRehab ? rehabDrillDownNodes() : muscleDrillDownNodes(regionRows)}
+            value={focus}
+            onSelect={setFocus}
+          />
+        </section>
+      )}
+
+      {step === 2 && (
+        <section className="space-y-4">
+          <div>
+            <p className="text-label text-accent">STEP 3 OF {STEPS}</p>
             <h1 className="text-h1 text-text-primary">What do you have?</h1>
             <p className="text-body text-text-muted">Pick the equipment you train with.</p>
           </div>
@@ -99,65 +174,10 @@ export default function SetupPage() {
         </section>
       )}
 
-      {step === 1 && (
+      {step === 3 && (
         <section className="space-y-4">
           <div>
-            <p className="text-label text-accent">STEP 2 OF 3</p>
-            <h1 className="text-h1 text-text-primary">Default focus?</h1>
-            <p className="text-body text-text-muted">You can change this any time you build.</p>
-          </div>
-          <div className="space-y-4">
-            <div>
-              <p className="mb-2 text-[0.65rem] font-semibold tracking-wide text-text-faint">SPECIAL</p>
-              <div className="space-y-2">
-                {SPECIAL_FOCUSES.map((f) => (
-                  <button
-                    key={f.value}
-                    type="button"
-                    onClick={() => setFocus(f.value)}
-                    className={`flex w-full items-center gap-3 rounded-md border p-4 text-left transition-colors ${
-                      focus === f.value ? 'border-accent bg-accent/10' : 'border-border bg-surface'
-                    }`}
-                  >
-                    <span className="text-h2">{f.emoji}</span>
-                    <span className="flex-1">
-                      <span className="block text-body font-semibold text-text-primary">{f.label}</span>
-                      <span className="block text-caption text-text-muted">{f.desc}</span>
-                    </span>
-                    {focus === f.value && <span className="text-accent">●</span>}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <p className="mb-2 text-[0.65rem] font-semibold tracking-wide text-text-faint">MUSCLE GROUP</p>
-              <div className="grid grid-cols-3 gap-2">
-                {MUSCLE_GROUP_FOCUSES.map((f) => (
-                  <button
-                    key={f.value}
-                    type="button"
-                    onClick={() => setFocus(f.value)}
-                    className={`rounded-md border p-2.5 text-center transition-colors ${
-                      focus === f.value ? 'border-accent bg-accent/10' : 'border-border bg-surface'
-                    }`}
-                  >
-                    <span className="block text-body">{f.emoji}</span>
-                    <span className="mt-0.5 block text-caption font-semibold leading-tight text-text-primary">
-                      {f.label}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {step === 2 && (
-        <section className="space-y-4">
-          <div>
-            <p className="text-label text-accent">STEP 3 OF 3</p>
+            <p className="text-label text-accent">STEP 4 OF {STEPS}</p>
             <h1 className="text-h1 text-text-primary">Intensity?</h1>
             <p className="text-body text-text-muted">Sets the volume of generated workouts.</p>
           </div>
@@ -196,7 +216,7 @@ export default function SetupPage() {
             Back
           </button>
         )}
-        {step < 2 ? (
+        {step < STEPS - 1 ? (
           <button
             type="button"
             disabled={!canNext}
@@ -211,7 +231,7 @@ export default function SetupPage() {
             onClick={finish}
             className="h-14 flex-1 rounded-md bg-accent text-label text-on-accent transition-all active:scale-[0.97]"
           >
-            SAVE & BUILD
+            SAVE &amp; BUILD
           </button>
         )}
       </div>

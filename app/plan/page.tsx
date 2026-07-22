@@ -111,10 +111,13 @@ export default function PlanPage() {
         })}
       </div>
 
-      {/* Goal */}
+      {/* Goal — recover_rehab is excluded: weekly pillar planning doesn't model
+          rehab-stage progression (out of scope for v1), and picking it here
+          would silently regenerate the plain general_health week under a
+          misleading label — see lib/pillars.ts#GOAL_SEQUENCE. */}
       <p className="mb-2 text-caption text-text-muted">GOAL</p>
       <div className="mb-5 space-y-2">
-        {GOAL_CHOICES.map((g) => {
+        {GOAL_CHOICES.filter((g) => g.value !== 'recover_rehab').map((g) => {
           const on = goal === g.value;
           return (
             <button
