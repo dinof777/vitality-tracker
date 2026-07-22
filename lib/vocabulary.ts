@@ -52,11 +52,12 @@ export const ROUTINE = { one: 'routine', many: 'routines' } as const;
  * unified:
  *   - Muscle group is a single exercise's taxonomy value ("Chest", "Legs"),
  *     governed in admin/taxonomy and shown under every exercise.
- *   - Focus is a curated session preset a trainee picks on Home / Build. Some
- *     focuses map 1:1 onto a set of muscle groups ("Upper Body"), but others
- *     draw from pillars ("Cardio", "Balance") or a tagged rehab pool ("Physical
- *     Therapy", "Knee") instead — a focus is not always reducible to muscle
- *     groups at all. Renaming one to the other would erase that.
+ *   - Focus is a curated session preset a trainee picks on Home / Build. Most
+ *     focuses map 1:1 onto one muscle group ("Chest", "Legs" — generated from
+ *     CANON_MUSCLE_GROUPS so the two lists can't drift), but the "special"
+ *     focuses draw from pillars ("Cardio", "Balance") or a tagged rehab pool
+ *     ("Physical Therapy", "Knee") instead — a focus is not always reducible
+ *     to a muscle group at all. Renaming one to the other would erase that.
  */
 export const FOCUS_VS_MUSCLE_GROUP_NOTE =
   'Focus is a curated session preset; Muscle group is a single exercise’s taxonomy value. Not the same thing — see lib/vocabulary.ts.';

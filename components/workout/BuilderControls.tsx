@@ -4,6 +4,8 @@ import { useState } from 'react';
 import type { Equipment } from '@/lib/database.types';
 import {
   FOCUS_CHOICES,
+  SPECIAL_FOCUSES,
+  MUSCLE_GROUP_FOCUSES,
   INTENSITY_CHOICES,
   EQUIPMENT_CHOICES,
   intensityParams,
@@ -117,25 +119,55 @@ export default function BuilderControls({ value, onChange, showEquipment = true,
             </p>
 
             {sheet === 'focus' && (
-              <div className="grid grid-cols-2 gap-2">
-                {FOCUS_CHOICES.map((f) => {
-                  const on = value.focus === f.value;
-                  return (
-                    <button
-                      key={f.value}
-                      type="button"
-                      onClick={() => {
-                        onChange({ focus: f.value });
-                        setSheet(null);
-                      }}
-                      className={`rounded-lg border p-3 text-left transition-colors ${on ? 'border-accent bg-accent/10' : 'border-border bg-surface'}`}
-                    >
-                      <span className="text-h3">{f.emoji}</span>
-                      <span className="mt-1 block text-body font-semibold text-text-primary">{f.label}</span>
-                      <span className="block text-caption text-text-muted">{f.desc}</span>
-                    </button>
-                  );
-                })}
+              <div className="space-y-4">
+                <div>
+                  <p className="mb-2 text-[0.65rem] font-semibold tracking-wide text-text-faint">SPECIAL</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {SPECIAL_FOCUSES.map((f) => {
+                      const on = value.focus === f.value;
+                      return (
+                        <button
+                          key={f.value}
+                          type="button"
+                          onClick={() => {
+                            onChange({ focus: f.value });
+                            setSheet(null);
+                          }}
+                          className={`rounded-lg border p-3 text-left transition-colors ${on ? 'border-accent bg-accent/10' : 'border-border bg-surface'}`}
+                        >
+                          <span className="text-h3">{f.emoji}</span>
+                          <span className="mt-1 block text-body font-semibold text-text-primary">{f.label}</span>
+                          <span className="block text-caption text-text-muted">{f.desc}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="mb-2 text-[0.65rem] font-semibold tracking-wide text-text-faint">MUSCLE GROUP</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {MUSCLE_GROUP_FOCUSES.map((f) => {
+                      const on = value.focus === f.value;
+                      return (
+                        <button
+                          key={f.value}
+                          type="button"
+                          onClick={() => {
+                            onChange({ focus: f.value });
+                            setSheet(null);
+                          }}
+                          className={`rounded-lg border p-2.5 text-center transition-colors ${on ? 'border-accent bg-accent/10' : 'border-border bg-surface'}`}
+                        >
+                          <span className="block text-body">{f.emoji}</span>
+                          <span className="mt-0.5 block text-caption font-semibold leading-tight text-text-primary">
+                            {f.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             )}
 

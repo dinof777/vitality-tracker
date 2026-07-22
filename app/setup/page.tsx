@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import type { Equipment } from '@/lib/database.types';
 import {
   EQUIPMENT_CHOICES,
-  FOCUS_CHOICES,
+  SPECIAL_FOCUSES,
+  MUSCLE_GROUP_FOCUSES,
   INTENSITY_CHOICES,
   loadProfile,
   saveProfile,
@@ -105,24 +106,50 @@ export default function SetupPage() {
             <h1 className="text-h1 text-text-primary">Default focus?</h1>
             <p className="text-body text-text-muted">You can change this any time you build.</p>
           </div>
-          <div className="space-y-2">
-            {FOCUS_CHOICES.map((f) => (
-              <button
-                key={f.value}
-                type="button"
-                onClick={() => setFocus(f.value)}
-                className={`flex w-full items-center gap-3 rounded-md border p-4 text-left transition-colors ${
-                  focus === f.value ? 'border-accent bg-accent/10' : 'border-border bg-surface'
-                }`}
-              >
-                <span className="text-h2">{f.emoji}</span>
-                <span className="flex-1">
-                  <span className="block text-body font-semibold text-text-primary">{f.label}</span>
-                  <span className="block text-caption text-text-muted">{f.desc}</span>
-                </span>
-                {focus === f.value && <span className="text-accent">●</span>}
-              </button>
-            ))}
+          <div className="space-y-4">
+            <div>
+              <p className="mb-2 text-[0.65rem] font-semibold tracking-wide text-text-faint">SPECIAL</p>
+              <div className="space-y-2">
+                {SPECIAL_FOCUSES.map((f) => (
+                  <button
+                    key={f.value}
+                    type="button"
+                    onClick={() => setFocus(f.value)}
+                    className={`flex w-full items-center gap-3 rounded-md border p-4 text-left transition-colors ${
+                      focus === f.value ? 'border-accent bg-accent/10' : 'border-border bg-surface'
+                    }`}
+                  >
+                    <span className="text-h2">{f.emoji}</span>
+                    <span className="flex-1">
+                      <span className="block text-body font-semibold text-text-primary">{f.label}</span>
+                      <span className="block text-caption text-text-muted">{f.desc}</span>
+                    </span>
+                    {focus === f.value && <span className="text-accent">●</span>}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <p className="mb-2 text-[0.65rem] font-semibold tracking-wide text-text-faint">MUSCLE GROUP</p>
+              <div className="grid grid-cols-3 gap-2">
+                {MUSCLE_GROUP_FOCUSES.map((f) => (
+                  <button
+                    key={f.value}
+                    type="button"
+                    onClick={() => setFocus(f.value)}
+                    className={`rounded-md border p-2.5 text-center transition-colors ${
+                      focus === f.value ? 'border-accent bg-accent/10' : 'border-border bg-surface'
+                    }`}
+                  >
+                    <span className="block text-body">{f.emoji}</span>
+                    <span className="mt-0.5 block text-caption font-semibold leading-tight text-text-primary">
+                      {f.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </section>
       )}

@@ -26,8 +26,10 @@ import { currentTrainer } from '@/lib/current-tenant';
 
 export const dynamic = 'force-dynamic';
 
-// Focus options offered on the tenant builder (a useful subset).
-const FOCI = ['full', 'upper', 'lower', 'core', 'cardio', 'mobility', 'physical-therapy', 'knee'] as const;
+// Every value BuilderControls' focus picker can produce (special + generated
+// muscle-group focuses) — derived, not hand-listed, so it can't drift out of
+// sync with what the shared picker actually offers.
+const FOCI = new Set(FOCUS_CHOICES.map((f) => f.value));
 const LENGTHS = [4, 6, 8] as const;
 
 // Public, themed: generate a workout from THIS gym's library (global + their
@@ -53,7 +55,7 @@ export default async function TenantBuild({
   const me = await currentTrainer();
   const isMyGym = me?.tenant.id === tenant.id;
 
-  const focusVal = FOCI.includes(searchParams.focus as (typeof FOCI)[number]) ? (searchParams.focus as string) : 'full';
+  const focusVal = searchParams.focus && FOCI.has(searchParams.focus) ? searchParams.focus : 'full';
   // Minutes (like the personal app) rather than a fixed move count. `len` is still
   // honoured so older printed QR codes keep resolving.
   const minutes = searchParams.mins

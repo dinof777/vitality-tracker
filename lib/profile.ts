@@ -1,4 +1,5 @@
 import type { Equipment } from './database.types';
+import { CANON_MUSCLE_GROUPS } from './taxonomy';
 
 // User training profile — saved once in the setup wizard, then used to generate
 // workouts on the fly. Stored in localStorage (per-device; sync to DB later).
@@ -67,8 +68,9 @@ export const EQUIPMENT_CHOICES: { value: Equipment; label: string; hint: string;
 // Focus vs Muscle group: deliberately two different words for two different
 // things (not drift) — see FOCUS_VS_MUSCLE_GROUP_NOTE in lib/vocabulary.ts.
 // A muscle group is a single move's taxonomy value ("Chest"); a Focus is a
-// curated session preset that sometimes maps onto muscle groups (`groups`
-// below) and sometimes doesn't (`pillars`, `tags`, `mobility` instead).
+// curated session preset. Most muscle-group focuses map 1:1 onto that same
+// value (`groups: ['Chest']`), but the "special" focuses don't — they draw by
+// pillar, tag or mode (`pillars`, `tags`, `mobility`) instead.
 export interface FocusChoice {
   /** Draw only from exercises carrying one of these tags (see lib/tags). */
   tags?: string[];
@@ -84,29 +86,61 @@ export interface FocusChoice {
   mobility?: boolean; // match stretch/isometric instead of muscle group
   pillars?: import('./pillars').Pillar[]; // pillar-based focus (overrides groups)
   balanced?: boolean; // round-robin one exercise per pillar
+  /** Which group the focus picker renders it under. */
+  section: 'special' | 'muscle';
 }
 
-export const FOCUS_CHOICES: FocusChoice[] = [
-  { value: 'full', label: 'Full Body', emoji: '🔥', desc: 'Hit everything in one session', groups: null },
-  { value: 'balanced', label: 'Balanced', emoji: '⚖️', desc: 'A bit of all 4 pillars', groups: null, pillars: ['strength', 'cardio', 'balance', 'flexibility'], balanced: true },
-  // The group bundles cover every muscle group between them (except Conditioning,
-  // which the Cardio focus owns via pillar, and Full Body). A guard test enforces
-  // it so a new muscle group can't silently fall through the Upper/Lower/Core split.
-  { value: 'upper', label: 'Upper Body', emoji: '💪', desc: 'Chest, back, shoulders & arms', groups: ['Chest', 'Back', 'Shoulders', 'Arms', 'Rear Delts', 'Traps', 'Grip', 'T-Spine'] },
-  { value: 'lower', label: 'Lower Body', emoji: '🦵', desc: 'Legs, glutes, quads & hamstrings', groups: ['Legs', 'Quads', 'Hamstrings', 'Glutes', 'Calves', 'Hips', 'Hip Flexors'] },
-  { value: 'core', label: 'Core & Abs', emoji: '🎯', desc: 'Midsection & stability', groups: ['Core', 'Spine'] },
-  { value: 'cardio', label: 'Cardio', emoji: '🏃', desc: 'Heart-rate & conditioning', groups: null, pillars: ['cardio'] },
-  { value: 'balance', label: 'Balance', emoji: '🤸', desc: 'Single-leg & stability', groups: null, pillars: ['balance'] },
-  { value: 'mobility', label: 'Mobility', emoji: '🧘', desc: 'Stretch, holds & flexibility', groups: null, mobility: true },
+// Hand-curated presets: whole-session shapes that aren't just "one muscle
+// group" — pillar-based (Cardio, Balance), mode-based (Mobility) or tag-based
+// (the Physical Therapy rehab pool and its per-joint sub-focuses).
+export const SPECIAL_FOCUSES: FocusChoice[] = [
+  { value: 'full', label: 'Full Body', emoji: '🔥', desc: 'Hit everything in one session', groups: null, section: 'special' },
+  { value: 'balanced', label: 'Balanced', emoji: '⚖️', desc: 'A bit of all 4 pillars', groups: null, pillars: ['strength', 'cardio', 'balance', 'flexibility'], balanced: true, section: 'special' },
+  { value: 'cardio', label: 'Cardio', emoji: '🏃', desc: 'Heart-rate & conditioning', groups: null, pillars: ['cardio'], section: 'special' },
+  { value: 'balance', label: 'Balance', emoji: '🤸', desc: 'Single-leg & stability', groups: null, pillars: ['balance'], section: 'special' },
+  { value: 'mobility', label: 'Mobility', emoji: '🧘', desc: 'Stretch, holds & flexibility', groups: null, mobility: true, section: 'special' },
   // Clinical focuses draw from the tagged rehab pool rather than muscle groups.
   // Physical Therapy is the umbrella (every rehab area); the per-joint focuses
   // below narrow to one. A future release nests these under PT properly instead
   // of listing them flat — see the taxonomy scoping note.
-  { value: 'physical-therapy', label: 'Physical Therapy', emoji: '🩹', desc: 'Rehab & recovery work', groups: null, tags: ['physical-therapy'], byStage: true },
-  { value: 'knee', label: 'Knee', emoji: '🦿', desc: 'Bend, straighten & rebuild the knee', groups: null, tags: ['physical-therapy'], areaTags: ['knee'], byStage: true },
-  { value: 'shoulder', label: 'Shoulder', emoji: '🫱', desc: 'Rotator-cuff, scapular & impingement recovery', groups: null, tags: ['physical-therapy'], areaTags: ['shoulder'], byStage: true },
-  { value: 'ankle', label: 'Ankle', emoji: '🦶', desc: 'Post-sprain strength, balance & range', groups: null, tags: ['physical-therapy'], areaTags: ['ankle'], byStage: true },
+  { value: 'physical-therapy', label: 'Physical Therapy', emoji: '🩹', desc: 'Rehab & recovery work', groups: null, tags: ['physical-therapy'], byStage: true, section: 'special' },
+  { value: 'knee', label: 'Knee', emoji: '🦿', desc: 'Bend, straighten & rebuild the knee', groups: null, tags: ['physical-therapy'], areaTags: ['knee'], byStage: true, section: 'special' },
+  { value: 'shoulder', label: 'Shoulder', emoji: '🫱', desc: 'Rotator-cuff, scapular & impingement recovery', groups: null, tags: ['physical-therapy'], areaTags: ['shoulder'], byStage: true, section: 'special' },
+  { value: 'ankle', label: 'Ankle', emoji: '🦶', desc: 'Post-sprain strength, balance & range', groups: null, tags: ['physical-therapy'], areaTags: ['ankle'], byStage: true, section: 'special' },
 ];
+
+// Muscle-group focuses that DON'T get a tile of their own, because a special
+// focus above already owns that exercise pool:
+//   Full Body    → the "Full Body" special (groups: null = everything); a
+//                  groups: ['Full Body'] focus would wrongly mean "only
+//                  exercises literally tagged Full Body".
+//   Conditioning → the "Cardio" special, via pillar rather than muscle group.
+const MUSCLE_GROUP_FOCUS_SKIP = new Set<string>(['Full Body', 'Conditioning']);
+
+/** "Rear Delts" → "rear-delts". Only used for the generated focus values below. */
+function slugifyGroup(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+// One tile per canon muscle group (lib/taxonomy.ts) — generated, never hand-typed,
+// so a new muscle group automatically gets a focus and can't be forgotten (see
+// the guard test in profile.test.ts). Order follows CANON_MUSCLE_GROUPS itself
+// rather than a hand-picked order, for the same reason.
+export const MUSCLE_GROUP_FOCUSES: FocusChoice[] = (CANON_MUSCLE_GROUPS as readonly string[])
+  .filter((group) => !MUSCLE_GROUP_FOCUS_SKIP.has(group))
+  .map((group) => ({
+    value: slugifyGroup(group),
+    label: group,
+    emoji: '💪',
+    desc: '',
+    groups: [group],
+    section: 'muscle' as const,
+  }));
+
+export const FOCUS_CHOICES: FocusChoice[] = [...SPECIAL_FOCUSES, ...MUSCLE_GROUP_FOCUSES];
 
 export interface IntensityChoice {
   value: Intensity;
