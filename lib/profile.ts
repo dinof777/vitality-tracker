@@ -125,6 +125,30 @@ function slugifyGroup(name: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
+// Best-available emoji per muscle group. Coverage is genuinely thin — the leg
+// muscles share 🦵 because there isn't a distinct emoji for each — so this is a
+// stopgap until lime-on-carbon muscle illustrations replace them (matching the
+// exercise thumbnails). Unmapped groups fall back to 💪.
+const MUSCLE_GROUP_EMOJI: Record<string, string> = {
+  Chest: '🎽',
+  Back: '🔙',
+  Shoulders: '🤸',
+  'Rear Delts': '🔙',
+  Traps: '🤷',
+  Arms: '💪',
+  Grip: '✊',
+  Core: '🎯',
+  Spine: '🦴',
+  'T-Spine': '🦴',
+  Legs: '🦵',
+  Quads: '🦵',
+  Hamstrings: '🦵',
+  Glutes: '🍑',
+  Calves: '🦶',
+  Hips: '🕺',
+  'Hip Flexors': '🦵',
+};
+
 // One tile per canon muscle group (lib/taxonomy.ts) — generated, never hand-typed,
 // so a new muscle group automatically gets a focus and can't be forgotten (see
 // the guard test in profile.test.ts). Order follows CANON_MUSCLE_GROUPS itself
@@ -134,7 +158,7 @@ export const MUSCLE_GROUP_FOCUSES: FocusChoice[] = (CANON_MUSCLE_GROUPS as reado
   .map((group) => ({
     value: slugifyGroup(group),
     label: group,
-    emoji: '💪',
+    emoji: MUSCLE_GROUP_EMOJI[group] ?? '💪',
     desc: '',
     groups: [group],
     section: 'muscle' as const,
