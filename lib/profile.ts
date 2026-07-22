@@ -339,8 +339,13 @@ function compositeFocusChoice(parts: ParsedFocus): FocusChoice {
   };
 }
 
-/** The single choke point composite values pass through — see focusChoice below. */
-function parseCompositeFocus(value: string): FocusChoice | null {
+/**
+ * The single choke point composite values pass through — see focusChoice
+ * below. Exported so a host that gates a raw focus VALUE before it ever
+ * reaches focusChoice (e.g. the gym build page's URL-param allowlist) can
+ * accept a well-formed composite instead of only the static FOCUS_CHOICES.
+ */
+export function parseCompositeFocus(value: string): FocusChoice | null {
   if (!value.includes(':')) return null; // legacy path, byte-identical to today
   const parts = parseFocusValue(value);
   if (!parts || !isPillarToken(parts.pillarToken)) return null; // foreign token → fall through to legacy lookup
@@ -398,6 +403,11 @@ export interface DrillDownNode {
  * remaining muscle group that isn't part of a region. `regions` is DB state —
  * pass [] before it's loaded and every muscle group renders flat, which is
  * the correct fallback (no worse than the old flat picker), not a broken tree.
+ *
+ * No longer called from any host — onboarding step 2 switched to the shared
+ * FocusPicker (components/workout/FocusPicker.tsx). Left in place (still
+ * covered by lib/profile-drilldown.test.ts) rather than deleted; a future
+ * cleanup pass can remove it if nothing else ever needs the region-driven tree.
  */
 export function muscleDrillDownNodes(regions: { region: string; groups: string[] }[]): DrillDownNode[] {
   const parentNames = new Set(regions.map((r) => r.region));
@@ -438,6 +448,10 @@ export function muscleDrillDownNodes(regions: { region: string; groups: string[]
  * single "whole area" parent, drilling to the specific joint focuses
  * (knee/shoulder/ankle in v1, from REHAB_AREA_FOCUSES). Tapping the umbrella
  * tile alone selects every rehab area; tapping a revealed child narrows to one.
+ *
+ * No longer called from any host — onboarding step 2 switched to the shared
+ * FocusPicker (components/workout/FocusPicker.tsx). Left in place (still
+ * covered by lib/profile-drilldown.test.ts) rather than deleted.
  */
 export function rehabDrillDownNodes(): DrillDownNode[] {
   const umbrella = SPECIAL_FOCUSES.find((f) => f.value === 'physical-therapy');
@@ -573,6 +587,9 @@ const STYLE_FOCUS_VALUES = new Set(['balanced', 'cardio', 'balance', 'mobility']
  * a resolved focus value belongs to — drives the sheet's default tab so
  * reopening it lands where the current focus already lives, instead of always
  * resetting to the first tab.
+ *
+ * Not currently called from any host UI (still covered by
+ * lib/profile-drilldown.test.ts) — left in place rather than deleted.
  */
 export function focusKind(value: string, regions: FocusChoice[]): 'muscle' | 'style' | 'rehab' {
   const fc = resolveFocus(value, regions);

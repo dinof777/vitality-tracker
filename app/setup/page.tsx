@@ -4,17 +4,9 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Equipment } from '@/lib/database.types';
 import type { Goal } from '@/lib/pillars';
-import { DEFAULT_GOAL, GOAL_CHOICES } from '@/lib/pillars';
-import {
-  EQUIPMENT_CHOICES,
-  INTENSITY_CHOICES,
-  loadProfile,
-  muscleDrillDownNodes,
-  rehabDrillDownNodes,
-  saveProfile,
-  type Intensity,
-} from '@/lib/profile';
-import MuscleDrillDown from '@/components/workout/MuscleDrillDown';
+import { DEFAULT_GOAL, GOAL_CHOICES, GOAL_PILLAR_SEED } from '@/lib/pillars';
+import { EQUIPMENT_CHOICES, INTENSITY_CHOICES, loadProfile, saveProfile, type Intensity } from '@/lib/profile';
+import FocusPicker from '@/components/workout/FocusPicker';
 
 const STEPS = 4;
 const DEFAULT_MUSCLE_FOCUS = 'full';
@@ -34,11 +26,6 @@ export default function SetupPage() {
   ]);
   // (kettlebell / pull-up bar / medicine ball / jump rope start unchecked — opt in.)
   const [intensity, setIntensity] = useState<Intensity>('moderate');
-  // Admin-managed regions — the same tree BuilderControls drills through, so
-  // onboarding and the per-workout builder never diverge over what "Legs"
-  // expands to. Empty until loaded; the tree just renders muscle groups flat
-  // until then, same fallback as BuilderControls.
-  const [regionRows, setRegionRows] = useState<{ region: string; groups: string[] }[]>([]);
 
   // Pre-fill from an existing profile (editing).
   useEffect(() => {
@@ -49,10 +36,6 @@ export default function SetupPage() {
       setFocus(p.focus);
       setIntensity(p.intensity);
     }
-    fetch('/api/taxonomy/regions')
-      .then((r) => (r.ok ? r.json() : { regions: [] }))
-      .then((d) => setRegionRows((d.regions ?? []) as { region: string; groups: string[] }[]))
-      .catch(() => setRegionRows([]));
   }, []);
 
   const selectGoal = (g: Goal) => {
@@ -126,11 +109,7 @@ export default function SetupPage() {
                 : 'Pick a muscle group to narrow, or leave it on Full Body. You can refine any single workout later.'}
             </p>
           </div>
-          <MuscleDrillDown
-            nodes={isRehab ? rehabDrillDownNodes() : muscleDrillDownNodes(regionRows)}
-            value={focus}
-            onSelect={setFocus}
-          />
+          <FocusPicker value={focus} onSelect={setFocus} initialPillar={GOAL_PILLAR_SEED[goal] ?? null} />
         </section>
       )}
 

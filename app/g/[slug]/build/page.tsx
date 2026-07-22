@@ -12,6 +12,7 @@ import {
   lengthToCount,
   regionFocus,
   resolveFocus,
+  parseCompositeFocus,
   DEFAULT_LENGTH,
   LENGTH_MIN,
   LENGTH_MAX,
@@ -75,7 +76,16 @@ export default async function TenantBuild({
   const me = await currentTrainer();
   const isMyGym = me?.tenant.id === tenant.id;
 
-  const focusVal = searchParams.focus && FOCI.has(searchParams.focus) ? searchParams.focus : 'full';
+  // Accept either a curated/region value (in FOCI) or a well-formed pillar-first
+  // composite (e.g. "strength:legs:quads") from the pillar-first focus picker —
+  // FOCI alone doesn't (can't, without enumerating every composite) contain
+  // those, so gating on it alone silently fell back to Full Body. Composite
+  // values flow through resolveFocus/focusChoice (called below, and inside
+  // generateWorkout) exactly like any other focus once they pass this gate.
+  const focusVal =
+    searchParams.focus && (FOCI.has(searchParams.focus) || parseCompositeFocus(searchParams.focus) !== null)
+      ? searchParams.focus
+      : 'full';
   // Minutes (like the personal app) rather than a fixed move count. `len` is still
   // honoured so older printed QR codes keep resolving.
   const minutes = searchParams.mins

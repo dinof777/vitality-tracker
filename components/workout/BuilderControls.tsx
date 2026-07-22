@@ -9,15 +9,13 @@ import {
   lengthToCount,
   regionFocus,
   resolveFocus,
-  focusPillarNodes,
-  focusGroupNodes,
   focusPillarToken,
   isPillarToken,
   type FocusChoice,
   type Intensity,
 } from '@/lib/profile';
 import LengthDial from '@/components/home/LengthDial';
-import MuscleDrillDown from '@/components/workout/MuscleDrillDown';
+import FocusPicker from '@/components/workout/FocusPicker';
 import { EXERCISE } from '@/lib/vocabulary';
 
 export interface BuilderValue {
@@ -69,9 +67,6 @@ export default function BuilderControls({
   onSetDefaultFocus,
 }: Props) {
   const [sheet, setSheet] = useState<'focus' | 'intensity' | 'equipment' | null>(null);
-  // Pillar-first focus drill: null = step 1 (pick a pillar), a pillar token =
-  // step 2 (pick a muscle group, optionally drilling to a deep muscle/joint).
-  const [pillarStep, setPillarStep] = useState<string | null>(null);
   const [regionRows, setRegionRows] = useState<{ region: string; groups: string[] }[]>([]);
   const regions = regionRows.map(regionFocus);
 
@@ -98,6 +93,11 @@ export default function BuilderControls({
   }, []);
 
   const fc = resolveFocus(value.focus, regions);
+  // Reopen where the current focus already lives — e.g. reopening on
+  // "strength:legs:quads" lands FocusPicker's step 2 already on Strength.
+  // 'full'/'balanced' (whole-session, select-and-close) stay at step 1.
+  const focusPillarTok = focusPillarToken(value.focus, regions);
+  const focusInitialPillar = isPillarToken(focusPillarTok) ? focusPillarTok : null;
   const ip = intensityParams(value.intensity);
   const estCount = lengthToCount(value.minutes);
   const sets = value.sets ?? ip.sets;
@@ -121,14 +121,7 @@ export default function BuilderControls({
 
       <button
         type="button"
-        onClick={() => {
-          // Reopen where the current focus already lives — e.g. re-opening on
-          // "strength:legs:quads" lands step 2 already showing the Legs group.
-          // 'full'/'balanced' (whole-session, select-and-close) stay at step 1.
-          const token = focusPillarToken(value.focus, regions);
-          setPillarStep(isPillarToken(token) ? token : null);
-          setSheet('focus');
-        }}
+        onClick={() => setSheet('focus')}
         className="mb-2 flex w-full items-center justify-between rounded-lg border border-border bg-surface p-4 text-left active:bg-surface-raised"
       >
         <span>
@@ -182,41 +175,17 @@ export default function BuilderControls({
 
             {sheet === 'focus' && (
               <div className="space-y-4">
-                {pillarStep === null ? (
-                  // Step 1 — Full Body, Balanced (select & close) and the 5
-                  // pillar tiles (Strength/Cardio/Balance/Flexibility/PT), which
-                  // advance to step 2 instead of selecting.
-                  <MuscleDrillDown
-                    nodes={focusPillarNodes()}
-                    value={value.focus}
-                    onSelect={(v) => {
-                      if (isPillarToken(v)) {
-                        setPillarStep(v);
-                      } else {
-                        onChange({ focus: v });
-                        setSheet(null);
-                      }
-                    }}
-                  />
-                ) : (
-                  // Step 2 (+3) — muscle group, optionally drilling to the
-                  // specific muscle (training pillars) or joint/area (Physical
-                  // Therapy) via MuscleDrillDown's own parent/child expand.
-                  <div className="space-y-2">
-                    <button
-                      type="button"
-                      onClick={() => setPillarStep(null)}
-                      className="flex items-center gap-1 text-caption font-semibold text-accent"
-                    >
-                      ‹ Back
-                    </button>
-                    <MuscleDrillDown
-                      nodes={focusGroupNodes(pillarStep)}
-                      value={value.focus}
-                      onSelect={(v) => onChange({ focus: v })}
-                    />
-                  </div>
-                )}
+                <FocusPicker
+                  value={value.focus}
+                  initialPillar={focusInitialPillar}
+                  onSelect={(v) => {
+                    onChange({ focus: v });
+                    // Full Body / Balanced are step 1's select-and-close
+                    // tiles — everything else (a composite pillar/group/deep
+                    // value from step 2) stays open until DONE.
+                    if (v === 'full' || v === 'balanced') setSheet(null);
+                  }}
+                />
 
                 {onSetDefaultFocus && (
                   <button

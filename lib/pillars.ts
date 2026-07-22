@@ -60,6 +60,22 @@ export const GOAL_CHOICES: { value: Goal; label: string; emoji: string; hint: st
 export const DEFAULT_GOAL: Goal = 'general_health';
 export const DEFAULT_DAYS_PER_WEEK = 4;
 
+/**
+ * Sensible starting pillar for onboarding step 2's FocusPicker
+ * (components/workout/FocusPicker.tsx), seeded from the goal just picked in
+ * step 1 — purely a navigation seed for which screen the drill opens on,
+ * never a pre-selected FOCUS VALUE, so "leave it on Full Body / Physical
+ * Therapy" (that step's own copy) stays true until the user actually taps a
+ * tile. The user can still back out to FocusPicker's own step 1 (Full Body,
+ * Balanced, the pillar tiles) and pick anything else. `general_health` has no
+ * entry on purpose — it starts at that pillar list rather than assuming one.
+ */
+export const GOAL_PILLAR_SEED: Partial<Record<Goal, string>> = {
+  build_muscle: 'strength',
+  weight_loss: 'cardio',
+  recover_rehab: 'physical-therapy',
+};
+
 export type DayKind = 'strength' | 'cardio' | 'balance' | 'flexibility' | 'recovery' | 'rest';
 
 export interface DayKindMeta {
