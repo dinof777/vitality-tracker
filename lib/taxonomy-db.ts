@@ -242,3 +242,39 @@ export async function tenantTagIds(tenantId: string): Promise<Map<string, Taxono
   const terms = await tenantTerms(tenantId, 'tag');
   return new Map(terms.map((t) => [termSlug(t.normalized), t]));
 }
+
+export interface RegionRow {
+  region: string;
+  groups: string[];
+}
+
+/**
+ * The admin-managed muscle-group hierarchy — regions with their children, for
+ * the builder's REGION tiles. Only live, shared (core/approved) parents with
+ * at least one live, shared child are offered — a region an admin hasn't
+ * finished building simply doesn't show up. Public data (core muscle groups
+ * are global), shared by GET /api/taxonomy/regions and the server-rendered
+ * gym build page, so both resolve the exact same tree.
+ */
+export async function fetchRegionHierarchy(): Promise<RegionRow[]> {
+  const sql = getSql();
+  if (!sql) return [];
+
+  const rows = await sql`
+    select p.id as parent_id, p.name as region, c.name as group_name
+    from taxonomy_terms p
+    join taxonomy_terms c on c.parent_id = p.id
+    where p.kind = 'muscle_group' and p.status in ('core', 'approved') and p.archived_at is null
+      and c.kind = 'muscle_group' and c.status in ('core', 'approved') and c.archived_at is null
+    order by p.name, c.name
+  `;
+
+  const byParent = new Map<string, RegionRow>();
+  for (const r of rows) {
+    const key = String(r.parent_id);
+    const entry = byParent.get(key) ?? { region: String(r.region), groups: [] };
+    entry.groups.push(String(r.group_name));
+    byParent.set(key, entry);
+  }
+  return Array.from(byParent.values());
+}

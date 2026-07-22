@@ -6,7 +6,19 @@ import type { Exercise } from '@/lib/database.types';
 import { brandingToCssVars, fetchTenantBySlug } from '@/lib/tenant';
 import { tenantLibrary } from '@/lib/tenant-library';
 import { generateWorkout } from '@/lib/workout-generator';
-import { workoutParams, FOCUS_CHOICES, lengthToCount, DEFAULT_LENGTH, LENGTH_MIN, LENGTH_MAX, type Profile, type Intensity } from '@/lib/profile';
+import {
+  workoutParams,
+  FOCUS_CHOICES,
+  lengthToCount,
+  regionFocus,
+  resolveFocus,
+  DEFAULT_LENGTH,
+  LENGTH_MIN,
+  LENGTH_MAX,
+  type FocusChoice,
+  type Profile,
+  type Intensity,
+} from '@/lib/profile';
 import { EQUIPMENT_ORDER, EQUIPMENT_LABEL } from '@/lib/exercises';
 import { isTimed, exerciseMode, modeWorkLabel } from '@/lib/exercise-mode';
 import { syncrofitRunUrl } from '@/lib/syncrofit';
@@ -23,13 +35,10 @@ import TenantBuilderControls from '@/components/workout/TenantBuilderControls';
 import { filterByFacets, tagsInCategory } from '@/lib/tags';
 import { tenantEquipmentSlugs } from '@/lib/tenant-equipment';
 import { currentTrainer } from '@/lib/current-tenant';
+import { fetchRegionHierarchy } from '@/lib/taxonomy-db';
 
 export const dynamic = 'force-dynamic';
 
-// Every value BuilderControls' focus picker can produce (special + generated
-// muscle-group focuses) — derived, not hand-listed, so it can't drift out of
-// sync with what the shared picker actually offers.
-const FOCI = new Set(FOCUS_CHOICES.map((f) => f.value));
 const LENGTHS = [4, 6, 8] as const;
 
 // Public, themed: generate a workout from THIS gym's library (global + their
@@ -46,6 +55,17 @@ export default async function TenantBuild({
   if (!tenant) notFound();
   const library = await tenantLibrary(tenant.id);
   const name = tenant.branding.brandName ?? tenant.name;
+
+  // Admin-managed regions ("Upper Body" → Chest/Back/Shoulders…) — not in the
+  // static FOCUS_CHOICES (they're DB data, not a curated preset), so every
+  // value/label lookup below merges this in. Empty when the admin hasn't built
+  // a tree yet; the REGION section on BuilderControls just doesn't render then.
+  const regionRows = await fetchRegionHierarchy();
+  const regions: FocusChoice[] = regionRows.map(regionFocus);
+  // Every value the focus picker can produce (special + generated muscle-group
+  // focuses + fetched regions) — derived, not hand-listed, so it can't drift
+  // out of sync with what the shared picker actually offers.
+  const FOCI = new Set([...FOCUS_CHOICES, ...regions].map((f) => f.value));
 
   // Only build with equipment the gym actually has. Empty = not set up yet, so
   // fall back to everything rather than producing an empty workout.
@@ -74,7 +94,7 @@ export default async function TenantBuild({
     const [i, k] = part.split(':').map(Number);
     if (Number.isInteger(i) && i >= 0) swaps.set(i, Math.max(1, Math.min(50, k || 1)));
   }
-  const focusLabel = FOCUS_CHOICES.find((f) => f.value === focusVal)?.label ?? 'Full Body';
+  const focusLabel = resolveFocus(focusVal, regions).label;
   const custom = searchParams.mode === 'custom';
 
   // Tag facets narrow the pool the generator draws from — so "Stage 3 + Knee PT"
@@ -103,13 +123,13 @@ export default async function TenantBuild({
   }));
 
   const profile: Profile = { equipment: allowedEquipment, focus: focusVal, intensity };
-  const generated = generateWorkout(profile, { focus: focusVal, count, pool, rng });
+  const generated = generateWorkout(profile, { focus: focusVal, count, pool, rng, focusChoices: regions });
 
   // A rehab session should read early → late. Sorting the pool doesn't survive
   // the generator's per-muscle selection, so order the finished session instead.
   const stageOf = (e: Exercise) =>
     (e.tags ?? []).includes('stage-1') ? 0 : (e.tags ?? []).includes('stage-2') ? 1 : 2;
-  const focusChoiceFull = FOCUS_CHOICES.find((f) => f.value === focusVal);
+  const focusChoiceFull = resolveFocus(focusVal, regions);
 
   // Refresh a single move: swap that slot for another from the pool, chosen
   // deterministically so the URL (and any QR of it) still reproduces exactly.

@@ -29,6 +29,12 @@ interface Props {
   archived?: boolean;
   /** Highlight rows that want attention (e.g. awaiting review). */
   flagged?: boolean;
+  /**
+   * A child of a parent/region row, rendered directly beneath it — indented
+   * with a connector rather than a separate nested list, so a region's
+   * children read as "part of" it without a second list component.
+   */
+  indent?: boolean;
   open: boolean;
   onToggle: () => void;
   children: ReactNode;
@@ -40,6 +46,7 @@ export default function LifecycleRow({
   meta,
   archived = false,
   flagged = false,
+  indent = false,
   open,
   onToggle,
   children,
@@ -47,7 +54,7 @@ export default function LifecycleRow({
   const panelId = useId();
   return (
     <li
-      className={`overflow-hidden rounded-lg border ${
+      className={`overflow-hidden rounded-lg border ${indent ? 'ml-5 border-l-4 border-l-accent/25' : ''} ${
         archived
           ? 'border-dashed border-border bg-background'
           : flagged

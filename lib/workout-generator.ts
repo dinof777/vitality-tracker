@@ -3,7 +3,7 @@ import { SAMPLE_EXERCISES } from './exercises';
 import { exerciseTier, intensityPreferredTier } from './exercise-intensity';
 import { exerciseMode } from './exercise-mode';
 import { hasPillar, type Pillar } from './pillars';
-import { focusChoice, workoutParams, type Intensity, type Profile } from './profile';
+import { focusChoice, workoutParams, type FocusChoice, type Intensity, type Profile } from './profile';
 import { packToTime } from './workout-timing';
 
 const ALL_PILLARS: Pillar[] = ['strength', 'cardio', 'balance', 'flexibility'];
@@ -37,6 +37,11 @@ interface GenerateOpts {
   count?: number; // or just take this many exercises
   pool?: Exercise[]; // draw from this library instead of the global one (e.g. a gym's)
   rng?: () => number; // seeded RNG for reproducible (shareable / QR-able) workouts
+  /** Admin-managed regions (lib/profile#regionFocus), or any other focus not
+   *  in the static FOCUS_CHOICES — checked before falling back to the static
+   *  lookup, so a region focus value resolves to its actual muscle groups
+   *  instead of silently defaulting to the first static focus. */
+  focusChoices?: FocusChoice[];
 }
 
 // Order the focus/equipment pool for variety AND intensity-type: bias toward the
@@ -50,8 +55,9 @@ function varietyOrdered(
   preferTier: number,
   source: Exercise[] = SAMPLE_EXERCISES,
   rng: () => number = Math.random,
+  extraFocuses: FocusChoice[] = [],
 ): Exercise[] {
-  const focus = focusChoice(focusValue);
+  const focus = extraFocuses.find((f) => f.value === focusValue) ?? focusChoice(focusValue);
   const eq = new Set(profile.equipment);
   let pool = source.filter((e) => e.equipment && eq.has(e.equipment));
   // Clinical focuses select by tag instead of muscle group: the goal tag
@@ -97,7 +103,14 @@ function varietyOrdered(
 // resolved sets/reps/rest/hold timing; falls back to a fixed `count`.
 export function generateWorkout(profile: Profile, opts: GenerateOpts = {}): Exercise[] {
   const intensity = opts.intensity ?? profile.intensity;
-  const ordered = varietyOrdered(profile, opts.focus ?? profile.focus, intensityPreferredTier(intensity), opts.pool, opts.rng);
+  const ordered = varietyOrdered(
+    profile,
+    opts.focus ?? profile.focus,
+    intensityPreferredTier(intensity),
+    opts.pool,
+    opts.rng,
+    opts.focusChoices,
+  );
   if (ordered.length === 0) return [];
 
   const overridden = { ...profile, intensity };

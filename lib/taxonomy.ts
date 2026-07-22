@@ -290,6 +290,52 @@ export const CANON_MUSCLE_GROUPS = [
   'Traps',
 ] as const;
 
+// ── Parent grouping (muscle_group only) ─────────────────────────────────────
+//
+// A region ("Upper Body") is an ordinary muscle_group taxonomy_terms row that
+// happens to have children — no new `kind`. Strictly 2 levels: a term that is
+// itself a parent can't be given a parent, and a parent can't itself be nested
+// under another. Enforced here in app code, the same way merge's same-kind
+// check is, rather than a DB trigger.
+
+export interface ParentMoveCheck {
+  allowed: boolean;
+  reason?: string;
+}
+
+/**
+ * Can `term` become a child of `parent` (or top-level, when `parent` is null)?
+ *
+ * Three rules, in order: same-kind (both muscle_group), no-cycle (a term can't
+ * parent itself), no-grandparent — which covers both directions at once given
+ * strictly 2 levels: the chosen parent must itself be top-level, AND the term
+ * being parented must not already have children of its own (it would otherwise
+ * become a parent nested under another parent).
+ */
+export function checkSetParent(
+  term: { id: string; name: string; kind: TermKind; hasChildren: boolean },
+  parent: { id: string; kind: TermKind; hasParent: boolean } | null,
+): ParentMoveCheck {
+  if (!parent) return { allowed: true }; // clearing to top-level is always fine
+
+  if (parent.id === term.id) {
+    return { allowed: false, reason: `“${term.name}” can’t be its own parent.` };
+  }
+  if (term.kind !== 'muscle_group' || parent.kind !== 'muscle_group') {
+    return { allowed: false, reason: 'Parent grouping only applies to muscle groups.' };
+  }
+  if (parent.hasParent) {
+    return { allowed: false, reason: 'That group already belongs to a region — only two levels deep are allowed.' };
+  }
+  if (term.hasChildren) {
+    return {
+      allowed: false,
+      reason: `“${term.name}” already groups its own child groups — a region can’t also be nested under another.`,
+    };
+  }
+  return { allowed: true };
+}
+
 // ── Governance limits ────────────────────────────────────────────────────────
 
 /**

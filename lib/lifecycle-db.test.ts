@@ -73,7 +73,7 @@ describe('exerciseUsage', () => {
     // The whole point: prove the return value is correct, not just that the
     // query looked plausible. A silent-zero here is what re-enables the
     // CASCADE-destroys-history bug this module exists to prevent.
-    expect(usage).toEqual({ routines: 3, logEntries: 112, aliases: 1, exercises: 0, gyms: 0 });
+    expect(usage).toEqual({ routines: 3, logEntries: 112, aliases: 1, exercises: 0, gyms: 0, children: 0 });
 
     expect(sql).toHaveBeenCalledTimes(1);
     const [{ text, values }] = calls;
@@ -101,6 +101,7 @@ describe('exerciseUsage', () => {
       aliases: 1,
       exercises: 0,
       gyms: 0,
+      children: 0,
     });
   });
 
@@ -118,6 +119,7 @@ describe('exerciseUsage', () => {
       aliases: 0,
       exercises: 0,
       gyms: 0,
+      children: 0,
     });
   });
 
@@ -131,6 +133,7 @@ describe('exerciseUsage', () => {
       aliases: 0,
       exercises: 0,
       gyms: 0,
+      children: 0,
     });
   });
 });
@@ -161,15 +164,39 @@ describe('termUsage', () => {
           : undefined,
       (text) => (text.includes('from tenant_terms where term_id') ? [{ n: 2 }] : undefined),
       (text) => (text.includes('exercises where') && text.includes('muscle_group =') ? [{ n: 7 }] : undefined),
+      (text) => (text.includes('where parent_id =') ? [{ n: 0 }] : undefined),
     ]);
     vi.mocked(getSql).mockReturnValue(sql as unknown as SqlOrNull);
 
     const usage = await termUsage('term-rd');
-    expect(usage).toEqual({ routines: 0, logEntries: 0, aliases: 0, exercises: 7, gyms: 2 });
+    expect(usage).toEqual({ routines: 0, logEntries: 0, aliases: 0, exercises: 7, gyms: 2, children: 0 });
 
     const exerciseQuery = calls.find((c) => c.text.includes('muscle_group ='))!;
     expect(exerciseQuery.values).toContain('Rear Delts'); // display name
     expect(exerciseQuery.values).not.toContain('rear delts'); // NOT the normalized form
+  });
+
+  it('muscle_group: a region with live children counts them, keyed by parent_id and excluding archived rows', async () => {
+    // The whole reason this exists: a parent region with children must read as
+    // in-use (isInUse) so deleting it archives instead of orphaning the
+    // children still pointing at it via parent_id.
+    const { sql, calls } = fakeSql([
+      (text) =>
+        text.includes('from taxonomy_terms where id')
+          ? [{ kind: 'muscle_group', name: 'Upper Body', normalized: 'upper body' }]
+          : undefined,
+      (text) => (text.includes('from tenant_terms where term_id') ? [{ n: 0 }] : undefined),
+      (text) => (text.includes('exercises where') && text.includes('muscle_group =') ? [{ n: 0 }] : undefined),
+      (text) => (text.includes('where parent_id =') ? [{ n: 3 }] : undefined),
+    ]);
+    vi.mocked(getSql).mockReturnValue(sql as unknown as SqlOrNull);
+
+    const usage = await termUsage('term-upper');
+    expect(usage).toEqual({ routines: 0, logEntries: 0, aliases: 0, exercises: 0, gyms: 0, children: 3 });
+
+    const childrenQuery = calls.find((c) => c.text.includes('where parent_id ='))!;
+    expect(childrenQuery.text).toContain('archived_at is null');
+    expect(childrenQuery.values).toEqual(['term-upper']);
   });
 
   it('tag: counts exercises by the SLUG derived from `normalized` (spaces -> dashes), not `name`', async () => {
@@ -180,11 +207,12 @@ describe('termUsage', () => {
           : undefined,
       (text) => (text.includes('from tenant_terms where term_id') ? [{ n: 0 }] : undefined),
       (text) => (text.includes('any(tags)') ? [{ n: 5 }] : undefined),
+      (text) => (text.includes('where parent_id =') ? [{ n: 0 }] : undefined),
     ]);
     vi.mocked(getSql).mockReturnValue(sql as unknown as SqlOrNull);
 
     const usage = await termUsage('term-kneept');
-    expect(usage).toEqual({ routines: 0, logEntries: 0, aliases: 0, exercises: 5, gyms: 0 });
+    expect(usage).toEqual({ routines: 0, logEntries: 0, aliases: 0, exercises: 5, gyms: 0, children: 0 });
 
     const tagQuery = calls.find((c) => c.text.includes('any(tags)'))!;
     expect(tagQuery.values).toContain('knee-pt'); // slug: dash-joined normalized form
@@ -197,11 +225,12 @@ describe('termUsage', () => {
           ? [{ kind: 'equipment', name: 'Dumbbell', normalized: 'dumbbell' }]
           : undefined,
       (text) => (text.includes('from tenant_terms where term_id') ? [{ n: 4 }] : undefined),
+      (text) => (text.includes('where parent_id =') ? [{ n: 0 }] : undefined),
     ]);
     vi.mocked(getSql).mockReturnValue(sql as unknown as SqlOrNull);
 
     const usage = await termUsage('term-db');
-    expect(usage).toEqual({ routines: 0, logEntries: 0, aliases: 0, exercises: 0, gyms: 4 });
+    expect(usage).toEqual({ routines: 0, logEntries: 0, aliases: 0, exercises: 0, gyms: 4, children: 0 });
     expect(calls.some((c) => c.text.includes('any(tags)') || c.text.includes('muscle_group ='))).toBe(false);
   });
 });

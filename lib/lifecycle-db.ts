@@ -25,6 +25,7 @@ export async function exerciseUsage(exerciseId: string): Promise<Usage> {
     aliases: r.aliases ?? 0,
     exercises: 0,
     gyms: 0,
+    children: 0,
   };
 }
 
@@ -47,7 +48,14 @@ export async function termUsage(termId: string): Promise<Usage> {
     exercises = (await sql`select count(*)::int n from exercises where ${slug} = any(tags)`)[0]?.n ?? 0;
   }
 
-  return { routines: 0, logEntries: 0, aliases: 0, exercises, gyms };
+  // A region (a muscle_group with children) counting them here is what makes
+  // isInUse() treat it as in-use — deleting it archives instead of orphaning
+  // whatever's still parented to it.
+  const children =
+    (await sql`select count(*)::int n from taxonomy_terms where parent_id = ${termId} and archived_at is null`)[0]
+      ?.n ?? 0;
+
+  return { routines: 0, logEntries: 0, aliases: 0, exercises, gyms, children };
 }
 
 /**

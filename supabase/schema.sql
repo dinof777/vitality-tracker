@@ -97,9 +97,14 @@ create table if not exists taxonomy_terms (
   archived_at timestamptz,   -- retired but still resolvable; see exercises.archived_at
   archived_by text,
   created_at  timestamptz not null default now(),
+  -- Parent region for muscle_group only (app-enforced, not a DB check — see
+  -- 0006_taxonomy_parent.sql). Strictly 2 levels: a term with children may not
+  -- itself have a parent. Null for every other kind.
+  parent_id   uuid references taxonomy_terms(id) on delete set null,
   unique (kind, normalized),
   -- Tags drive faceted filtering, which groups by category.
-  constraint tag_needs_category check (kind <> 'tag' or category is not null)
+  constraint tag_needs_category check (kind <> 'tag' or category is not null),
+  constraint taxonomy_terms_parent_not_self check (parent_id is distinct from id)
 );
 
 -- tenant_terms: which gyms use which term. This is what makes moderation
@@ -233,6 +238,7 @@ create index if not exists idx_mobility_logs_logged_date    on mobility_logs (lo
 -- Taxonomy: the picker reads "canon + this gym's" on every load.
 create index if not exists idx_taxonomy_kind_status on taxonomy_terms (kind, status);
 create index if not exists idx_taxonomy_proposer    on taxonomy_terms (created_by_tenant_id);
+create index if not exists idx_taxonomy_parent      on taxonomy_terms (parent_id);
 create index if not exists idx_tenant_terms_tenant  on tenant_terms (tenant_id);
 create index if not exists idx_tenant_terms_term    on tenant_terms (term_id);
 -- Every picker/generator query filters archived_at is null.

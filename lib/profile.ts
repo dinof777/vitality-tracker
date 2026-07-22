@@ -86,8 +86,9 @@ export interface FocusChoice {
   mobility?: boolean; // match stretch/isometric instead of muscle group
   pillars?: import('./pillars').Pillar[]; // pillar-based focus (overrides groups)
   balanced?: boolean; // round-robin one exercise per pillar
-  /** Which group the focus picker renders it under. */
-  section: 'special' | 'muscle';
+  /** Which group the focus picker renders it under. `region` is admin-managed
+   *  (see regionFocus below) — never hand-authored like special/muscle. */
+  section: 'special' | 'muscle' | 'region';
 }
 
 // Hand-curated presets: whole-session shapes that aren't just "one muscle
@@ -117,8 +118,9 @@ export const SPECIAL_FOCUSES: FocusChoice[] = [
 //   Conditioning → the "Cardio" special, via pillar rather than muscle group.
 const MUSCLE_GROUP_FOCUS_SKIP = new Set<string>(['Full Body', 'Conditioning']);
 
-/** "Rear Delts" → "rear-delts". Only used for the generated focus values below. */
-function slugifyGroup(name: string): string {
+/** "Rear Delts" → "rear-delts". Exported so a region focus (below) can build a
+ *  value in the same shape as the generated muscle-group focuses. */
+export function slugifyGroup(name: string): string {
   return name
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
@@ -166,6 +168,31 @@ export const MUSCLE_GROUP_FOCUSES: FocusChoice[] = (CANON_MUSCLE_GROUPS as reado
 
 export const FOCUS_CHOICES: FocusChoice[] = [...SPECIAL_FOCUSES, ...MUSCLE_GROUP_FOCUSES];
 
+/**
+ * Turn one admin-managed region (GET /api/taxonomy/regions — a muscle_group
+ * taxonomy_terms row with children) into a FocusChoice the builder and
+ * generator can treat exactly like any other focus. `groups` is the region's
+ * children by name; the generator already handles a multi-group focus
+ * (varietyOrdered picks one exercise per muscle group before repeating), so
+ * no generator change was needed for this to work.
+ *
+ * Regions are DB data, not a curated preset, so they're never folded into the
+ * static FOCUS_CHOICES above — every caller that resolves a focus VALUE (the
+ * generator, the builder's own display) merges the fetched list in alongside
+ * FOCUS_CHOICES instead. See BuilderControls.tsx and
+ * app/g/[slug]/build/page.tsx.
+ */
+export function regionFocus(region: { region: string; groups: string[] }): FocusChoice {
+  return {
+    value: `region-${slugifyGroup(region.region)}`,
+    label: region.region,
+    emoji: '🧭',
+    desc: region.groups.join(', '),
+    groups: region.groups,
+    section: 'region',
+  };
+}
+
 export interface IntensityChoice {
   value: Intensity;
   label: string;
@@ -192,6 +219,16 @@ export function intensityParams(i: Intensity): IntensityChoice {
 
 export function focusChoice(value: string): FocusChoice {
   return FOCUS_CHOICES.find((f) => f.value === value) ?? FOCUS_CHOICES[0];
+}
+
+/**
+ * Same lookup as focusChoice, but checked against admin-managed regions first —
+ * every caller that has fetched regions (BuilderControls, the personal Home
+ * page, the gym build page) should resolve through this rather than the bare
+ * focusChoice, or a region focus value silently resolves to Full Body.
+ */
+export function resolveFocus(value: string, regions: FocusChoice[]): FocusChoice {
+  return regions.find((f) => f.value === value) ?? focusChoice(value);
 }
 
 const KEY = 'vitality_profile';

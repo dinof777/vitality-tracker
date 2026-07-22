@@ -10,10 +10,11 @@ import type { Exercise } from '@/lib/database.types';
 import { computeStreak } from '@/lib/daily5';
 import {
   DEFAULT_LENGTH,
-  focusChoice,
   loadProfile,
+  resolveFocus,
   saveProfile,
   workoutParams,
+  type FocusChoice,
   type Intensity,
   type Profile,
 } from '@/lib/profile';
@@ -46,6 +47,9 @@ export default function Home() {
   const [pending, setPending] = useState<Exercise[] | null>(null);
   const [today, setToday] = useState<RoutineWithExercises[]>([]);
   const [building, setBuilding] = useState(false);
+  // Admin-managed regions, merged alongside the static FOCUS_CHOICES wherever a
+  // focus value needs resolving — see BuilderControls' onRegions.
+  const [regions, setRegions] = useState<FocusChoice[]>([]);
 
   useEffect(() => {
     const now = new Date();
@@ -79,7 +83,7 @@ export default function Home() {
       router.push('/setup');
       return;
     }
-    const ex = generateWorkout(profile, { focus, intensity, targetSeconds: length * 60 });
+    const ex = generateWorkout(profile, { focus, intensity, targetSeconds: length * 60, focusChoices: regions });
     if (ex.length) setPending(ex);
   };
 
@@ -87,7 +91,7 @@ export default function Home() {
     if (pending) router.push(`/workout/active?ex=${pending.map((e) => e.id).join(',')}`);
   };
 
-  const fc = focusChoice(focus);
+  const fc = resolveFocus(focus, regions);
   const params = profile ? workoutParams({ ...profile, intensity }) : null;
 
 
@@ -162,6 +166,7 @@ export default function Home() {
                   reps: params?.reps,
                   restSec: params?.restSec,
                 }}
+                onRegions={setRegions}
                 onChange={(patch) => {
                   if (patch.minutes !== undefined) { setLength(patch.minutes); persist({ length: patch.minutes }); }
                   if (patch.focus !== undefined) { setFocus(patch.focus); persist({ focus: patch.focus }); }

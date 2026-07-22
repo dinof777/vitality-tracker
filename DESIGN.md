@@ -186,6 +186,11 @@ now, chosen by whether the entity has a visual identity worth showing:
 `components/admin/ScopeSelect.tsx`. For flat, text-only entities: muscle
 groups, tags, equipment names. Nothing to illustrate, so the per-row
 disclosure IS the content. Used by `/admin/taxonomy` and `/admin/equipment`.
+For muscle groups specifically, a term can also carry a parent (a "region" —
+"Upper Body" grouping Chest/Back/Shoulders): `LifecycleRow`'s `indent` prop
+nests a child directly beneath its parent row (`ml-5 border-l-4`, no separate
+list component) and `components/admin/ParentSelect.tsx` — a sibling of
+`ScopeSelect`, same single-`<select>` shape — sits in the panel to set it.
 
 **Illustrated browse + sheet** — `components/workout/ExerciseBrowseList.tsx`
 (search + equipment-grouped rows, shared with the trainee-facing `/exercises`)

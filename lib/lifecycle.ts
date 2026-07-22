@@ -26,12 +26,14 @@ export interface Usage {
   exercises: number;
   /** Gyms that have this term in their vocabulary. */
   gyms: number;
+  /** Muscle groups nested under this one (a region with live children). */
+  children: number;
 }
 
-export const NO_USAGE: Usage = { routines: 0, logEntries: 0, aliases: 0, exercises: 0, gyms: 0 };
+export const NO_USAGE: Usage = { routines: 0, logEntries: 0, aliases: 0, exercises: 0, gyms: 0, children: 0 };
 
 export function isInUse(u: Usage): boolean {
-  return u.routines + u.logEntries + u.aliases + u.exercises + u.gyms > 0;
+  return u.routines + u.logEntries + u.aliases + u.exercises + u.gyms + u.children > 0;
 }
 
 /** What a delete will actually do, so the UI can say so before it happens. */
@@ -45,6 +47,7 @@ const PLURAL: Array<[keyof Usage, string, string]> = [
   ['logEntries', 'logged set', 'logged sets'],
   ['routines', 'routine', 'routines'],
   ['exercises', 'exercise', 'exercises'],
+  ['children', 'child region', 'child regions'],
   ['aliases', 'local rename', 'local renames'],
   ['gyms', 'gym', 'gyms'],
 ];

@@ -32,6 +32,7 @@ routes, tables, or integrations change.
 | `/log`, `/workout/[workoutId]` | Logging surfaces (progressive-overload spine) |
 | `/settings` | Profile — trainer/trainee, saved routines, history |
 | `/setup` | First-run profile wizard |
+| `GET /api/taxonomy/regions` | Public, no auth — the admin-managed muscle-group region hierarchy (`{ region, groups[] }[]`), for the builder's REGION tiles |
 
 ### Vitality Pro — trainer admin (Clerk-protected)
 | Route | What it is |
@@ -43,7 +44,7 @@ routes, tables, or integrations change.
 | `/dashboard/equipment` | Custom equipment (dedup + "did you mean?") |
 | `/g/<slug>/branding` | Brand autopilot (paste URL → logo/colors/name) + pickers |
 | `/admin/equipment` | Global equipment-catalog moderation queue — approve/reject/merge a gym's proposed piece (admins only) |
-| `/admin/taxonomy` | Muscle-group + tag lifecycle at both scopes — rename, merge, archive/delete, promote/demote scope, via the disclosure-row pattern (admins only) |
+| `/admin/taxonomy` | Muscle-group + tag lifecycle at both scopes — rename, merge, archive/delete, promote/demote scope, via the disclosure-row pattern; muscle groups can also be grouped into a parent region ("Upper Body" → Chest/Back/Shoulders…), 2 levels max (admins only) |
 | `/admin/exercises` | Exercise lifecycle at both scopes — edit any exercise, archive/delete, move it between shared and gym-owned, via the same disclosure-row pattern (admins only) |
 
 ### Vitality Pro — public tenant surfaces
@@ -80,6 +81,13 @@ database that already exists; every change lands in both so they can't drift.
 - **taxonomy_terms** + **tenant_terms** — the same governed model for every
   other vocabulary a trainer can extend (muscle groups, tags). `exercises.muscle_group`
   and `exercises.tags` hold display values validated against it on write.
+  `taxonomy_terms.parent_id` (self-referencing, `muscle_group` kind only) groups
+  muscle groups into an admin-managed region — "Upper Body" is an ordinary
+  `muscle_group` row that happens to have children. Strictly 2 levels, enforced
+  in app code (`checkSetParent` in `lib/taxonomy.ts`), not a DB trigger. The
+  workout builder reads the tree (`fetchRegionHierarchy` in `lib/taxonomy-db.ts`,
+  or `GET /api/taxonomy/regions`) to offer a REGION tile per parent whose
+  `groups` expand to its children — see `lib/profile.ts#regionFocus`.
 - **syncrofit_events** — inbound import/completion feedback from SyncroFit.
 
 Multi-tenancy: app-level scoping — every tenant query filters by

@@ -1,15 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Equipment } from '@/lib/database.types';
 import {
-  FOCUS_CHOICES,
   SPECIAL_FOCUSES,
   MUSCLE_GROUP_FOCUSES,
   INTENSITY_CHOICES,
   EQUIPMENT_CHOICES,
   intensityParams,
   lengthToCount,
+  regionFocus,
+  resolveFocus,
+  type FocusChoice,
   type Intensity,
 } from '@/lib/profile';
 import LengthDial from '@/components/home/LengthDial';
@@ -32,6 +34,14 @@ interface Props {
   showEquipment?: boolean;
   /** Replaces the equipment row with a read-only summary + link. */
   equipmentNote?: React.ReactNode;
+  /**
+   * Regions load async (admin-managed, DB-backed) — fired once fetched (even
+   * if empty) so a host that resolves focus → groups itself to call
+   * generateWorkout (the personal app; the gym builder resolves server-side
+   * instead) can include them and a region focus doesn't silently generate a
+   * Full Body workout.
+   */
+  onRegions?: (regions: FocusChoice[]) => void;
 }
 
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
@@ -39,10 +49,33 @@ const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n
 // The workout builder controls — length dial plus summary rows that open sheets.
 // Shared by the personal app and the gym builder so trainers get the same calm,
 // progressive-disclosure experience instead of a wall of pills.
-export default function BuilderControls({ value, onChange, showEquipment = true, equipmentNote }: Props) {
+export default function BuilderControls({ value, onChange, showEquipment = true, equipmentNote, onRegions }: Props) {
   const [sheet, setSheet] = useState<'focus' | 'intensity' | 'equipment' | null>(null);
+  const [regions, setRegions] = useState<FocusChoice[]>([]);
 
-  const fc = FOCUS_CHOICES.find((f) => f.value === value.focus) ?? FOCUS_CHOICES[0];
+  // Admin-managed regions ("Upper Body" → Chest/Back/Shoulders…) — a region
+  // tile only shows once one actually exists; an empty tree just means the
+  // REGION section doesn't render, no different from any other empty state.
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/taxonomy/regions')
+      .then((r) => (r.ok ? r.json() : { regions: [] }))
+      .then((d) => {
+        if (cancelled) return;
+        const built = ((d.regions ?? []) as { region: string; groups: string[] }[]).map(regionFocus);
+        setRegions(built);
+        onRegions?.(built);
+      })
+      .catch(() => {
+        if (!cancelled) onRegions?.([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const fc = resolveFocus(value.focus, regions);
   const ip = intensityParams(value.intensity);
   const estCount = lengthToCount(value.minutes);
   const sets = value.sets ?? ip.sets;
@@ -143,6 +176,32 @@ export default function BuilderControls({ value, onChange, showEquipment = true,
                     })}
                   </div>
                 </div>
+
+                {regions.length > 0 && (
+                  <div>
+                    <p className="mb-2 text-[0.65rem] font-semibold tracking-wide text-text-faint">REGION</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {regions.map((f) => {
+                        const on = value.focus === f.value;
+                        return (
+                          <button
+                            key={f.value}
+                            type="button"
+                            onClick={() => {
+                              onChange({ focus: f.value });
+                              setSheet(null);
+                            }}
+                            className={`rounded-lg border p-3 text-left transition-colors ${on ? 'border-accent bg-accent/10' : 'border-border bg-surface'}`}
+                          >
+                            <span className="text-h3">{f.emoji}</span>
+                            <span className="mt-1 block text-body font-semibold text-text-primary">{f.label}</span>
+                            <span className="block truncate text-caption text-text-muted">{f.desc}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
 
                 <div>
                   <p className="mb-2 text-[0.65rem] font-semibold tracking-wide text-text-faint">MUSCLE GROUP</p>

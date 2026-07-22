@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import LifecycleRow from '@/components/admin/LifecycleRow';
 import ScopeSelect, { GLOBAL, type Gym } from '@/components/admin/ScopeSelect';
+import ParentSelect, { TOP_LEVEL } from '@/components/admin/ParentSelect';
 import { promotionThreshold } from '@/lib/taxonomy';
 import { FIELD_LABEL_PLURAL, EXERCISE, SCOPE, plural, tagCategoryLabel } from '@/lib/vocabulary';
 
@@ -23,6 +24,11 @@ interface Term {
   proposed_by_id: string | null;
   gyms_using: number;
   exercises_using: number;
+  /** Live child regions grouped under this term — muscle_group only, always 0 for tags. */
+  children_using: number;
+  /** Parent region (muscle_group only) — null for top-level. */
+  parent_id: string | null;
+  parent_name: string | null;
 }
 interface Canonical {
   id: string;
@@ -87,11 +93,45 @@ export default function VocabularyAdmin() {
     return filter === 'review' ? live.filter((t) => t.status === 'pending') : live;
   }, [terms, filter]);
 
+  // Muscle groups only: a parent row followed directly by its children (only
+  // for children that are themselves visible under the current filter — a
+  // child whose parent got filtered out of view still renders, just standalone,
+  // with its "Part of <Parent>" meta line carrying the context instead.
+  const ordered = useMemo(() => {
+    if (kind !== 'muscle_group') return shown.map((t) => ({ term: t, isChild: false }));
+    const childrenByParent = new Map<string, Term[]>();
+    for (const t of shown) {
+      if (!t.parent_id) continue;
+      const arr = childrenByParent.get(t.parent_id) ?? [];
+      arr.push(t);
+      childrenByParent.set(t.parent_id, arr);
+    }
+    const nestedIds = new Set(
+      shown.filter((t) => t.parent_id && shown.some((p) => p.id === t.parent_id)).map((t) => t.id),
+    );
+    const out: { term: Term; isChild: boolean }[] = [];
+    for (const t of shown) {
+      if (nestedIds.has(t.id)) continue; // rendered under its parent, below
+      out.push({ term: t, isChild: false });
+      for (const child of childrenByParent.get(t.id) ?? []) out.push({ term: child, isChild: true });
+    }
+    return out;
+  }, [shown, kind]);
+
+  // Eligible parents for a term: other top-level, live muscle groups — not
+  // itself, and not already a child (a child can't itself be a parent; the
+  // API enforces this too, this just keeps the picker from offering it).
+  const parentOptions = (t: Term) =>
+    terms
+      .filter((c) => !c.archived_at && !c.parent_id && c.id !== t.id)
+      .map((c) => ({ id: c.id, name: c.name }));
+
   const reviewCount = terms.filter((t) => !t.archived_at && t.status === 'pending').length;
 
   const usageLabel = (t: Term) =>
     [
       t.exercises_using ? plural(t.exercises_using, EXERCISE.one, EXERCISE.many) : '',
+      t.children_using ? plural(t.children_using, 'child region') : '',
       t.gyms_using ? plural(t.gyms_using, 'gym') : '',
     ]
       .filter(Boolean)
@@ -117,6 +157,9 @@ export default function VocabularyAdmin() {
     if (next === GLOBAL) return act(t.id, 'promote');
     return act(t.id, 'demote', { tenantId: next });
   };
+
+  const changeParent = async (t: Term, next: string) =>
+    act(t.id, 'set-parent', { parentId: next === TOP_LEVEL ? null : next });
 
   const remove = async (t: Term) => {
     const used = usageLabel(t);
@@ -213,7 +256,7 @@ export default function VocabularyAdmin() {
               {filter === 'all' && reviewCount > 0 && ` · ${reviewCount} awaiting review`}
             </p>
             <ul className="space-y-2">
-              {shown.map((t) => (
+              {ordered.map(({ term: t, isChild }) => (
                 <LifecycleRow
                   key={t.id}
                   title={t.name}
@@ -228,6 +271,7 @@ export default function VocabularyAdmin() {
                     [
                       t.status === 'pending' ? 'Awaiting review' : null,
                       tagCategoryLabel(t.category),
+                      t.parent_name ? `Part of ${t.parent_name}` : null,
                       usageLabel(t) || null,
                     ]
                       .filter(Boolean)
@@ -235,6 +279,7 @@ export default function VocabularyAdmin() {
                   }
                   archived={!!t.archived_at}
                   flagged={t.status === 'pending' && !t.archived_at}
+                  indent={isChild}
                   open={openId === t.id}
                   onToggle={() => {
                     const next = openId === t.id ? null : t.id;
@@ -278,6 +323,14 @@ export default function VocabularyAdmin() {
                         gyms={gyms}
                         onChange={(next) => changeScope(t, next)}
                       />
+
+                      {kind === 'muscle_group' && (
+                        <ParentSelect
+                          value={t.parent_id ?? TOP_LEVEL}
+                          options={parentOptions(t)}
+                          onChange={(next) => changeParent(t, next)}
+                        />
+                      )}
 
                       <div className="space-y-3 border-t border-border pt-3">
                         {mergeOpen ? (
