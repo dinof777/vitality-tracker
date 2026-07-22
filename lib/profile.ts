@@ -336,6 +336,26 @@ export function resolveFocus(value: string, regions: FocusChoice[]): FocusChoice
   return regions.find((f) => f.value === value) ?? focusChoice(value);
 }
 
+/** Focus values that live in the "Style" lens of the focus picker's segmented
+ *  control — pillar/mode-based whole-session presets, as opposed to a single
+ *  muscle group or a rehab area. Physical Therapy and Full Body are
+ *  deliberately excluded: PT belongs to the Rehab lens (below) and Full Body
+ *  belongs to the Muscle lens (it's the drill-down's own first node). */
+const STYLE_FOCUS_VALUES = new Set(['balanced', 'cardio', 'balance', 'mobility']);
+
+/**
+ * Which lens of the focus picker's segmented control (Muscle · Style · Rehab)
+ * a resolved focus value belongs to — drives the sheet's default tab so
+ * reopening it lands where the current focus already lives, instead of always
+ * resetting to the first tab.
+ */
+export function focusKind(value: string, regions: FocusChoice[]): 'muscle' | 'style' | 'rehab' {
+  const fc = resolveFocus(value, regions);
+  if (fc.tags?.includes('physical-therapy') || (fc.areaTags && fc.areaTags.length > 0)) return 'rehab';
+  if (STYLE_FOCUS_VALUES.has(fc.value)) return 'style';
+  return 'muscle';
+}
+
 const KEY = 'vitality_profile';
 
 export function loadProfile(): Profile | null {

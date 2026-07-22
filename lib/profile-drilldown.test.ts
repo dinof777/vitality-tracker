@@ -3,6 +3,7 @@ import {
   muscleDrillDownNodes,
   rehabDrillDownNodes,
   regionFocus,
+  focusKind,
   REHAB_AREA_FOCUSES,
   type DrillDownNode,
 } from './profile';
@@ -102,6 +103,44 @@ describe('rehabDrillDownNodes', () => {
       expect(focus).toBeDefined();
       expect(focus!.label).toBe(child.label);
     }
+  });
+});
+
+// Regression coverage for the focus sheet's segmented control (BuilderControls
+// sheet === 'focus'): which lens (Muscle · Style · Rehab) the CURRENT focus
+// belongs to, so opening the sheet defaults to the tab the user is already on
+// instead of always resetting to Muscle.
+describe('focusKind — which lens of the focus picker a value belongs to', () => {
+  it('the Physical Therapy umbrella (a tag match, no area) resolves to rehab', () => {
+    expect(focusKind('physical-therapy', [])).toBe('rehab');
+  });
+
+  it('a narrowed rehab area (an areaTags match) resolves to rehab', () => {
+    const knee = REHAB_AREA_FOCUSES.find((f) => f.value === 'knee')!;
+    expect(focusKind(knee.value, [])).toBe('rehab');
+  });
+
+  it('each Style preset (balanced/cardio/balance/mobility) resolves to style', () => {
+    for (const v of ['balanced', 'cardio', 'balance', 'mobility']) {
+      expect(focusKind(v, [])).toBe('style');
+    }
+  });
+
+  it('Full Body resolves to muscle, not style — it lives in the Muscle lens only', () => {
+    expect(focusKind('full', [])).toBe('muscle');
+  });
+
+  it('a plain muscle-group value resolves to muscle', () => {
+    expect(focusKind('chest', [])).toBe('muscle');
+  });
+
+  it('an admin-managed region focus resolves to muscle', () => {
+    const region = regionFocus({ region: 'Legs', groups: ['Legs', 'Quads', 'Hamstrings'] });
+    expect(focusKind(region.value, [region])).toBe('muscle');
+  });
+
+  it('an unrecognized value falls back to muscle (focusChoice/resolveFocus default)', () => {
+    expect(focusKind('not-a-real-focus', [])).toBe('muscle');
   });
 });
 

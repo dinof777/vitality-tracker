@@ -11,6 +11,8 @@ import {
   regionFocus,
   resolveFocus,
   muscleDrillDownNodes,
+  rehabDrillDownNodes,
+  focusKind,
   type FocusChoice,
   type Intensity,
 } from '@/lib/profile';
@@ -55,6 +57,20 @@ interface Props {
 
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
 
+// The "Style" lens of the focus picker — whole-session presets that aren't a
+// muscle group or a rehab area. Full Body lives in the Muscle lens (it's
+// muscleDrillDownNodes' own first node) and Physical Therapy lives in the
+// Rehab lens (it drills to an area there) — both excluded here so each tile
+// appears in exactly one lens instead of stacking flat alongside these four.
+const STYLE_FOCUSES = SPECIAL_FOCUSES.filter((f) => f.value !== 'full' && f.value !== 'physical-therapy');
+
+type FocusLens = 'muscle' | 'style' | 'rehab';
+const FOCUS_LENSES: { value: FocusLens; label: string }[] = [
+  { value: 'muscle', label: 'Muscle' },
+  { value: 'style', label: 'Style' },
+  { value: 'rehab', label: 'Rehab' },
+];
+
 // The workout builder controls — length dial plus summary rows that open sheets.
 // Shared by the personal app and the gym builder so trainers get the same calm,
 // progressive-disclosure experience instead of a wall of pills.
@@ -67,6 +83,7 @@ export default function BuilderControls({
   onSetDefaultFocus,
 }: Props) {
   const [sheet, setSheet] = useState<'focus' | 'intensity' | 'equipment' | null>(null);
+  const [focusLens, setFocusLens] = useState<FocusLens>('muscle');
   const [regionRows, setRegionRows] = useState<{ region: string; groups: string[] }[]>([]);
   const regions = regionRows.map(regionFocus);
 
@@ -116,7 +133,10 @@ export default function BuilderControls({
 
       <button
         type="button"
-        onClick={() => setSheet('focus')}
+        onClick={() => {
+          setFocusLens(focusKind(value.focus, regions));
+          setSheet('focus');
+        }}
         className="mb-2 flex w-full items-center justify-between rounded-lg border border-border bg-surface p-4 text-left active:bg-surface-raised"
       >
         <span>
@@ -170,10 +190,41 @@ export default function BuilderControls({
 
             {sheet === 'focus' && (
               <div className="space-y-4">
-                <div>
-                  <p className="mb-2 text-[0.65rem] font-semibold tracking-wide text-text-faint">SPECIAL</p>
+                <div
+                  role="tablist"
+                  aria-label="Focus lens"
+                  className="inline-flex h-12 w-full rounded-full bg-surface-raised p-1"
+                >
+                  {FOCUS_LENSES.map((lens) => {
+                    const on = focusLens === lens.value;
+                    return (
+                      <button
+                        key={lens.value}
+                        type="button"
+                        role="tab"
+                        aria-selected={on}
+                        onClick={() => setFocusLens(lens.value)}
+                        className={`h-full flex-1 rounded-full text-caption font-semibold transition-colors ${
+                          on ? 'bg-accent text-on-accent' : 'text-text-muted'
+                        }`}
+                      >
+                        {lens.label}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {focusLens === 'muscle' && (
+                  <MuscleDrillDown
+                    nodes={muscleDrillDownNodes(regionRows)}
+                    value={value.focus}
+                    onSelect={(v) => onChange({ focus: v })}
+                  />
+                )}
+
+                {focusLens === 'style' && (
                   <div className="grid grid-cols-2 gap-2">
-                    {SPECIAL_FOCUSES.map((f) => {
+                    {STYLE_FOCUSES.map((f) => {
                       const on = value.focus === f.value;
                       return (
                         <button
@@ -192,16 +243,15 @@ export default function BuilderControls({
                       );
                     })}
                   </div>
-                </div>
+                )}
 
-                <div>
-                  <p className="mb-2 text-[0.65rem] font-semibold tracking-wide text-text-faint">TARGET A MUSCLE</p>
+                {focusLens === 'rehab' && (
                   <MuscleDrillDown
-                    nodes={muscleDrillDownNodes(regionRows)}
+                    nodes={rehabDrillDownNodes()}
                     value={value.focus}
                     onSelect={(v) => onChange({ focus: v })}
                   />
-                </div>
+                )}
 
                 {onSetDefaultFocus && (
                   <button
