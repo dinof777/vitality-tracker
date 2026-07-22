@@ -2,21 +2,33 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import LifecycleRow from '@/components/admin/LifecycleRow';
-import ScopeSelect, { GLOBAL, type Gym } from '@/components/admin/ScopeSelect';
+import type { Equipment, Exercise } from '@/lib/database.types';
+import ExerciseBrowseList from '@/components/workout/ExerciseBrowseList';
+import ExerciseDetailSheet from '@/components/workout/ExerciseDetailSheet';
+import { GLOBAL, type Gym } from '@/components/admin/ScopeSelect';
 import { EXERCISE, SCOPE, plural } from '@/lib/vocabulary';
 
 // Admin lifecycle for the exercise library at both scopes.
 //
-// Layout rule: this is a LIST first. One scannable line per move; the controls
-// (rare, some destructive) open behind a single disclosure. The earlier version
-// rendered every action on every row, turning the list into stacked forms.
+// This reuses the same illustrated browse view trainees get on `/exercises`
+// (`ExerciseBrowseList` — search + equipment-grouped rows) rather than a
+// separate plain management list: one way to render an exercise, two action
+// sets. Tapping a row opens the same `ExerciseDetailSheet` everyone else
+// gets, extended with an admin-only `manage` block (edit fields, `ScopeSelect`,
+// archive/delete/restore) — see `ExerciseDetailSheet`'s `manage` prop.
+//
+// What stays page-local (Elena's line): the scope/archived filter chips, the
+// `/api/admin/exercises` fetch + search debounce, and the edit/scope/delete
+// handlers. Only the RENDERING is shared.
 
 interface AdminExercise {
   id: string;
   name: string;
   muscle_group: string | null;
   default_cue: string | null;
+  equipment: Equipment | null;
+  image_url: string | null;
+  tags: string[];
   is_global: boolean;
   tenant_id: string | null;
   gym_name: string | null;
@@ -35,6 +47,12 @@ const FILTERS = [
 
 type Filter = (typeof FILTERS)[number]['value'];
 
+interface Draft {
+  name: string;
+  muscle_group: string;
+  default_cue: string;
+}
+
 export default function ExerciseAdmin() {
   const [filter, setFilter] = useState<Filter>('all');
   const [q, setQ] = useState('');
@@ -44,7 +62,7 @@ export default function ExerciseAdmin() {
   const [denied, setDenied] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
-  const [draft, setDraft] = useState<AdminExercise | null>(null);
+  const [draft, setDraft] = useState<Draft | null>(null);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -77,6 +95,11 @@ export default function ExerciseAdmin() {
     [list, filter],
   );
 
+  // The row currently open in the sheet — looked up live from `list` (not
+  // `shown`) so a scope change keeps it open with the fresh value, the way
+  // the old inline disclosure did.
+  const openExercise = openId ? (list.find((e) => e.id === openId) ?? null) : null;
+
   const usageLabel = (ex: AdminExercise) => {
     const parts = [
       ex.log_entries ? plural(ex.log_entries, 'logged set') : '',
@@ -84,6 +107,16 @@ export default function ExerciseAdmin() {
       ex.aliases ? plural(ex.aliases, 'rename') : '',
     ].filter(Boolean);
     return parts.join(' · ');
+  };
+
+  const openRow = (ex: AdminExercise) => {
+    setOpenId(ex.id);
+    setDraft({ name: ex.name, muscle_group: ex.muscle_group ?? '', default_cue: ex.default_cue ?? '' });
+  };
+
+  const closeSheet = () => {
+    setOpenId(null);
+    setDraft(null);
   };
 
   const act = async (id: string, action: string, extra: Record<string, unknown> = {}) => {
@@ -112,8 +145,14 @@ export default function ExerciseAdmin() {
     const msg = used
       ? `“${ex.name}” is used by ${used}.\n\nIt will be archived, not deleted — it leaves the ${EXERCISE.many} you can build from, but everything using it keeps working.`
       : `Delete “${ex.name}”? Nothing uses it, so it will be removed completely.`;
-    if (!window.confirm(msg)) return;
-    await act(ex.id, 'delete');
+    if (!window.confirm(msg)) return false;
+    return act(ex.id, 'delete');
+  };
+
+  const badgeFor = (ex: AdminExercise): string | null => {
+    if (ex.archived_at) return 'Archived';
+    if (ex.is_global) return null;
+    return ex.gym_name ?? SCOPE.tenant.badge;
   };
 
   if (denied) {
@@ -123,6 +162,24 @@ export default function ExerciseAdmin() {
       </div>
     );
   }
+
+  // Draft-aware preview so the sheet's illustration/title reflect live edits,
+  // not just the last-saved row.
+  const previewExercise: Exercise | null =
+    openExercise && draft
+      ? {
+          id: openExercise.id,
+          name: draft.name,
+          muscle_group: draft.muscle_group || null,
+          default_cue: draft.default_cue || null,
+          equipment: openExercise.equipment,
+          image_url: openExercise.image_url,
+          created_at: '',
+          tags: openExercise.tags,
+          tenant_id: openExercise.tenant_id,
+          is_global: openExercise.is_global,
+        }
+      : null;
 
   return (
     <div className="min-h-dvh bg-background text-text-primary">
@@ -137,14 +194,6 @@ export default function ExerciseAdmin() {
             Muscle groups &amp; tags →
           </Link>
         </nav>
-
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder={`Search ${EXERCISE.many}…`}
-          aria-label={`Search ${EXERCISE.many}`}
-          className="mb-3 h-12 w-full rounded-md bg-surface-raised px-4 text-body text-text-primary outline-none placeholder:text-text-faint focus:ring-2 focus:ring-accent"
-        />
 
         <div className="mb-4 flex flex-wrap gap-2">
           {FILTERS.map((f) => (
@@ -169,114 +218,68 @@ export default function ExerciseAdmin() {
 
         {loading ? (
           <div className="h-16 animate-pulse rounded-lg bg-surface" />
-        ) : shown.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-border p-6 text-center text-body text-text-muted">
-            No {EXERCISE.many} match.
-          </p>
         ) : (
           <>
-            <p className="mb-2 text-caption text-text-faint">{plural(shown.length, EXERCISE.one, EXERCISE.many)}</p>
-            <ul className="space-y-2">
-              {shown.map((ex) => (
-                <LifecycleRow
-                  key={ex.id}
-                  title={ex.name}
-                  badge={
-                    ex.archived_at
-                      ? { label: 'Archived', tone: 'local' }
-                      : ex.is_global
-                        ? null
-                        : { label: ex.gym_name ?? SCOPE.tenant.badge, tone: 'local' }
-                  }
-                  meta={[ex.muscle_group, usageLabel(ex) || null].filter(Boolean).join(' · ')}
-                  archived={!!ex.archived_at}
-                  open={openId === ex.id}
-                  onToggle={() => {
-                    const next = openId === ex.id ? null : ex.id;
-                    setOpenId(next);
-                    setDraft(next ? ex : null);
-                  }}
-                >
-                  {ex.archived_at ? (
-                    <button
-                      type="button"
-                      onClick={() => act(ex.id, 'restore')}
-                      className="h-12 w-full rounded-md border border-accent text-caption font-semibold text-accent"
-                    >
-                      Restore to the library
-                    </button>
-                  ) : (
-                    draft && (
-                      <div className="space-y-3">
-                        <label className="block">
-                          <span className="mb-1 block text-label uppercase text-text-faint">Name</span>
-                          <input
-                            value={draft.name}
-                            onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-                            className="h-12 w-full rounded-md border border-border bg-surface-raised px-3 text-body text-text-primary"
-                          />
-                        </label>
-                        <label className="block">
-                          <span className="mb-1 block text-label uppercase text-text-faint">Muscle group</span>
-                          <input
-                            value={draft.muscle_group ?? ''}
-                            onChange={(e) => setDraft({ ...draft, muscle_group: e.target.value })}
-                            placeholder="Must be a shared term"
-                            className="h-12 w-full rounded-md border border-border bg-surface-raised px-3 text-body text-text-primary placeholder:text-text-faint"
-                          />
-                        </label>
-                        <label className="block">
-                          <span className="mb-1 block text-label uppercase text-text-faint">Form cue</span>
-                          <input
-                            value={draft.default_cue ?? ''}
-                            onChange={(e) => setDraft({ ...draft, default_cue: e.target.value })}
-                            className="h-12 w-full rounded-md border border-border bg-surface-raised px-3 text-body text-text-primary"
-                          />
-                        </label>
-
-                        <div className="space-y-3 border-t border-border pt-3">
-                          <ScopeSelect
-                            value={ex.is_global ? GLOBAL : (ex.tenant_id ?? GLOBAL)}
-                            gyms={gyms}
-                            onChange={(next) => changeScope(ex, next)}
-                          />
-
-                          <div className="flex gap-2">
-                            <button
-                              type="button"
-                              onClick={async () => {
-                                if (
-                                  await act(ex.id, 'edit', {
-                                    name: draft.name,
-                                    muscle_group: draft.muscle_group,
-                                    default_cue: draft.default_cue,
-                                  })
-                                ) {
-                                  setOpenId(null);
-                                }
-                              }}
-                              className="h-12 flex-1 rounded-md bg-accent text-caption font-semibold text-on-accent"
-                            >
-                              Save
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => remove(ex)}
-                              className="h-12 rounded-md border border-border px-4 text-caption text-destructive"
-                            >
-                              {usageLabel(ex) ? 'Archive' : 'Delete'}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    )
-                  )}
-                </LifecycleRow>
-              ))}
-            </ul>
+            {shown.length > 0 && (
+              <p className="mb-2 text-caption text-text-faint">{plural(shown.length, EXERCISE.one, EXERCISE.many)}</p>
+            )}
+            <ExerciseBrowseList
+              items={shown}
+              query={q}
+              onQueryChange={setQ}
+              onSelect={openRow}
+              renderDetail={(ex) => [ex.muscle_group, usageLabel(ex) || null].filter(Boolean).join(' · ') || null}
+              renderTrailing={(ex) => {
+                const badge = badgeFor(ex);
+                // Every badge here is the exception-to-the-default kind
+                // (gym-owned or archived) — see DESIGN.md §6 on reserving
+                // the badge for that, rather than the shared/global case.
+                if (!badge) return null;
+                return (
+                  <span className="shrink-0 rounded-full bg-surface-raised px-2 py-1 text-caption text-text-muted">
+                    {badge}
+                  </span>
+                );
+              }}
+              emptyLabel={() => `No ${EXERCISE.many} match.`}
+            />
           </>
         )}
       </main>
+
+      {openExercise && draft && previewExercise && (
+        <ExerciseDetailSheet
+          exercise={previewExercise}
+          onClose={closeSheet}
+          manage={{
+            name: draft.name,
+            muscleGroup: draft.muscle_group,
+            defaultCue: draft.default_cue,
+            onFieldChange: (field, value) => setDraft((d) => (d ? { ...d, [field]: value } : d)),
+            scope: openExercise.is_global ? GLOBAL : (openExercise.tenant_id ?? GLOBAL),
+            gyms,
+            onScopeChange: (next) => {
+              void changeScope(openExercise, next);
+            },
+            usageLabel: usageLabel(openExercise),
+            onSave: async () => {
+              const ok = await act(openExercise.id, 'edit', {
+                name: draft.name,
+                muscle_group: draft.muscle_group,
+                default_cue: draft.default_cue,
+              });
+              if (ok) closeSheet();
+            },
+            archived: !!openExercise.archived_at,
+            onArchiveOrDelete: () => {
+              void remove(openExercise).then((ok) => ok && closeSheet());
+            },
+            onRestore: () => {
+              void act(openExercise.id, 'restore').then((ok) => ok && closeSheet());
+            },
+          }}
+        />
+      )}
     </div>
   );
 }

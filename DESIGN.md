@@ -177,20 +177,38 @@ flex items-center gap-3 h-12 px-3 rounded-md bg-surface
 streak pill (top of list): bg-energy/15 text-energy rounded-full
 ```
 
-### Disclosure row (admin lifecycle lists)
-`components/admin/LifecycleRow.tsx` + `components/admin/ScopeSelect.tsx`.
-Reach for this pair — not a bespoke layout — any time a screen lists things an
-admin or trainer *manages* rather than just browses (exercises, muscle groups,
-tags; anything with add/update/delete/move-scope). Built twice already
-(`/admin/exercises`, `/admin/taxonomy`); that's the signal to reuse it rather
-than reinvent it a third time.
+### Two admin-list patterns — pick by whether there's something to illustrate
 
-Rules it encodes:
-- **A list is for reading first.** One scannable line per row: title, one
+An admin/trainer *managing* a list (not just browsing) has TWO valid layouts
+now, chosen by whether the entity has a visual identity worth showing:
+
+**Disclosure row** — `components/admin/LifecycleRow.tsx` +
+`components/admin/ScopeSelect.tsx`. For flat, text-only entities: muscle
+groups, tags, equipment names. Nothing to illustrate, so the per-row
+disclosure IS the content. Used by `/admin/taxonomy` and `/admin/equipment`.
+
+**Illustrated browse + sheet** — `components/workout/ExerciseBrowseList.tsx`
+(search + equipment-grouped rows, shared with the trainee-facing `/exercises`)
+plus `components/workout/ExerciseDetailSheet.tsx`'s optional `manage` block
+(edit fields + `ScopeSelect` + archive/restore, appended below the sheet's
+normal read content). For exercises specifically — an entity with a real
+illustration (`ExerciseThumb`), where a flat text row would throw that away.
+Used by `/admin/exercises`. This replaced an earlier `/admin/exercises` build
+on `LifecycleRow` that hand-rolled its own plain list instead of reusing the
+illustrated one — the layout choice matters, not just picking whichever admin
+list you saw last.
+
+Don't reach for a third pattern (a generic `<EntityAdminList>`, a
+schema-driven form) to unify these two — they're deliberately different
+because the underlying content is different.
+
+Rules both encode:
+- **A list is for reading first.** One scannable line per row: title/name, one
   meta line, an optional badge. Managing a row is the exception, not the
   default view.
-- **Controls live behind one per-row disclosure**, not stacked open on every
-  row (`open` / `onToggle`). A 19-term list is 19 lines, not 19 open forms.
+- **Controls live behind one disclosure** — a per-row panel (`LifecycleRow`)
+  or a shared modal sheet (`ExerciseDetailSheet`) — never stacked open on
+  every row. A 19-term list is 19 lines, not 19 open forms.
 - **Scope is ONE control, not several.** `ScopeSelect` is a single `<select>`
   — "Shared library — every gym" or a named gym — never a separate promote
   button plus a demote dropdown plus a move button for what is one property.
@@ -206,6 +224,12 @@ Rules it encodes:
 <LifecycleRow title meta badge={…|null} archived flagged open onToggle>
   {/* per-row panel: wide Save/Rename · ScopeSelect · narrow destructive */}
 </LifecycleRow>
+```
+
+```
+<ExerciseBrowseList items query onQueryChange onSelect renderTrailing={badge} />
+{/* onSelect opens: */}
+<ExerciseDetailSheet exercise onClose manage={{ /* wide Save · ScopeSelect · narrow destructive, below the read content */ }} />
 ```
 
 ---

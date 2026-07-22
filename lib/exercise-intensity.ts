@@ -1,4 +1,4 @@
-import type { Exercise } from './database.types';
+import type { Equipment } from './database.types';
 import type { Intensity } from './profile';
 
 // Difficulty / effort tier of a movement — the "type" dimension of intensity,
@@ -14,10 +14,16 @@ const HIGH =
 const LOW =
   /(stretch|pose|cat-cow|clamshell|clam|fire hydrant|donkey|bird dog|dead bug|pull-apart|march|hang|shrug|calf raise|lateral walk|forward fold|halo|child|cobra|butterfly|downward|spinal twist)/;
 
+/** The minimum shape the heuristic needs — Exercise and any browse-list item fit. */
+export interface TierLike {
+  name: string;
+  equipment: Equipment | null;
+}
+
 // Heuristic tier from the exercise name + equipment modality. Kettlebell /
 // pull-up bar skew hard; stretch / loop-band skew easy; dumbbell / tube band
 // sit in the middle — with name keywords overriding either way.
-export function exerciseTier(ex: Exercise): Tier {
+export function exerciseTier(ex: TierLike): Tier {
   const n = ex.name.toLowerCase();
   if (HIGH.test(n)) return 3;
   if (LOW.test(n)) return 1;

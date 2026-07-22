@@ -6,8 +6,37 @@ import { EQUIPMENT_LABEL } from '@/lib/exercises';
 import { TIER_LABEL, exerciseTier } from '@/lib/exercise-intensity';
 import { exerciseMode, modeWorkLabel } from '@/lib/exercise-mode';
 import { loadProfile, workoutParams } from '@/lib/profile';
+import ScopeSelect, { type Gym } from '@/components/admin/ScopeSelect';
 import ExerciseThumb from './ExerciseThumb';
 import OverloadSparkline from './OverloadSparkline';
+
+/**
+ * Optional admin lifecycle block — name/muscle-group/cue edit fields plus
+ * `ScopeSelect` and archive/restore, rendered as a section below the sheet's
+ * normal read content. Omit entirely on every trainee-facing call site
+ * (`/exercises`, `/g/[slug]/exercises`, the workout builder); admin is the
+ * only caller that supplies it. Field values + change handlers are separate
+ * (rather than one "draft object" prop) so this stays a plain, explicit
+ * contract — no schema/form-builder layer.
+ */
+export interface ExerciseManageBlock {
+  name: string;
+  muscleGroup: string;
+  defaultCue: string;
+  onFieldChange: (field: 'name' | 'muscle_group' | 'default_cue', value: string) => void;
+  scope: string; // GLOBAL, or the owning gym's id
+  gyms: Gym[];
+  onScopeChange: (next: string) => void;
+  /** "112 logged sets · 3 routines", or '' when nothing depends on it. */
+  usageLabel: string;
+  onSave: () => void;
+  archived: boolean;
+  /** Archives (if used) or deletes (if not) — label decided by the caller,
+   *  which already knows `usageLabel`. Ignored when `archived`. */
+  onArchiveOrDelete: () => void;
+  /** Ignored unless `archived`. */
+  onRestore: () => void;
+}
 
 interface ExerciseDetailSheetProps {
   exercise: Exercise;
@@ -15,16 +44,22 @@ interface ExerciseDetailSheetProps {
   /** Optional primary action (e.g. "Add to workout"). */
   actionLabel?: string;
   onAction?: () => void;
+  /** Admin-only lifecycle controls. Undefined on every other call site — see
+   *  `ExerciseManageBlock` above. */
+  manage?: ExerciseManageBlock;
 }
 
 // Bottom-sheet preview of an exercise: big illustration, muscle + equipment,
 // coaching cue, how-to-log hint, and recent-weight trend. Opened by tapping an
-// exercise anywhere in the app.
+// exercise anywhere in the app. Admin additionally gets a `manage` section
+// (edit + scope + archive/delete) below the read content — see
+// `ExerciseManageBlock`.
 export default function ExerciseDetailSheet({
   exercise,
   onClose,
   actionLabel,
   onAction,
+  manage,
 }: ExerciseDetailSheetProps) {
   // Close on Escape.
   useEffect(() => {
@@ -155,6 +190,76 @@ export default function ExerciseDetailSheet({
               </button>
             )}
           </div>
+
+          {/* Admin lifecycle — edit, scope, archive/delete. Only when `manage`
+              is supplied (admin's call site); every other caller never sees
+              this section. */}
+          {manage && (
+            <div className="space-y-3 border-t border-border pt-4">
+              <p className="text-caption text-text-muted">MANAGE</p>
+
+              {manage.archived ? (
+                <button
+                  type="button"
+                  onClick={manage.onRestore}
+                  className="h-12 w-full rounded-md border border-accent text-caption font-semibold text-accent"
+                >
+                  Restore to the library
+                </button>
+              ) : (
+                <>
+                  <label className="block">
+                    <span className="mb-1 block text-label uppercase text-text-faint">Name</span>
+                    <input
+                      value={manage.name}
+                      onChange={(e) => manage.onFieldChange('name', e.target.value)}
+                      className="h-12 w-full rounded-md border border-border bg-surface-raised px-3 text-body text-text-primary"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="mb-1 block text-label uppercase text-text-faint">Muscle group</span>
+                    <input
+                      value={manage.muscleGroup}
+                      onChange={(e) => manage.onFieldChange('muscle_group', e.target.value)}
+                      placeholder="Must be a shared term"
+                      className="h-12 w-full rounded-md border border-border bg-surface-raised px-3 text-body text-text-primary placeholder:text-text-faint"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="mb-1 block text-label uppercase text-text-faint">Form cue</span>
+                    <input
+                      value={manage.defaultCue}
+                      onChange={(e) => manage.onFieldChange('default_cue', e.target.value)}
+                      className="h-12 w-full rounded-md border border-border bg-surface-raised px-3 text-body text-text-primary"
+                    />
+                  </label>
+
+                  <div className="space-y-3 border-t border-border pt-3">
+                    <ScopeSelect value={manage.scope} gyms={manage.gyms} onChange={manage.onScopeChange} />
+                    {manage.usageLabel && (
+                      <p className="text-caption text-text-faint">{manage.usageLabel}</p>
+                    )}
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={manage.onSave}
+                        className="h-12 flex-1 rounded-md bg-accent text-caption font-semibold text-on-accent"
+                      >
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        onClick={manage.onArchiveOrDelete}
+                        className="h-12 rounded-md border border-border px-4 text-caption text-destructive"
+                      >
+                        {manage.usageLabel ? 'Archive' : 'Delete'}
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

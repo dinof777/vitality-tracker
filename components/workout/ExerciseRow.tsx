@@ -20,7 +20,7 @@ export default function ExerciseRow({
   trailing?: React.ReactNode;
 }) {
   return (
-    <li className="flex items-center gap-3 rounded-lg border border-border bg-surface p-3">
+    <li className="relative flex items-center gap-3 rounded-lg border border-border bg-surface p-3">
       {index !== undefined && (
         <span className="w-5 shrink-0 text-center text-caption font-semibold text-text-faint nums">{index}</span>
       )}
