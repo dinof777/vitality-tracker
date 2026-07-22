@@ -94,8 +94,13 @@ export const FOCUS_CHOICES: FocusChoice[] = [
   { value: 'balance', label: 'Balance', emoji: '🤸', desc: 'Single-leg & stability', groups: null, pillars: ['balance'] },
   { value: 'mobility', label: 'Mobility', emoji: '🧘', desc: 'Stretch, holds & flexibility', groups: null, mobility: true },
   // Clinical focuses draw from the tagged rehab pool rather than muscle groups.
-  { value: 'physical-therapy', label: 'Physical Therapy', emoji: '🩹', desc: 'Rehab & recovery work', groups: null, tags: ['knee-pt'], byStage: true },
+  // Physical Therapy is the umbrella (every rehab area); the per-joint focuses
+  // below narrow to one. A future release nests these under PT properly instead
+  // of listing them flat — see the taxonomy scoping note.
+  { value: 'physical-therapy', label: 'Physical Therapy', emoji: '🩹', desc: 'Rehab & recovery work', groups: null, tags: ['knee-pt', 'shoulder-pt', 'ankle-pt'], byStage: true },
   { value: 'knee', label: 'Knee', emoji: '🦿', desc: 'Bend, straighten & rebuild the knee', groups: null, tags: ['knee-pt'], byStage: true },
+  { value: 'shoulder', label: 'Shoulder', emoji: '🫱', desc: 'Rotator-cuff, scapular & impingement recovery', groups: null, tags: ['shoulder-pt'], byStage: true },
+  { value: 'ankle', label: 'Ankle', emoji: '🦶', desc: 'Post-sprain strength, balance & range', groups: null, tags: ['ankle-pt'], byStage: true },
 ];
 
 export interface IntensityChoice {
