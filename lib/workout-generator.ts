@@ -54,10 +54,16 @@ function varietyOrdered(
   const focus = focusChoice(focusValue);
   const eq = new Set(profile.equipment);
   let pool = source.filter((e) => e.equipment && eq.has(e.equipment));
-  // Clinical focuses (PT, Knee) select by tag instead of muscle group.
+  // Clinical focuses select by tag instead of muscle group: the goal tag
+  // (physical-therapy) ORs in the rehab pool, then an optional area (knee /
+  // shoulder / ankle) ANDs it down to one body region.
   if (focus.tags?.length) {
     const want = focus.tags;
     pool = pool.filter((e) => (e.tags ?? []).some((t) => want.includes(t)));
+  }
+  if (focus.areaTags?.length) {
+    const area = focus.areaTags;
+    pool = pool.filter((e) => (e.tags ?? []).some((t) => area.includes(t)));
   }
   if (focus.mobility) {
     // Mobility = stretches + holds (any bodyweight hold), by tracking mode.

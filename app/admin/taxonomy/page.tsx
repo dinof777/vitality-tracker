@@ -143,6 +143,10 @@ export default function VocabularyAdmin() {
         <p className="mb-4 text-body text-text-muted">
           The words gyms can file a {MOVE.one} under. Tap one to rename it, change where it lives, merge or retire it.
         </p>
+        <p className="mb-4 rounded-lg border border-border bg-surface p-3 text-caption text-text-muted">
+          The <span className="text-text-primary">Focus</span> presets on Home &amp; Build (Full Body, Cardio, Physical
+          Therapy…) are built from these muscle groups and tags — edit the building blocks here, not the presets.
+        </p>
         <nav className="mb-5 flex flex-wrap items-center gap-x-4 text-caption text-text-muted">
           <Link href="/admin/exercises" className="inline-flex h-8 items-center font-semibold text-accent">
             Moves →

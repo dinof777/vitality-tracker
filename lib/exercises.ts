@@ -215,32 +215,32 @@ export const SAMPLE_EXERCISES: Exercise[] = [
   // appropriate, certainly not early.
 
   // Stage 1 — off the feet: activate, protect, win back range
-  E('e0000201-0000-4000-8000-000000000000', 'Ankle Pumps', 'Calves', 'calisthenics', 'Lie back · flex and point the foot slowly · keeps the blood moving', '/exercises/ankle-pumps.jpg', ['knee-pt', 'stage-1', 'low-impact', 'seated-lying']),
-  E('e0000202-0000-4000-8000-000000000000', 'Quad Set', 'Quads', 'calisthenics', 'Leg straight · press the back of the knee down · squeeze the thigh 5s', '/exercises/quad-set.jpg', ['knee-pt', 'stage-1', 'knee-extension', 'isometric', 'seated-lying']),
-  E('e0000203-0000-4000-8000-000000000000', 'Glute Set', 'Glutes', 'calisthenics', 'Lie back · squeeze the glutes together · hold 5s · relax', '/exercises/glute-set.jpg', ['knee-pt', 'stage-1', 'isometric', 'seated-lying']),
-  E('e0000204-0000-4000-8000-000000000000', 'Heel Slide', 'Quads', 'calisthenics', 'Lie back · slide the heel toward the glute · hold the bend · slide back', '/exercises/heel-slide.jpg', ['knee-pt', 'stage-1', 'knee-flexion', 'seated-lying', 'mobility']),
-  E('e0000205-0000-4000-8000-000000000000', 'Short Arc Quad', 'Quads', 'calisthenics', 'Rolled towel under the knee · straighten the lower leg · hold 3s · lower', '/exercises/short-arc-quad.jpg', ['knee-pt', 'stage-1', 'knee-extension', 'seated-lying']),
-  E('e0000206-0000-4000-8000-000000000000', 'Straight Leg Raise', 'Quads', 'calisthenics', 'Knee locked straight · lift to the other thigh · lower slow', '/exercises/straight-leg-raise.jpg', ['knee-pt', 'stage-1', 'knee-extension', 'strength', 'seated-lying']),
-  E('e0000207-0000-4000-8000-000000000000', 'Seated Heel Drag', 'Hamstrings', 'calisthenics', 'Sit tall · drag the heel back under the chair · hold the bend', '/exercises/seated-heel-drag.jpg', ['knee-pt', 'stage-1', 'knee-flexion', 'seated-lying', 'mobility']),
-  E('e0000208-0000-4000-8000-000000000000', 'Prone Knee Hang', 'Quads', 'calisthenics', 'Face down, shins off the edge · let gravity straighten the knee', '/exercises/prone-knee-hang.jpg', ['knee-pt', 'stage-1', 'knee-extension', 'seated-lying', 'mobility']),
+  E('e0000201-0000-4000-8000-000000000000', 'Ankle Pumps', 'Calves', 'calisthenics', 'Lie back · flex and point the foot slowly · keeps the blood moving', '/exercises/ankle-pumps.jpg', ['physical-therapy', 'knee', 'stage-1', 'low-impact', 'seated-lying']),
+  E('e0000202-0000-4000-8000-000000000000', 'Quad Set', 'Quads', 'calisthenics', 'Leg straight · press the back of the knee down · squeeze the thigh 5s', '/exercises/quad-set.jpg', ['physical-therapy', 'knee', 'stage-1', 'knee-extension', 'isometric', 'seated-lying']),
+  E('e0000203-0000-4000-8000-000000000000', 'Glute Set', 'Glutes', 'calisthenics', 'Lie back · squeeze the glutes together · hold 5s · relax', '/exercises/glute-set.jpg', ['physical-therapy', 'knee', 'stage-1', 'isometric', 'seated-lying']),
+  E('e0000204-0000-4000-8000-000000000000', 'Heel Slide', 'Quads', 'calisthenics', 'Lie back · slide the heel toward the glute · hold the bend · slide back', '/exercises/heel-slide.jpg', ['physical-therapy', 'knee', 'stage-1', 'knee-flexion', 'seated-lying', 'mobility']),
+  E('e0000205-0000-4000-8000-000000000000', 'Short Arc Quad', 'Quads', 'calisthenics', 'Rolled towel under the knee · straighten the lower leg · hold 3s · lower', '/exercises/short-arc-quad.jpg', ['physical-therapy', 'knee', 'stage-1', 'knee-extension', 'seated-lying']),
+  E('e0000206-0000-4000-8000-000000000000', 'Straight Leg Raise', 'Quads', 'calisthenics', 'Knee locked straight · lift to the other thigh · lower slow', '/exercises/straight-leg-raise.jpg', ['physical-therapy', 'knee', 'stage-1', 'knee-extension', 'strength', 'seated-lying']),
+  E('e0000207-0000-4000-8000-000000000000', 'Seated Heel Drag', 'Hamstrings', 'calisthenics', 'Sit tall · drag the heel back under the chair · hold the bend', '/exercises/seated-heel-drag.jpg', ['physical-therapy', 'knee', 'stage-1', 'knee-flexion', 'seated-lying', 'mobility']),
+  E('e0000208-0000-4000-8000-000000000000', 'Prone Knee Hang', 'Quads', 'calisthenics', 'Face down, shins off the edge · let gravity straighten the knee', '/exercises/prone-knee-hang.jpg', ['physical-therapy', 'knee', 'stage-1', 'knee-extension', 'seated-lying', 'mobility']),
 
   // Range work — hold and breathe
-  E('e0000209-0000-4000-8000-000000000000', 'Heel Prop Stretch', 'Quads', 'stretch', 'Heel on a rolled towel · let the knee sink straight · relax 2–3 min', '/exercises/heel-prop-stretch.jpg', ['knee-pt', 'stage-1', 'knee-extension', 'stretch', 'mobility', 'seated-lying']),
-  E('e0000210-0000-4000-8000-000000000000', 'Seated Knee Flexion Stretch', 'Hamstrings', 'stretch', 'Foot planted · slide the hips forward · hold the deepest comfortable bend', '/exercises/seated-knee-flexion-stretch.jpg', ['knee-pt', 'stage-1', 'knee-flexion', 'stretch', 'mobility', 'seated-lying']),
-  E('e0000211-0000-4000-8000-000000000000', 'Standing Calf Stretch', 'Calves', 'stretch', 'Hands on the wall · back leg straight · heel stays down · hold', '/exercises/standing-calf-stretch.jpg', ['knee-pt', 'stage-2', 'stretch', 'mobility', 'weight-bearing']),
+  E('e0000209-0000-4000-8000-000000000000', 'Heel Prop Stretch', 'Quads', 'stretch', 'Heel on a rolled towel · let the knee sink straight · relax 2–3 min', '/exercises/heel-prop-stretch.jpg', ['physical-therapy', 'knee', 'stage-1', 'knee-extension', 'stretch', 'mobility', 'seated-lying']),
+  E('e0000210-0000-4000-8000-000000000000', 'Seated Knee Flexion Stretch', 'Hamstrings', 'stretch', 'Foot planted · slide the hips forward · hold the deepest comfortable bend', '/exercises/seated-knee-flexion-stretch.jpg', ['physical-therapy', 'knee', 'stage-1', 'knee-flexion', 'stretch', 'mobility', 'seated-lying']),
+  E('e0000211-0000-4000-8000-000000000000', 'Standing Calf Stretch', 'Calves', 'stretch', 'Hands on the wall · back leg straight · heel stays down · hold', '/exercises/standing-calf-stretch.jpg', ['physical-therapy', 'knee', 'stage-2', 'stretch', 'mobility', 'weight-bearing']),
 
   // Stage 2 — on the feet: load it, control it
-  E('e0000212-0000-4000-8000-000000000000', 'Long Arc Quad', 'Quads', 'calisthenics', 'Sit tall · straighten the knee fully · hold 3s at the top · lower slow', '/exercises/long-arc-quad.jpg', ['knee-pt', 'stage-2', 'knee-extension', 'strength', 'seated-lying']),
-  E('e0000213-0000-4000-8000-000000000000', 'Standing Hamstring Curl', 'Hamstrings', 'calisthenics', 'Hold support · bend the knee, heel toward the glute · lower controlled', '/exercises/standing-hamstring-curl.jpg', ['knee-pt', 'stage-2', 'knee-flexion', 'strength', 'weight-bearing']),
-  E('e0000214-0000-4000-8000-000000000000', 'Wall Slide Mini Squat', 'Quads', 'calisthenics', 'Back on the wall · slide to a shallow bend · drive up through the heels · knees track over the toes', '/exercises/wall-slide-mini-squat.jpg', ['knee-pt', 'stage-2', 'knee-flexion', 'strength', 'weight-bearing']),
-  E('e0000215-0000-4000-8000-000000000000', 'Sit-to-Stand', 'Quads', 'calisthenics', 'Sturdy chair · nose over toes · stand without hands if you can · sit down slow', '/exercises/sit-to-stand.jpg', ['knee-pt', 'stage-2', 'strength', 'weight-bearing']),
-  E('e0000216-0000-4000-8000-000000000000', 'Terminal Knee Extension', 'Quads', 'tube_band', 'Band behind the knee · straighten against the tension · squeeze the quad', '/exercises/terminal-knee-extension.jpg', ['knee-pt', 'stage-2', 'knee-extension', 'strength', 'weight-bearing']),
-  E('e0000217-0000-4000-8000-000000000000', 'Standing Marching', 'Hip Flexors', 'calisthenics', 'Hold support · lift the knee to hip height · slow and tall', '/exercises/standing-marching.jpg', ['knee-pt', 'stage-2', 'balance', 'stability', 'weight-bearing']),
+  E('e0000212-0000-4000-8000-000000000000', 'Long Arc Quad', 'Quads', 'calisthenics', 'Sit tall · straighten the knee fully · hold 3s at the top · lower slow', '/exercises/long-arc-quad.jpg', ['physical-therapy', 'knee', 'stage-2', 'knee-extension', 'strength', 'seated-lying']),
+  E('e0000213-0000-4000-8000-000000000000', 'Standing Hamstring Curl', 'Hamstrings', 'calisthenics', 'Hold support · bend the knee, heel toward the glute · lower controlled', '/exercises/standing-hamstring-curl.jpg', ['physical-therapy', 'knee', 'stage-2', 'knee-flexion', 'strength', 'weight-bearing']),
+  E('e0000214-0000-4000-8000-000000000000', 'Wall Slide Mini Squat', 'Quads', 'calisthenics', 'Back on the wall · slide to a shallow bend · drive up through the heels · knees track over the toes', '/exercises/wall-slide-mini-squat.jpg', ['physical-therapy', 'knee', 'stage-2', 'knee-flexion', 'strength', 'weight-bearing']),
+  E('e0000215-0000-4000-8000-000000000000', 'Sit-to-Stand', 'Quads', 'calisthenics', 'Sturdy chair · nose over toes · stand without hands if you can · sit down slow', '/exercises/sit-to-stand.jpg', ['physical-therapy', 'knee', 'stage-2', 'strength', 'weight-bearing']),
+  E('e0000216-0000-4000-8000-000000000000', 'Terminal Knee Extension', 'Quads', 'tube_band', 'Band behind the knee · straighten against the tension · squeeze the quad', '/exercises/terminal-knee-extension.jpg', ['physical-therapy', 'knee', 'stage-2', 'knee-extension', 'strength', 'weight-bearing']),
+  E('e0000217-0000-4000-8000-000000000000', 'Standing Marching', 'Hip Flexors', 'calisthenics', 'Hold support · lift the knee to hip height · slow and tall', '/exercises/standing-marching.jpg', ['physical-therapy', 'knee', 'stage-2', 'balance', 'stability', 'weight-bearing']),
 
   // Stage 3 — rebuild strength and confidence
-  E('e0000218-0000-4000-8000-000000000000', 'Step-Up', 'Quads', 'calisthenics', 'Low step · drive through the whole foot · step down with control · knee tracks over the toes', '/exercises/step-up.jpg', ['knee-pt', 'stage-3', 'strength', 'weight-bearing']),
-  E('e0000219-0000-4000-8000-000000000000', 'Single-Leg Balance', 'Full Body', 'calisthenics', 'Stand on one leg near support · eyes forward · build toward 30s', '/exercises/single-leg-balance.jpg', ['knee-pt', 'stage-3', 'balance', 'stability', 'weight-bearing']),
-  E('e0000220-0000-4000-8000-000000000000', 'Lateral Step-Down', 'Quads', 'calisthenics', 'On a low step · lower the free heel slowly to the floor · drive back up', '/exercises/lateral-step-down.jpg', ['knee-pt', 'stage-3', 'strength', 'knee-flexion', 'weight-bearing']),
+  E('e0000218-0000-4000-8000-000000000000', 'Step-Up', 'Quads', 'calisthenics', 'Low step · drive through the whole foot · step down with control · knee tracks over the toes', '/exercises/step-up.jpg', ['physical-therapy', 'knee', 'stage-3', 'strength', 'weight-bearing']),
+  E('e0000219-0000-4000-8000-000000000000', 'Single-Leg Balance', 'Full Body', 'calisthenics', 'Stand on one leg near support · eyes forward · build toward 30s', '/exercises/single-leg-balance.jpg', ['physical-therapy', 'knee', 'stage-3', 'balance', 'stability', 'weight-bearing']),
+  E('e0000220-0000-4000-8000-000000000000', 'Lateral Step-Down', 'Quads', 'calisthenics', 'On a low step · lower the free heel slowly to the floor · drive back up', '/exercises/lateral-step-down.jpg', ['physical-therapy', 'knee', 'stage-3', 'strength', 'knee-flexion', 'weight-bearing']),
 
   // ===== Coverage additions — general library (17) =====
   // From the personal-trainer + physical-therapist audit: close the pattern and
@@ -254,7 +254,7 @@ export const SAMPLE_EXERCISES: Exercise[] = [
   E('d0000152-0000-4000-8000-000000000000', 'DB Overhead Carry', 'Full Body', 'dumbbell', 'Dumbbell locked overhead · ribs down · walk tall without leaning', null, ['strength', 'stability']),
   // Calves — unilateral was missing at both bodyweight and load. The bodyweight
   // one doubles as ankle-rehab stage 2.
-  E('d0000153-0000-4000-8000-000000000000', 'Single-Leg Calf Raise', 'Calves', 'calisthenics', 'Balance on one foot near support · rise onto the toes · lower slow · switch sides', null, ['strength', 'balance', 'ankle-pt', 'stage-2', 'weight-bearing']),
+  E('d0000153-0000-4000-8000-000000000000', 'Single-Leg Calf Raise', 'Calves', 'calisthenics', 'Balance on one foot near support · rise onto the toes · lower slow · switch sides', null, ['strength', 'balance', 'physical-therapy', 'ankle', 'stage-2', 'weight-bearing']),
   E('d0000154-0000-4000-8000-000000000000', 'DB Single-Leg Calf Raise', 'Calves', 'dumbbell', 'One dumbbell in hand · balance on one foot · full stretch and drive tall', null, ['strength', 'balance']),
   // Split squat had only an isometric hold — this is the loadable rep version.
   E('d0000155-0000-4000-8000-000000000000', 'DB Split Squat', 'Legs', 'dumbbell', 'Stagger your stance · drop the back knee straight down · drive up through the front heel', null, ['strength']),
@@ -269,7 +269,7 @@ export const SAMPLE_EXERCISES: Exercise[] = [
   E('d0000161-0000-4000-8000-000000000000', 'Quadruped Thoracic Rotation', 'T-Spine', 'calisthenics', 'Hand behind the head · rotate the elbow up and open · follow with the eyes', null, ['mobility']),
   E('d0000162-0000-4000-8000-000000000000', 'DB Single-Arm Rear-Delt Fly', 'Rear Delts', 'dumbbell', 'One dumbbell · hinge over · raise the arm out to the side · squeeze the back', null, ['strength']),
   // Prehab / safer patterning — teach the movement before loading it.
-  E('d0000163-0000-4000-8000-000000000000', 'Standing Hip Flexor Stretch', 'Hip Flexors', 'stretch', 'Split stance, back heel lifted · tuck the pelvis · lean forward gently, no kneeling', null, ['mobility', 'stretch', 'knee-pt', 'stage-2']),
+  E('d0000163-0000-4000-8000-000000000000', 'Standing Hip Flexor Stretch', 'Hip Flexors', 'stretch', 'Split stance, back heel lifted · tuck the pelvis · lean forward gently, no kneeling', null, ['mobility', 'stretch', 'physical-therapy', 'knee', 'stage-2']),
   E('d0000164-0000-4000-8000-000000000000', 'Bodyweight Hip Hinge', 'Hamstrings', 'calisthenics', 'Hands on the hips · push the hips back, flat back · stop at the stretch · stand tall', null, ['mobility', 'stability']),
   E('d0000165-0000-4000-8000-000000000000', 'Dead Bug', 'Core', 'calisthenics', 'On your back, arms and knees up · lower one arm and the opposite leg · press the low back down · alternate', null, ['stability']),
   // Low-impact conditioning — the first non-jump-rope cardio in the library.
@@ -277,11 +277,11 @@ export const SAMPLE_EXERCISES: Exercise[] = [
   E('d0000167-0000-4000-8000-000000000000', 'Step Touch', 'Conditioning', 'calisthenics', 'Step side to side, tap the trailing foot · add an arm swing · stay light on the feet', null, ['low-impact']),
   // Loaded stage-3 hamstring curl — from Heath Mann DPT's knee HEP. The existing
   // Standing Hamstring Curl is bodyweight/stage-2; this adds the resisted version.
-  E('d0000168-0000-4000-8000-000000000000', 'Band Standing Hamstring Curl', 'Hamstrings', 'tube_band', 'Loop the band at one ankle, stand on the other end · hold support · curl the heel to the glute · lower slow', null, ['knee-pt', 'stage-3', 'knee-flexion', 'strength', 'weight-bearing']),
+  E('d0000168-0000-4000-8000-000000000000', 'Band Standing Hamstring Curl', 'Hamstrings', 'tube_band', 'Loop the band at one ankle, stand on the other end · hold support · curl the heel to the glute · lower slow', null, ['physical-therapy', 'knee', 'stage-3', 'knee-flexion', 'strength', 'weight-bearing']),
   // From the HEP's "Lunges – Pad". Dino signed off with Heath's context: a light
   // towel graze for depth cueing, NOT resting weight on the knee (distinct from
   // the section's excluded sustained-kneeling movements).
-  E('d0000169-0000-4000-8000-000000000000', 'Reverse Lunge to Towel Tap', 'Quads', 'calisthenics', 'Fold a towel behind you · step back, lower until the back knee lightly grazes it · don’t rest weight on it · drive through the front heel', null, ['knee-pt', 'stage-3', 'knee-flexion', 'strength', 'weight-bearing']),
+  E('d0000169-0000-4000-8000-000000000000', 'Reverse Lunge to Towel Tap', 'Quads', 'calisthenics', 'Fold a towel behind you · step back, lower until the back knee lightly grazes it · don’t rest weight on it · drive through the front heel', null, ['physical-therapy', 'knee', 'stage-3', 'knee-flexion', 'strength', 'weight-bearing']),
 
   // ===== Shoulder rehab — rotator-cuff / impingement / scapular (12) =====
   // The library had 14 shoulder moves, all presses/raises and zero cuff work.
@@ -289,74 +289,74 @@ export const SAMPLE_EXERCISES: Exercise[] = [
   // for information only — see REHAB_DISCLAIMER; not a prescription.
 
   // Stage 1 — pain-free, passive/isometric, little to no range
-  E('f0000301-0000-4000-8000-000000000000', 'Pendulum Swing', 'Shoulders', 'calisthenics', 'Lean on a chair for support · let the arm hang loose · swing small gentle circles', null, ['shoulder-pt', 'stage-1', 'mobility']),
-  E('f0000302-0000-4000-8000-000000000000', 'Isometric Shoulder Flexion', 'Shoulders', 'calisthenics', 'Fist against the wall at waist height · press forward gently · hold, no arm movement', null, ['shoulder-pt', 'stage-1', 'isometric', 'stability']),
-  E('f0000303-0000-4000-8000-000000000000', 'Isometric External Rotation', 'Shoulders', 'calisthenics', 'Elbow tucked at your side, back of the hand on the wall · press outward gently · hold', null, ['shoulder-pt', 'stage-1', 'isometric', 'stability']),
-  E('f0000304-0000-4000-8000-000000000000', 'Supine Assisted Shoulder Flexion', 'Shoulders', 'calisthenics', 'On your back · use the good arm to lift the sore arm overhead, pain-free range · lower slow', null, ['shoulder-pt', 'stage-1', 'mobility', 'stretch', 'seated-lying']),
+  E('f0000301-0000-4000-8000-000000000000', 'Pendulum Swing', 'Shoulders', 'calisthenics', 'Lean on a chair for support · let the arm hang loose · swing small gentle circles', null, ['physical-therapy', 'shoulder', 'stage-1', 'mobility']),
+  E('f0000302-0000-4000-8000-000000000000', 'Isometric Shoulder Flexion', 'Shoulders', 'calisthenics', 'Fist against the wall at waist height · press forward gently · hold, no arm movement', null, ['physical-therapy', 'shoulder', 'stage-1', 'isometric', 'stability']),
+  E('f0000303-0000-4000-8000-000000000000', 'Isometric External Rotation', 'Shoulders', 'calisthenics', 'Elbow tucked at your side, back of the hand on the wall · press outward gently · hold', null, ['physical-therapy', 'shoulder', 'stage-1', 'isometric', 'stability']),
+  E('f0000304-0000-4000-8000-000000000000', 'Supine Assisted Shoulder Flexion', 'Shoulders', 'calisthenics', 'On your back · use the good arm to lift the sore arm overhead, pain-free range · lower slow', null, ['physical-therapy', 'shoulder', 'stage-1', 'mobility', 'stretch', 'seated-lying']),
 
   // Stage 2 — standing, active range, light band resistance
-  E('f0000305-0000-4000-8000-000000000000', 'Scapular Retraction Squeeze', 'Rear Delts', 'calisthenics', 'Stand tall · pull the shoulder blades together and down · hold 5s · relax', null, ['shoulder-pt', 'stage-2', 'isometric', 'stability']),
-  E('f0000306-0000-4000-8000-000000000000', 'Band External Rotation', 'Rear Delts', 'tube_band', 'Anchor at elbow height · elbow pinned to the side · rotate the forearm out slowly', null, ['shoulder-pt', 'stage-2', 'strength', 'stability']),
-  E('f0000307-0000-4000-8000-000000000000', 'Band Internal Rotation', 'Shoulders', 'tube_band', 'Anchor at elbow height · elbow pinned to the side · rotate the forearm in slowly', null, ['shoulder-pt', 'stage-2', 'strength', 'stability']),
-  E('f0000308-0000-4000-8000-000000000000', 'Wall Walk', 'Shoulders', 'calisthenics', 'Fingers on the wall · walk them up as high as pain-free · walk back down', null, ['shoulder-pt', 'stage-2', 'mobility']),
-  E('f0000309-0000-4000-8000-000000000000', 'Wall Push-Up Plus', 'Shoulders', 'calisthenics', 'Hands on the wall, arms straight · push through the blades to round the upper back · relax', null, ['shoulder-pt', 'stage-2', 'strength', 'stability']),
+  E('f0000305-0000-4000-8000-000000000000', 'Scapular Retraction Squeeze', 'Rear Delts', 'calisthenics', 'Stand tall · pull the shoulder blades together and down · hold 5s · relax', null, ['physical-therapy', 'shoulder', 'stage-2', 'isometric', 'stability']),
+  E('f0000306-0000-4000-8000-000000000000', 'Band External Rotation', 'Rear Delts', 'tube_band', 'Anchor at elbow height · elbow pinned to the side · rotate the forearm out slowly', null, ['physical-therapy', 'shoulder', 'stage-2', 'strength', 'stability']),
+  E('f0000307-0000-4000-8000-000000000000', 'Band Internal Rotation', 'Shoulders', 'tube_band', 'Anchor at elbow height · elbow pinned to the side · rotate the forearm in slowly', null, ['physical-therapy', 'shoulder', 'stage-2', 'strength', 'stability']),
+  E('f0000308-0000-4000-8000-000000000000', 'Wall Walk', 'Shoulders', 'calisthenics', 'Fingers on the wall · walk them up as high as pain-free · walk back down', null, ['physical-therapy', 'shoulder', 'stage-2', 'mobility']),
+  E('f0000309-0000-4000-8000-000000000000', 'Wall Push-Up Plus', 'Shoulders', 'calisthenics', 'Hands on the wall, arms straight · push through the blades to round the upper back · relax', null, ['physical-therapy', 'shoulder', 'stage-2', 'strength', 'stability']),
 
   // Stage 3 — loaded, functional strengthening
-  E('f0000310-0000-4000-8000-000000000000', 'Band Scaption Raise', 'Shoulders', 'tube_band', 'Stand on the band · raise the arms to a Y at 30°, thumbs up · control down', null, ['shoulder-pt', 'stage-3', 'strength']),
-  E('f0000311-0000-4000-8000-000000000000', 'Prone I-Y-T Raise', 'Rear Delts', 'calisthenics', 'Face down · arms overhead · lift in an I, then Y, then T · squeeze the blades · lower slow', null, ['shoulder-pt', 'stage-3', 'strength', 'stability']),
-  E('f0000312-0000-4000-8000-000000000000', 'Side-Lying External Rotation', 'Shoulders', 'dumbbell', 'On your side, elbow tucked to the ribs · rotate the dumbbell up · slow control down', null, ['shoulder-pt', 'stage-3', 'strength']),
+  E('f0000310-0000-4000-8000-000000000000', 'Band Scaption Raise', 'Shoulders', 'tube_band', 'Stand on the band · raise the arms to a Y at 30°, thumbs up · control down', null, ['physical-therapy', 'shoulder', 'stage-3', 'strength']),
+  E('f0000311-0000-4000-8000-000000000000', 'Prone I-Y-T Raise', 'Rear Delts', 'calisthenics', 'Face down · arms overhead · lift in an I, then Y, then T · squeeze the blades · lower slow', null, ['physical-therapy', 'shoulder', 'stage-3', 'strength', 'stability']),
+  E('f0000312-0000-4000-8000-000000000000', 'Side-Lying External Rotation', 'Shoulders', 'dumbbell', 'On your side, elbow tucked to the ribs · rotate the dumbbell up · slow control down', null, ['physical-therapy', 'shoulder', 'stage-3', 'strength']),
 
   // ===== Ankle rehab — post-sprain strength / balance / range (7) =====
   // Ankle sprain is one of the most common general-population injuries and the
   // library had no rehab arc for it. (Single-Leg Calf Raise above also serves
-  // ankle-pt stage 2.) Staged, same as knee/shoulder. Information only.
+  // the ankle area, stage 2.) Staged, same as knee/shoulder. Information only.
 
   // Stage 1 — off the foot, range + isometric
-  E('f0000401-0000-4000-8000-000000000000', 'Seated Ankle Circles', 'Calves', 'calisthenics', 'Seated, lift the foot · draw slow circles each direction · both ways', null, ['ankle-pt', 'stage-1', 'mobility', 'seated-lying']),
-  E('f0000402-0000-4000-8000-000000000000', 'Seated Resisted Ankle Eversion', 'Calves', 'loop_band', 'Seated, band around the forefoot · roll the foot outward against the band · control back', null, ['ankle-pt', 'stage-1', 'strength', 'seated-lying']),
-  E('f0000403-0000-4000-8000-000000000000', 'Seated Resisted Ankle Inversion', 'Calves', 'loop_band', 'Seated, band around the forefoot · roll the foot inward against the band · control back', null, ['ankle-pt', 'stage-1', 'strength', 'seated-lying']),
+  E('f0000401-0000-4000-8000-000000000000', 'Seated Ankle Circles', 'Calves', 'calisthenics', 'Seated, lift the foot · draw slow circles each direction · both ways', null, ['physical-therapy', 'ankle', 'stage-1', 'mobility', 'seated-lying']),
+  E('f0000402-0000-4000-8000-000000000000', 'Seated Resisted Ankle Eversion', 'Calves', 'loop_band', 'Seated, band around the forefoot · roll the foot outward against the band · control back', null, ['physical-therapy', 'ankle', 'stage-1', 'strength', 'seated-lying']),
+  E('f0000403-0000-4000-8000-000000000000', 'Seated Resisted Ankle Inversion', 'Calves', 'loop_band', 'Seated, band around the forefoot · roll the foot inward against the band · control back', null, ['physical-therapy', 'ankle', 'stage-1', 'strength', 'seated-lying']),
 
   // Stage 2 — standing, weight-bearing balance
-  E('f0000404-0000-4000-8000-000000000000', 'Heel-to-Toe Walk', 'Calves', 'calisthenics', 'Walk a straight line, heel touching toe each step · arms out for balance', null, ['ankle-pt', 'stage-2', 'balance', 'weight-bearing']),
+  E('f0000404-0000-4000-8000-000000000000', 'Heel-to-Toe Walk', 'Calves', 'calisthenics', 'Walk a straight line, heel touching toe each step · arms out for balance', null, ['physical-therapy', 'ankle', 'stage-2', 'balance', 'weight-bearing']),
 
   // Stage 3 — loaded / dynamic, return to activity
-  E('f0000405-0000-4000-8000-000000000000', 'Single-Leg Eccentric Heel Drop', 'Calves', 'calisthenics', 'Low step, heel off the edge · rise on one foot · lower the heel below the step slowly', null, ['ankle-pt', 'stage-3', 'strength', 'weight-bearing']),
-  E('f0000406-0000-4000-8000-000000000000', 'Lateral Hop-and-Stick', 'Calves', 'calisthenics', 'Small hop sideways · land soft and hold · stick the landing before the next hop', null, ['ankle-pt', 'stage-3', 'balance', 'weight-bearing']),
-  E('f0000407-0000-4000-8000-000000000000', 'Single-Leg Balance with Reach', 'Full Body', 'calisthenics', 'Stand on one leg · reach the free foot forward, side, and back, tapping lightly · stay balanced', null, ['ankle-pt', 'stage-3', 'balance', 'stability', 'weight-bearing']),
+  E('f0000405-0000-4000-8000-000000000000', 'Single-Leg Eccentric Heel Drop', 'Calves', 'calisthenics', 'Low step, heel off the edge · rise on one foot · lower the heel below the step slowly', null, ['physical-therapy', 'ankle', 'stage-3', 'strength', 'weight-bearing']),
+  E('f0000406-0000-4000-8000-000000000000', 'Lateral Hop-and-Stick', 'Calves', 'calisthenics', 'Small hop sideways · land soft and hold · stick the landing before the next hop', null, ['physical-therapy', 'ankle', 'stage-3', 'balance', 'weight-bearing']),
+  E('f0000407-0000-4000-8000-000000000000', 'Single-Leg Balance with Reach', 'Full Body', 'calisthenics', 'Stand on one leg · reach the free foot forward, side, and back, tapping lightly · stay balanced', null, ['physical-therapy', 'ankle', 'stage-3', 'balance', 'stability', 'weight-bearing']),
 ];
 
 // Library moves that already serve knee rehab — tagged, not duplicated. Kneeling
 // movements (e.g. the Kneeling Hip Flexor Stretch) are intentionally left out.
 const RETRO_TAGS: Record<string, string[]> = {
-  'Glute Bridge': ['knee-pt', 'stage-2', 'strength'],
-  'Glute Bridge Hold': ['knee-pt', 'stage-2', 'isometric'],
-  'Single-Leg Glute Bridge': ['knee-pt', 'stage-3', 'strength'],
-  'Wall Sit': ['knee-pt', 'stage-3', 'isometric', 'weight-bearing'],
-  'Single-Leg Wall Sit': ['knee-pt', 'stage-3', 'isometric', 'weight-bearing'],
-  'Calf Raise': ['knee-pt', 'stage-2', 'strength', 'weight-bearing'],
-  'Seated Hamstring Stretch': ['knee-pt', 'stage-1', 'stretch', 'mobility', 'seated-lying'],
-  'Standing Quad Stretch': ['knee-pt', 'stage-2', 'stretch', 'mobility', 'weight-bearing'],
-  'Banded Clamshell': ['knee-pt', 'stage-2', 'stability', 'seated-lying'],
-  'Banded Seated Hip Abduction': ['knee-pt', 'stage-2', 'stability', 'seated-lying'],
-  'Banded Standing Hip Abduction': ['knee-pt', 'stage-2', 'stability', 'weight-bearing'],
-  'Bodyweight Squat': ['knee-pt', 'stage-3', 'strength', 'weight-bearing'],
-  'Isometric Squat Hold': ['knee-pt', 'stage-3', 'isometric', 'weight-bearing'],
+  'Glute Bridge': ['physical-therapy', 'knee', 'stage-2', 'strength'],
+  'Glute Bridge Hold': ['physical-therapy', 'knee', 'stage-2', 'isometric'],
+  'Single-Leg Glute Bridge': ['physical-therapy', 'knee', 'stage-3', 'strength'],
+  'Wall Sit': ['physical-therapy', 'knee', 'stage-3', 'isometric', 'weight-bearing'],
+  'Single-Leg Wall Sit': ['physical-therapy', 'knee', 'stage-3', 'isometric', 'weight-bearing'],
+  'Calf Raise': ['physical-therapy', 'knee', 'stage-2', 'strength', 'weight-bearing'],
+  'Seated Hamstring Stretch': ['physical-therapy', 'knee', 'stage-1', 'stretch', 'mobility', 'seated-lying'],
+  'Standing Quad Stretch': ['physical-therapy', 'knee', 'stage-2', 'stretch', 'mobility', 'weight-bearing'],
+  'Banded Clamshell': ['physical-therapy', 'knee', 'stage-2', 'stability', 'seated-lying'],
+  'Banded Seated Hip Abduction': ['physical-therapy', 'knee', 'stage-2', 'stability', 'seated-lying'],
+  'Banded Standing Hip Abduction': ['physical-therapy', 'knee', 'stage-2', 'stability', 'weight-bearing'],
+  'Bodyweight Squat': ['physical-therapy', 'knee', 'stage-3', 'strength', 'weight-bearing'],
+  'Isometric Squat Hold': ['physical-therapy', 'knee', 'stage-3', 'isometric', 'weight-bearing'],
   'Bird Dog Hold': ['stability', 'isometric'],
   'Butterfly Stretch': ['mobility', 'stretch'],
   // Cross-tagged for the ankle arc (already serve it; not duplicated).
-  'Ankle Pumps': ['ankle-pt', 'stage-1'],
-  'Single-Leg Balance': ['ankle-pt', 'stage-3'],
+  'Ankle Pumps': ['physical-therapy', 'ankle', 'stage-1'],
+  'Single-Leg Balance': ['physical-therapy', 'ankle', 'stage-3'],
   // "Safer core" cluster — anti-flexion/anti-rotation work a low-back-sensitive
   // user can filter to, apart from the spinal-flexion crunches. Bird Dog + the
   // new Dead Bug already carry `stability`; tag the other two to match.
   'Plank': ['stability'],
   'Band Pallof Press': ['stability'],
   // From Heath Mann DPT's knee HEP — these on-kit moves already serve it.
-  'Band Lateral Walk': ['knee-pt', 'stage-3', 'weight-bearing'],
-  'Banded Monster Walk': ['knee-pt', 'stage-3', 'weight-bearing'],
+  'Band Lateral Walk': ['physical-therapy', 'knee', 'stage-3', 'weight-bearing'],
+  'Banded Monster Walk': ['physical-therapy', 'knee', 'stage-3', 'weight-bearing'],
   // The bike's low-impact warm-up intent (not a true non-weight-bearing match).
-  'Standing March in Place': ['knee-pt', 'stage-3', 'low-impact'],
-  'Step Touch': ['knee-pt', 'stage-3', 'low-impact'],
+  'Standing March in Place': ['physical-therapy', 'knee', 'stage-3', 'low-impact'],
+  'Step Touch': ['physical-therapy', 'knee', 'stage-3', 'low-impact'],
 };
 
 for (const ex of SAMPLE_EXERCISES) {

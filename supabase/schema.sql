@@ -89,7 +89,7 @@ create table if not exists taxonomy_terms (
   kind        text not null check (kind in ('muscle_group', 'tag', 'equipment')),
   name        text not null,
   normalized  text not null,
-  category    text check (category in ('goal', 'stage', 'pattern')),
+  category    text check (category in ('goal', 'stage', 'pattern', 'area')),
   status      text not null default 'pending'
                 check (status in ('core', 'approved', 'pending', 'rejected', 'merged')),
   merged_into uuid references taxonomy_terms(id) on delete set null,
@@ -266,9 +266,10 @@ insert into taxonomy_terms (kind, name, normalized, status) values
 on conflict (kind, normalized) do nothing;
 
 insert into taxonomy_terms (kind, name, normalized, category, status) values
-  ('tag', 'Knee PT',              'knee pt',        'goal',    'core'),
-  ('tag', 'Shoulder PT',          'shoulder pt',    'goal',    'core'),
-  ('tag', 'Ankle PT',             'ankle pt',       'goal',    'core'),
+  ('tag', 'Physical Therapy',     'physical therapy', 'goal', 'core'),
+  ('tag', 'Knee',                 'knee',           'area',    'core'),
+  ('tag', 'Shoulder',             'shoulder',       'area',    'core'),
+  ('tag', 'Ankle',                'ankle',          'area',    'core'),
   ('tag', 'Mobility',             'mobility',       'goal',    'core'),
   ('tag', 'Strength',             'strength',       'goal',    'core'),
   ('tag', 'Stability',            'stability',      'goal',    'core'),

@@ -3,7 +3,7 @@ import { SAMPLE_EXERCISES } from './exercises';
 import { MOVEMENT_FAMILIES } from './movement-families';
 import { TAG_BY_ID, STAGE_ORDER, filterExercises, filterByFacets, groupByTag, usedTags, hasTag } from './tags';
 
-const kneePt = SAMPLE_EXERCISES.filter((e) => hasTag(e, 'knee-pt'));
+const rehab = SAMPLE_EXERCISES.filter((e) => hasTag(e, 'physical-therapy'));
 
 describe('exercise tags', () => {
   it('every tag used in the library exists in the registry (catches typos)', () => {
@@ -21,12 +21,12 @@ describe('exercise tags', () => {
     expect(new Set(ids).size, 'duplicate exercise id').toBe(ids.length);
   });
 
-  it('knee-pt has a meaningful set of movements', () => {
-    expect(kneePt.length).toBeGreaterThanOrEqual(30);
+  it('physical-therapy has a meaningful set of movements', () => {
+    expect(rehab.length).toBeGreaterThanOrEqual(30);
   });
 
-  it('every knee-pt movement is assigned exactly one recovery stage', () => {
-    for (const ex of kneePt) {
+  it('every rehab movement is assigned exactly one recovery stage', () => {
+    for (const ex of rehab) {
       const stages = (ex.tags ?? []).filter((t) => (STAGE_ORDER as readonly string[]).includes(t));
       expect(stages.length, `"${ex.name}" should have exactly one stage, got [${stages}]`).toBe(1);
     }
@@ -34,38 +34,42 @@ describe('exercise tags', () => {
 
   it('all three recovery stages are populated', () => {
     for (const stage of STAGE_ORDER) {
-      const inStage = kneePt.filter((e) => hasTag(e, stage));
+      const inStage = rehab.filter((e) => hasTag(e, stage));
       expect(inStage.length, `${stage} is empty`).toBeGreaterThanOrEqual(4);
     }
   });
 
   it('covers both regaining the bend and regaining full extension', () => {
-    expect(kneePt.filter((e) => hasTag(e, 'knee-flexion')).length).toBeGreaterThanOrEqual(4);
-    expect(kneePt.filter((e) => hasTag(e, 'knee-extension')).length).toBeGreaterThanOrEqual(4);
-    expect(kneePt.filter((e) => hasTag(e, 'stretch')).length).toBeGreaterThanOrEqual(3);
+    expect(rehab.filter((e) => hasTag(e, 'knee-flexion')).length).toBeGreaterThanOrEqual(4);
+    expect(rehab.filter((e) => hasTag(e, 'knee-extension')).length).toBeGreaterThanOrEqual(4);
+    expect(rehab.filter((e) => hasTag(e, 'stretch')).length).toBeGreaterThanOrEqual(3);
   });
 
-  it('early stage stays off the feet; later stages load the leg', () => {
-    const early = kneePt.filter((e) => hasTag(e, 'stage-1'));
-    expect(early.every((e) => hasTag(e, 'seated-lying')), 'stage-1 should be seated/lying').toBe(true);
-    expect(kneePt.filter((e) => hasTag(e, 'weight-bearing')).length).toBeGreaterThanOrEqual(6);
+  it('knee early stage stays off the feet; later stages load the leg', () => {
+    // Knee-specific: stage-1 knee work is off the feet. Not true across all
+    // areas (shoulder stage-1 is standing), so scope to the knee area.
+    const kneeEarly = SAMPLE_EXERCISES.filter((e) => hasTag(e, 'knee') && hasTag(e, 'stage-1'));
+    expect(kneeEarly.length).toBeGreaterThan(0);
+    expect(kneeEarly.every((e) => hasTag(e, 'seated-lying')), 'knee stage-1 should be seated/lying').toBe(true);
+    expect(rehab.filter((e) => hasTag(e, 'weight-bearing')).length).toBeGreaterThanOrEqual(6);
   });
 
   it('excludes kneeling movements (not appropriate on a replaced knee)', () => {
-    expect(kneePt.some((e) => /kneel/i.test(e.name))).toBe(false);
+    const knee = SAMPLE_EXERCISES.filter((e) => hasTag(e, 'knee'));
+    expect(knee.some((e) => /kneel/i.test(e.name))).toBe(false);
   });
 
   it('offers more than one equipment option', () => {
-    const equip = new Set(kneePt.map((e) => e.equipment));
+    const equip = new Set(rehab.map((e) => e.equipment));
     expect(equip.size).toBeGreaterThanOrEqual(3);
   });
 
   it('filterExercises combines tags, equipment and muscle group', () => {
-    const seatedEarly = filterExercises(SAMPLE_EXERCISES, { allTags: ['knee-pt', 'stage-1'] });
+    const seatedEarly = filterExercises(SAMPLE_EXERCISES, { allTags: ['physical-therapy', 'stage-1'] });
     expect(seatedEarly.length).toBeGreaterThan(0);
     expect(seatedEarly.every((e) => hasTag(e, 'stage-1'))).toBe(true);
 
-    const stretches = filterExercises(SAMPLE_EXERCISES, { allTags: ['knee-pt'], equipment: ['stretch'] });
+    const stretches = filterExercises(SAMPLE_EXERCISES, { allTags: ['physical-therapy'], equipment: ['stretch'] });
     expect(stretches.every((e) => e.equipment === 'stretch')).toBe(true);
 
     const byName = filterExercises(SAMPLE_EXERCISES, { search: 'heel slide' });
@@ -73,19 +77,19 @@ describe('exercise tags', () => {
   });
 
   it('groups a program by stage in progression order', () => {
-    const groups = groupByTag(kneePt, 'stage');
+    const groups = groupByTag(rehab, 'stage');
     expect(groups.map((g) => g.tag.id)).toEqual([...STAGE_ORDER]);
   });
 
   it('usedTags only returns tags actually in use', () => {
     const goals = usedTags(SAMPLE_EXERCISES, 'goal').map((t) => t.id);
-    expect(goals).toContain('knee-pt');
+    expect(goals).toContain('physical-therapy');
   });
 });
 
 describe('filterByFacets — OR within a group, AND across groups', () => {
-  const flexion = kneePt.filter((e) => hasTag(e, 'knee-flexion'));
-  const extension = kneePt.filter((e) => hasTag(e, 'knee-extension'));
+  const flexion = rehab.filter((e) => hasTag(e, 'knee-flexion'));
+  const extension = rehab.filter((e) => hasTag(e, 'knee-extension'));
 
   it('picking two tags in the SAME group widens the list (union, not intersection)', () => {
     const both = filterByFacets(SAMPLE_EXERCISES, { tags: ['knee-flexion', 'knee-extension'] });
@@ -104,30 +108,30 @@ describe('filterByFacets — OR within a group, AND across groups', () => {
   });
 
   it('tags in DIFFERENT groups narrow the list (intersection)', () => {
-    const goalOnly = filterByFacets(SAMPLE_EXERCISES, { tags: ['knee-pt'] });
-    const goalAndStage = filterByFacets(SAMPLE_EXERCISES, { tags: ['knee-pt', 'stage-1'] });
+    const goalOnly = filterByFacets(SAMPLE_EXERCISES, { tags: ['physical-therapy'] });
+    const goalAndStage = filterByFacets(SAMPLE_EXERCISES, { tags: ['physical-therapy', 'stage-1'] });
     expect(goalAndStage.length).toBeLessThan(goalOnly.length);
-    expect(goalAndStage.every((e) => hasTag(e, 'knee-pt') && hasTag(e, 'stage-1'))).toBe(true);
+    expect(goalAndStage.every((e) => hasTag(e, 'physical-therapy') && hasTag(e, 'stage-1'))).toBe(true);
   });
 
   it('combines an in-group OR with a cross-group AND', () => {
-    const res = filterByFacets(SAMPLE_EXERCISES, { tags: ['knee-pt', 'stage-2', 'stage-3'] });
+    const res = filterByFacets(SAMPLE_EXERCISES, { tags: ['physical-therapy', 'stage-2', 'stage-3'] });
     expect(res.length).toBeGreaterThan(0);
-    // every result: knee-pt AND (stage-2 OR stage-3)
-    expect(res.every((e) => hasTag(e, 'knee-pt') && (hasTag(e, 'stage-2') || hasTag(e, 'stage-3')))).toBe(true);
+    // every result: physical-therapy AND (stage-2 OR stage-3)
+    expect(res.every((e) => hasTag(e, 'physical-therapy') && (hasTag(e, 'stage-2') || hasTag(e, 'stage-3')))).toBe(true);
     expect(res.some((e) => hasTag(e, 'stage-2'))).toBe(true);
     expect(res.some((e) => hasTag(e, 'stage-3'))).toBe(true);
   });
 
   it('equipment is its own OR facet, AND-ed with tags', () => {
-    const res = filterByFacets(SAMPLE_EXERCISES, { tags: ['knee-pt'], equipment: ['stretch', 'tube_band'] });
+    const res = filterByFacets(SAMPLE_EXERCISES, { tags: ['physical-therapy'], equipment: ['stretch', 'tube_band'] });
     expect(res.length).toBeGreaterThan(0);
-    expect(res.every((e) => hasTag(e, 'knee-pt') && ['stretch', 'tube_band'].includes(e.equipment ?? ''))).toBe(true);
+    expect(res.every((e) => hasTag(e, 'physical-therapy') && ['stretch', 'tube_band'].includes(e.equipment ?? ''))).toBe(true);
   });
 
   it('search AND-s with the rest', () => {
-    const res = filterByFacets(SAMPLE_EXERCISES, { tags: ['knee-pt'], search: 'heel' });
-    expect(res.every((e) => hasTag(e, 'knee-pt') && /heel/i.test(e.name))).toBe(true);
+    const res = filterByFacets(SAMPLE_EXERCISES, { tags: ['physical-therapy'], search: 'heel' });
+    expect(res.every((e) => hasTag(e, 'physical-therapy') && /heel/i.test(e.name))).toBe(true);
     expect(res.map((e) => e.name)).toContain('Heel Slide');
   });
 
@@ -180,9 +184,9 @@ describe('muscle group facet', () => {
 
     // Cross-facet narrows: 'Legs' has plenty of non-rehab movements.
     const legs = filterByFacets(SAMPLE_EXERCISES, { muscleGroups: ['Legs'] });
-    const kneeLegs = filterByFacets(SAMPLE_EXERCISES, { tags: ['knee-pt'], muscleGroups: ['Legs'] });
+    const kneeLegs = filterByFacets(SAMPLE_EXERCISES, { tags: ['physical-therapy'], muscleGroups: ['Legs'] });
     expect(kneeLegs.length).toBeGreaterThan(0);
     expect(kneeLegs.length).toBeLessThan(legs.length);
-    expect(kneeLegs.every((e) => hasTag(e, 'knee-pt') && e.muscle_group === 'Legs')).toBe(true);
+    expect(kneeLegs.every((e) => hasTag(e, 'physical-therapy') && e.muscle_group === 'Legs')).toBe(true);
   });
 });

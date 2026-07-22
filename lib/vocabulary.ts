@@ -69,6 +69,7 @@ export const TAG_CATEGORY_LABEL: Record<TagCategory, string> = {
   goal: 'Goal',
   stage: 'Stage',
   pattern: 'Movement',
+  area: 'Area',
 };
 
 /** What each tag category is for — used as the hint under a category picker. */
@@ -76,8 +77,11 @@ export const TAG_CATEGORY_HINT: Record<TagCategory, string> = {
   goal: 'What program it serves',
   stage: 'Where it sits in a progression',
   pattern: 'What the movement does',
+  area: 'Which body area it is for',
 };
 
+// Trainer-pickable tag categories for a custom move. `area` is intentionally not
+// here — body-area tags belong to curated rehab content, not free trainer entry.
 export const TAG_CATEGORIES: TagCategory[] = ['goal', 'stage', 'pattern'];
 
 export function tagCategoryLabel(category: string | null | undefined): string {

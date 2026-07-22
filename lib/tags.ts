@@ -8,7 +8,7 @@ import type { Equipment, Exercise } from './database.types';
 // `filterExercises` queries across all of them together so callers never care
 // which dimension lives where.
 
-export type TagCategory = 'goal' | 'stage' | 'pattern';
+export type TagCategory = 'goal' | 'stage' | 'pattern' | 'area';
 
 export interface Tag {
   id: string;
@@ -21,12 +21,18 @@ export interface Tag {
 
 export const TAGS: Tag[] = [
   // ── Goal: what program this movement serves ────────────────────────────────
-  { id: 'knee-pt', category: 'goal', label: 'Knee PT', description: 'Knee rehab — post knee-replacement or knee-injury recovery', clinical: true },
-  { id: 'shoulder-pt', category: 'goal', label: 'Shoulder PT', description: 'Shoulder rehab — rotator-cuff, impingement and scapular recovery', clinical: true },
-  { id: 'ankle-pt', category: 'goal', label: 'Ankle PT', description: 'Ankle rehab — post-sprain strength, balance and range', clinical: true },
+  // Rehab is one goal (physical-therapy) crossed with an AREA (below) and a
+  // STAGE — so "Knee, Stage 2" is goal=physical-therapy + area=knee + stage-2,
+  // rather than a separate goal tag per joint.
+  { id: 'physical-therapy', category: 'goal', label: 'Physical Therapy', description: 'Rehab & recovery — pick a body area below', clinical: true },
   { id: 'mobility', category: 'goal', label: 'Mobility', description: 'Range of motion and tissue length' },
   { id: 'strength', category: 'goal', label: 'Strength', description: 'Rebuilding force production' },
   { id: 'stability', category: 'goal', label: 'Stability', description: 'Balance, control, and joint support' },
+
+  // ── Area: the body region a rehab movement is for (composes with the PT goal) ─
+  { id: 'knee', category: 'area', label: 'Knee', description: 'Knee rehab — post-replacement or knee-injury recovery', clinical: true },
+  { id: 'shoulder', category: 'area', label: 'Shoulder', description: 'Rotator-cuff, impingement and scapular recovery', clinical: true },
+  { id: 'ankle', category: 'area', label: 'Ankle', description: 'Post-sprain strength, balance and range', clinical: true },
 
   // ── Stage: where it sits in a recovery/progression arc ─────────────────────
   // Joint-agnostic: the same three-stage arc drives knee, shoulder and ankle

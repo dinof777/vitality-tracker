@@ -5,15 +5,16 @@ import { TAG_BY_ID, groupByTag, hasTag, tagsInCategory, REHAB_DISCLAIMER } from 
 import ExerciseThumb from '@/components/workout/ExerciseThumb';
 import { MOVE, plural } from '@/lib/vocabulary';
 
-// A tagged collection rendered as a staged program. Generic over any `goal` tag —
-// /collections/knee-pt today, any future program for free.
+// A tagged collection rendered as a staged program. Generic over any `goal` or
+// `area` tag — /collections/physical-therapy (all rehab) or /collections/knee
+// (one body area), plus any future program for free.
 export function generateStaticParams() {
-  return tagsInCategory('goal').map((t) => ({ goal: t.id }));
+  return [...tagsInCategory('goal'), ...tagsInCategory('area')].map((t) => ({ goal: t.id }));
 }
 
 export default function Collection({ params }: { params: { goal: string } }) {
   const goal = TAG_BY_ID[params.goal];
-  if (!goal || goal.category !== 'goal') notFound();
+  if (!goal || (goal.category !== 'goal' && goal.category !== 'area')) notFound();
 
   const items = SAMPLE_EXERCISES.filter((e) => hasTag(e, goal.id));
   if (items.length === 0) notFound();

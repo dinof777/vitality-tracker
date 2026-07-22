@@ -72,6 +72,8 @@ export const EQUIPMENT_CHOICES: { value: Equipment; label: string; hint: string;
 export interface FocusChoice {
   /** Draw only from exercises carrying one of these tags (see lib/tags). */
   tags?: string[];
+  /** Narrow further to one body area (AND with `tags`) — rehab sub-focuses. */
+  areaTags?: string[];
   /** Order the result by recovery stage — early work first. */
   byStage?: boolean;
   value: string;
@@ -97,10 +99,10 @@ export const FOCUS_CHOICES: FocusChoice[] = [
   // Physical Therapy is the umbrella (every rehab area); the per-joint focuses
   // below narrow to one. A future release nests these under PT properly instead
   // of listing them flat — see the taxonomy scoping note.
-  { value: 'physical-therapy', label: 'Physical Therapy', emoji: '🩹', desc: 'Rehab & recovery work', groups: null, tags: ['knee-pt', 'shoulder-pt', 'ankle-pt'], byStage: true },
-  { value: 'knee', label: 'Knee', emoji: '🦿', desc: 'Bend, straighten & rebuild the knee', groups: null, tags: ['knee-pt'], byStage: true },
-  { value: 'shoulder', label: 'Shoulder', emoji: '🫱', desc: 'Rotator-cuff, scapular & impingement recovery', groups: null, tags: ['shoulder-pt'], byStage: true },
-  { value: 'ankle', label: 'Ankle', emoji: '🦶', desc: 'Post-sprain strength, balance & range', groups: null, tags: ['ankle-pt'], byStage: true },
+  { value: 'physical-therapy', label: 'Physical Therapy', emoji: '🩹', desc: 'Rehab & recovery work', groups: null, tags: ['physical-therapy'], byStage: true },
+  { value: 'knee', label: 'Knee', emoji: '🦿', desc: 'Bend, straighten & rebuild the knee', groups: null, tags: ['physical-therapy'], areaTags: ['knee'], byStage: true },
+  { value: 'shoulder', label: 'Shoulder', emoji: '🫱', desc: 'Rotator-cuff, scapular & impingement recovery', groups: null, tags: ['physical-therapy'], areaTags: ['shoulder'], byStage: true },
+  { value: 'ankle', label: 'Ankle', emoji: '🦶', desc: 'Post-sprain strength, balance & range', groups: null, tags: ['physical-therapy'], areaTags: ['ankle'], byStage: true },
 ];
 
 export interface IntensityChoice {
