@@ -249,6 +249,12 @@ export interface DrillDownNode {
  */
 export function muscleDrillDownNodes(regions: { region: string; groups: string[] }[]): DrillDownNode[] {
   const parentNames = new Set(regions.map((r) => r.region));
+  // A muscle group already nested under a region (Quads/Biceps/…) must NOT
+  // also surface as its own top-level leaf, or the drill-down collapses back
+  // into the flat wall of tiles it was built to replace — every group would
+  // render twice: once correctly nested, once leaked flat alongside its
+  // parent.
+  const childNames = new Set(regions.flatMap((r) => r.groups.filter((g) => g !== r.region)));
   const byLabel = new Map(MUSCLE_GROUP_FOCUSES.map((f) => [f.label, f]));
   const full = SPECIAL_FOCUSES.find((f) => f.value === 'full');
 
@@ -264,7 +270,9 @@ export function muscleDrillDownNodes(regions: { region: string; groups: string[]
       }),
   }));
 
-  const leaves: DrillDownNode[] = MUSCLE_GROUP_FOCUSES.filter((f) => !parentNames.has(f.label)).map((f) => ({
+  const leaves: DrillDownNode[] = MUSCLE_GROUP_FOCUSES.filter(
+    (f) => !parentNames.has(f.label) && !childNames.has(f.label),
+  ).map((f) => ({
     value: f.value,
     label: f.label,
     emoji: f.emoji,
