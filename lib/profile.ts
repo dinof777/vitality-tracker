@@ -89,9 +89,12 @@ export interface FocusChoice {
 export const FOCUS_CHOICES: FocusChoice[] = [
   { value: 'full', label: 'Full Body', emoji: '🔥', desc: 'Hit everything in one session', groups: null },
   { value: 'balanced', label: 'Balanced', emoji: '⚖️', desc: 'A bit of all 4 pillars', groups: null, pillars: ['strength', 'cardio', 'balance', 'flexibility'], balanced: true },
-  { value: 'upper', label: 'Upper Body', emoji: '💪', desc: 'Chest, back, shoulders & arms', groups: ['Chest', 'Back', 'Shoulders', 'Arms', 'Rear Delts', 'Traps'] },
-  { value: 'lower', label: 'Lower Body', emoji: '🦵', desc: 'Legs, glutes & hamstrings', groups: ['Legs', 'Hamstrings', 'Glutes', 'Calves'] },
-  { value: 'core', label: 'Core & Abs', emoji: '🎯', desc: 'Midsection & stability', groups: ['Core'] },
+  // The group bundles cover every muscle group between them (except Conditioning,
+  // which the Cardio focus owns via pillar, and Full Body). A guard test enforces
+  // it so a new muscle group can't silently fall through the Upper/Lower/Core split.
+  { value: 'upper', label: 'Upper Body', emoji: '💪', desc: 'Chest, back, shoulders & arms', groups: ['Chest', 'Back', 'Shoulders', 'Arms', 'Rear Delts', 'Traps', 'Grip', 'T-Spine'] },
+  { value: 'lower', label: 'Lower Body', emoji: '🦵', desc: 'Legs, glutes, quads & hamstrings', groups: ['Legs', 'Quads', 'Hamstrings', 'Glutes', 'Calves', 'Hips', 'Hip Flexors'] },
+  { value: 'core', label: 'Core & Abs', emoji: '🎯', desc: 'Midsection & stability', groups: ['Core', 'Spine'] },
   { value: 'cardio', label: 'Cardio', emoji: '🏃', desc: 'Heart-rate & conditioning', groups: null, pillars: ['cardio'] },
   { value: 'balance', label: 'Balance', emoji: '🤸', desc: 'Single-leg & stability', groups: null, pillars: ['balance'] },
   { value: 'mobility', label: 'Mobility', emoji: '🧘', desc: 'Stretch, holds & flexibility', groups: null, mobility: true },
