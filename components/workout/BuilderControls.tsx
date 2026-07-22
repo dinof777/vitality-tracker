@@ -3,16 +3,16 @@
 import { useEffect, useState } from 'react';
 import type { Equipment } from '@/lib/database.types';
 import {
-  SPECIAL_FOCUSES,
   INTENSITY_CHOICES,
   EQUIPMENT_CHOICES,
   intensityParams,
   lengthToCount,
   regionFocus,
   resolveFocus,
-  muscleDrillDownNodes,
-  rehabDrillDownNodes,
-  focusKind,
+  focusPillarNodes,
+  focusGroupNodes,
+  focusPillarToken,
+  isPillarToken,
   type FocusChoice,
   type Intensity,
 } from '@/lib/profile';
@@ -57,20 +57,6 @@ interface Props {
 
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
 
-// The "Style" lens of the focus picker — whole-session presets that aren't a
-// muscle group or a rehab area. Full Body lives in the Muscle lens (it's
-// muscleDrillDownNodes' own first node) and Physical Therapy lives in the
-// Rehab lens (it drills to an area there) — both excluded here so each tile
-// appears in exactly one lens instead of stacking flat alongside these four.
-const STYLE_FOCUSES = SPECIAL_FOCUSES.filter((f) => f.value !== 'full' && f.value !== 'physical-therapy');
-
-type FocusLens = 'muscle' | 'style' | 'rehab';
-const FOCUS_LENSES: { value: FocusLens; label: string }[] = [
-  { value: 'muscle', label: 'Muscle' },
-  { value: 'style', label: 'Style' },
-  { value: 'rehab', label: 'Rehab' },
-];
-
 // The workout builder controls — length dial plus summary rows that open sheets.
 // Shared by the personal app and the gym builder so trainers get the same calm,
 // progressive-disclosure experience instead of a wall of pills.
@@ -83,7 +69,9 @@ export default function BuilderControls({
   onSetDefaultFocus,
 }: Props) {
   const [sheet, setSheet] = useState<'focus' | 'intensity' | 'equipment' | null>(null);
-  const [focusLens, setFocusLens] = useState<FocusLens>('muscle');
+  // Pillar-first focus drill: null = step 1 (pick a pillar), a pillar token =
+  // step 2 (pick a muscle group, optionally drilling to a deep muscle/joint).
+  const [pillarStep, setPillarStep] = useState<string | null>(null);
   const [regionRows, setRegionRows] = useState<{ region: string; groups: string[] }[]>([]);
   const regions = regionRows.map(regionFocus);
 
@@ -134,7 +122,11 @@ export default function BuilderControls({
       <button
         type="button"
         onClick={() => {
-          setFocusLens(focusKind(value.focus, regions));
+          // Reopen where the current focus already lives — e.g. re-opening on
+          // "strength:legs:quads" lands step 2 already showing the Legs group.
+          // 'full'/'balanced' (whole-session, select-and-close) stay at step 1.
+          const token = focusPillarToken(value.focus, regions);
+          setPillarStep(isPillarToken(token) ? token : null);
           setSheet('focus');
         }}
         className="mb-2 flex w-full items-center justify-between rounded-lg border border-border bg-surface p-4 text-left active:bg-surface-raised"
@@ -190,67 +182,40 @@ export default function BuilderControls({
 
             {sheet === 'focus' && (
               <div className="space-y-4">
-                <div
-                  role="tablist"
-                  aria-label="Focus lens"
-                  className="inline-flex h-12 w-full rounded-full bg-surface-raised p-1"
-                >
-                  {FOCUS_LENSES.map((lens) => {
-                    const on = focusLens === lens.value;
-                    return (
-                      <button
-                        key={lens.value}
-                        type="button"
-                        role="tab"
-                        aria-selected={on}
-                        onClick={() => setFocusLens(lens.value)}
-                        className={`h-full flex-1 rounded-full text-caption font-semibold transition-colors ${
-                          on ? 'bg-accent text-on-accent' : 'text-text-muted'
-                        }`}
-                      >
-                        {lens.label}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {focusLens === 'muscle' && (
+                {pillarStep === null ? (
+                  // Step 1 — Full Body, Balanced (select & close) and the 5
+                  // pillar tiles (Strength/Cardio/Balance/Flexibility/PT), which
+                  // advance to step 2 instead of selecting.
                   <MuscleDrillDown
-                    nodes={muscleDrillDownNodes(regionRows)}
+                    nodes={focusPillarNodes()}
                     value={value.focus}
-                    onSelect={(v) => onChange({ focus: v })}
+                    onSelect={(v) => {
+                      if (isPillarToken(v)) {
+                        setPillarStep(v);
+                      } else {
+                        onChange({ focus: v });
+                        setSheet(null);
+                      }
+                    }}
                   />
-                )}
-
-                {focusLens === 'style' && (
-                  <div className="grid grid-cols-2 gap-2">
-                    {STYLE_FOCUSES.map((f) => {
-                      const on = value.focus === f.value;
-                      return (
-                        <button
-                          key={f.value}
-                          type="button"
-                          onClick={() => {
-                            onChange({ focus: f.value });
-                            setSheet(null);
-                          }}
-                          className={`rounded-lg border p-3 text-left transition-colors ${on ? 'border-accent bg-accent/10' : 'border-border bg-surface'}`}
-                        >
-                          <span className="text-h3">{f.emoji}</span>
-                          <span className="mt-1 block text-body font-semibold text-text-primary">{f.label}</span>
-                          <span className="block text-caption text-text-muted">{f.desc}</span>
-                        </button>
-                      );
-                    })}
+                ) : (
+                  // Step 2 (+3) — muscle group, optionally drilling to the
+                  // specific muscle (training pillars) or joint/area (Physical
+                  // Therapy) via MuscleDrillDown's own parent/child expand.
+                  <div className="space-y-2">
+                    <button
+                      type="button"
+                      onClick={() => setPillarStep(null)}
+                      className="flex items-center gap-1 text-caption font-semibold text-accent"
+                    >
+                      ‹ Back
+                    </button>
+                    <MuscleDrillDown
+                      nodes={focusGroupNodes(pillarStep)}
+                      value={value.focus}
+                      onSelect={(v) => onChange({ focus: v })}
+                    />
                   </div>
-                )}
-
-                {focusLens === 'rehab' && (
-                  <MuscleDrillDown
-                    nodes={rehabDrillDownNodes()}
-                    value={value.focus}
-                    onSelect={(v) => onChange({ focus: v })}
-                  />
                 )}
 
                 {onSetDefaultFocus && (

@@ -1,4 +1,5 @@
 import type { Equipment } from './database.types';
+import type { Pillar } from './pillars';
 import { CANON_MUSCLE_GROUPS } from './taxonomy';
 import { tagsInCategory } from './tags';
 
@@ -98,8 +99,17 @@ export interface FocusChoice {
 export const SPECIAL_FOCUSES: FocusChoice[] = [
   { value: 'full', label: 'Full Body', emoji: '🔥', desc: 'Hit everything in one session', groups: null, section: 'special' },
   { value: 'balanced', label: 'Balanced', emoji: '⚖️', desc: 'A bit of all 4 pillars', groups: null, pillars: ['strength', 'cardio', 'balance', 'flexibility'], balanced: true, section: 'special' },
+  // Pillar tiles (step 1 of the pillar-first focus picker — see
+  // focusPillarNodes below). strength/flexibility are new; cardio/balance
+  // already existed and are reused as-is (same value, same semantics).
+  { value: 'strength', label: 'Strength', emoji: '💪', desc: 'Resistance & core work', groups: null, pillars: ['strength'], section: 'special' },
   { value: 'cardio', label: 'Cardio', emoji: '🏃', desc: 'Heart-rate & conditioning', groups: null, pillars: ['cardio'], section: 'special' },
   { value: 'balance', label: 'Balance', emoji: '🤸', desc: 'Single-leg & stability', groups: null, pillars: ['balance'], section: 'special' },
+  // NOTE: `flexibility` (pillar = equipment==='stretch') is NARROWER than the
+  // legacy `mobility` preset below (exerciseMode==='hold', also catches
+  // bodyweight holds). `mobility` stays resolvable forever for backward
+  // compat, but the new pillar-first picker never produces it.
+  { value: 'flexibility', label: 'Flexibility', emoji: '🧘', desc: 'Stretch equipment work', groups: null, pillars: ['flexibility'], section: 'special' },
   { value: 'mobility', label: 'Mobility', emoji: '🧘', desc: 'Stretch, holds & flexibility', groups: null, mobility: true, section: 'special' },
   // Clinical: Physical Therapy is the umbrella (every rehab area, unnarrowed).
   // The per-joint focuses that used to be hand-typed here are now generated —
@@ -198,6 +208,144 @@ export const MUSCLE_GROUP_FOCUSES: FocusChoice[] = (CANON_MUSCLE_GROUPS as reado
   }));
 
 export const FOCUS_CHOICES: FocusChoice[] = [...SPECIAL_FOCUSES, ...REHAB_AREA_FOCUSES, ...MUSCLE_GROUP_FOCUSES];
+
+// ── Pillar-first focus picker (composite grammar) ───────────────────────────
+// The per-workout focus sheet (BuilderControls) drills Pillar → Muscle group →
+// Deep. `Profile.focus` stays a single string; a composite value is just
+// `<pillarToken>[:<groupSlug>[:<deepSlug>]]`. The grammar activates ONLY when
+// the string contains a `:` — no legacy value (full, balanced, cardio,
+// region-legs, quads, physical-therapy, knee, mobility, …) has ever contained
+// a colon, so this is purely additive, never a migration.
+
+/** The 5 tokens a picker "pillar" tile can advance into. */
+export type PillarToken = Pillar | 'physical-therapy';
+const PILLAR_TOKENS: PillarToken[] = ['strength', 'cardio', 'balance', 'flexibility', 'physical-therapy'];
+
+export function isPillarToken(value: string): value is PillarToken {
+  return (PILLAR_TOKENS as string[]).includes(value);
+}
+
+/**
+ * Muscle-group tree for the training pillars, hardcoded (not DB-dependent —
+ * regions don't factor into the pillar-first picker). Parent-inclusive:
+ * a group's training filter set is `[group, ...muscles]`.
+ */
+export const FOCUS_MUSCLE_GROUPS: { group: string; muscles: string[] }[] = [
+  { group: 'Legs', muscles: ['Quads', 'Hamstrings', 'Glutes', 'Calves', 'Hip Flexors', 'Hips'] },
+  { group: 'Back', muscles: ['Traps', 'Spine', 'T-Spine'] }, // Spine included → low-back Spine exercises resolve
+  { group: 'Chest', muscles: [] },
+  { group: 'Shoulders', muscles: ['Rear Delts'] },
+  { group: 'Arms', muscles: ['Biceps', 'Triceps', 'Grip'] },
+  { group: 'Core', muscles: ['Obliques'] },
+];
+
+// PT-CONFIRMED mapping (low-back → Back, per the physical therapist):
+const AREA_TO_GROUP: Record<string, string> = {
+  knee: 'Legs',
+  hip: 'Legs',
+  ankle: 'Legs',
+  shoulder: 'Shoulders',
+  'upper-back': 'Back',
+  'low-back': 'Back',
+};
+
+interface ParsedFocus {
+  pillarToken: string;
+  groupSlug?: string;
+  deepSlug?: string;
+}
+
+/** Split a composite value on ':'. Returns null for any colon-free (legacy) value. */
+export function parseFocusValue(value: string): ParsedFocus | null {
+  if (!value.includes(':')) return null;
+  const [pillarToken, groupSlug, deepSlug] = value.split(':');
+  if (!pillarToken) return null;
+  return { pillarToken, groupSlug: groupSlug || undefined, deepSlug: deepSlug || undefined };
+}
+
+/**
+ * Build a FocusChoice from parsed composite parts. `parts.pillarToken` is
+ * assumed already validated by the caller (parseCompositeFocus). A stale or
+ * malformed group/deep slug degrades to the next coarser level — this never
+ * throws and never returns an empty/unrecognized focus.
+ */
+function compositeFocusChoice(parts: ParsedFocus): FocusChoice {
+  const { pillarToken, groupSlug, deepSlug } = parts;
+  const pillarBase = SPECIAL_FOCUSES.find((f) => f.value === pillarToken);
+  if (!pillarBase) return FOCUS_CHOICES[0]; // defensive; callers only pass a validated pillar token
+
+  if (!groupSlug) return pillarBase;
+
+  const group = FOCUS_MUSCLE_GROUPS.find((g) => slugifyGroup(g.group) === groupSlug);
+  if (!group) return pillarBase; // stale group slug degrades to the bare pillar
+
+  const groupValue = `${pillarToken}:${groupSlug}`;
+  const isPT = pillarToken === 'physical-therapy';
+
+  if (isPT) {
+    const areas = tagsInCategory('area').filter((t) => AREA_TO_GROUP[t.id] === group.group);
+    if (!deepSlug) {
+      return {
+        value: groupValue,
+        label: `Physical Therapy · ${group.group}`,
+        emoji: pillarBase.emoji,
+        desc: `Rehab & recovery work for ${group.group}`,
+        groups: null,
+        tags: ['physical-therapy'],
+        areaTags: areas.map((a) => a.id), // empty for Chest/Core/Arms — falls back to the full PT pool, not zero results
+        byStage: true,
+        section: 'special',
+      };
+    }
+    const area = areas.find((a) => a.id === deepSlug);
+    if (!area) return compositeFocusChoice({ pillarToken, groupSlug }); // stale deep slug degrades to group-level
+    return {
+      value: `${groupValue}:${deepSlug}`,
+      label: area.label,
+      emoji: REHAB_AREA_EMOJI[area.id] ?? '🩹',
+      desc: area.description,
+      groups: null,
+      tags: ['physical-therapy'],
+      areaTags: [area.id],
+      byStage: true,
+      section: 'special',
+    };
+  }
+
+  // Training pillar: the group's parent-inclusive muscle set, AND-ed with the pillar.
+  const pillar = pillarToken as Pillar;
+  const parentInclusive = [group.group, ...group.muscles];
+  if (!deepSlug) {
+    return {
+      value: groupValue,
+      label: `${pillarBase.label} · ${group.group}`,
+      emoji: pillarBase.emoji,
+      desc: `${pillarBase.label} work for ${group.group}`,
+      groups: parentInclusive,
+      pillars: [pillar],
+      section: 'special',
+    };
+  }
+  const muscle = group.muscles.find((m) => slugifyGroup(m) === deepSlug);
+  if (!muscle) return compositeFocusChoice({ pillarToken, groupSlug }); // stale deep slug degrades to group-level
+  return {
+    value: `${groupValue}:${deepSlug}`,
+    label: `${pillarBase.label} · ${muscle}`,
+    emoji: MUSCLE_GROUP_EMOJI[muscle] ?? pillarBase.emoji,
+    desc: `${pillarBase.label} work for ${muscle}`,
+    groups: [muscle],
+    pillars: [pillar],
+    section: 'special',
+  };
+}
+
+/** The single choke point composite values pass through — see focusChoice below. */
+function parseCompositeFocus(value: string): FocusChoice | null {
+  if (!value.includes(':')) return null; // legacy path, byte-identical to today
+  const parts = parseFocusValue(value);
+  if (!parts || !isPillarToken(parts.pillarToken)) return null; // foreign token → fall through to legacy lookup
+  return compositeFocusChoice(parts);
+}
 
 /**
  * Turn one admin-managed region (GET /api/taxonomy/regions — a muscle_group
@@ -298,6 +446,81 @@ export function rehabDrillDownNodes(): DrillDownNode[] {
   return [{ value: umbrella.value, label: umbrella.label, emoji: umbrella.emoji, children }];
 }
 
+// ── Pillar-first focus picker tree builders ─────────────────────────────────
+// BuilderControls' `sheet === 'focus'` is a two-step drill: pick a pillar
+// (step 1), then optionally a muscle group / deep muscle-or-joint (step 2,
+// reusing the SAME MuscleDrillDown component + its parent/child expand
+// behavior). Onboarding keeps using muscleDrillDownNodes/rehabDrillDownNodes
+// above, untouched — these are additive, not a replacement.
+
+/** Step 1: Full Body + Balanced (select-and-close) plus the 5 pillar tiles
+ *  (each advances to step 2 instead of selecting). Flat leaves — no children —
+ *  so MuscleDrillDown never auto-expands them; BuilderControls owns the
+ *  advance-vs-select decision per tile. */
+const FOCUS_PILLAR_STEP1_VALUES = ['full', 'balanced', 'strength', 'cardio', 'balance', 'flexibility', 'physical-therapy'];
+
+export function focusPillarNodes(): DrillDownNode[] {
+  return FOCUS_PILLAR_STEP1_VALUES.map((v) => {
+    const f = SPECIAL_FOCUSES.find((sf) => sf.value === v);
+    return f
+      ? { value: f.value, label: f.label, emoji: f.emoji }
+      : { value: v, label: v, emoji: '💪' }; // defensive; every value above has a SPECIAL_FOCUSES entry
+  });
+}
+
+/**
+ * Step 2 (+3) for a chosen pillar: one tile per FOCUS_MUSCLE_GROUPS group,
+ * each carrying children to drill deeper — muscles for a training pillar,
+ * rehab areas (via AREA_TO_GROUP) for physical-therapy. A group with no
+ * children (Chest under a training pillar; Chest/Core/Arms under PT, which
+ * have no mapped rehab area) is a leaf, same as MuscleDrillDown already
+ * handles for any childless node.
+ */
+export function focusGroupNodes(pillarToken: string): DrillDownNode[] {
+  const isPT = pillarToken === 'physical-therapy';
+  return FOCUS_MUSCLE_GROUPS.map((g) => {
+    const groupSlug = slugifyGroup(g.group);
+    const groupValue = `${pillarToken}:${groupSlug}`;
+    const groupEmoji = MUSCLE_GROUP_EMOJI[g.group] ?? '💪';
+
+    if (isPT) {
+      const areas = tagsInCategory('area').filter((t) => AREA_TO_GROUP[t.id] === g.group);
+      return {
+        value: groupValue,
+        label: g.group,
+        emoji: groupEmoji,
+        children: areas.length
+          ? areas.map((a) => ({ value: `${groupValue}:${a.id}`, label: a.label, emoji: REHAB_AREA_EMOJI[a.id] ?? '🩹' }))
+          : undefined,
+      };
+    }
+
+    return {
+      value: groupValue,
+      label: g.group,
+      emoji: groupEmoji,
+      children: g.muscles.length
+        ? g.muscles.map((m) => ({ value: `${groupValue}:${slugifyGroup(m)}`, label: m, emoji: MUSCLE_GROUP_EMOJI[m] ?? '💪' }))
+        : undefined,
+    };
+  });
+}
+
+/**
+ * Reopen-state: which pillar (step-1 token) the current focus value belongs
+ * to, so reopening the sheet lands where the focus already lives instead of
+ * always resetting to step 1. `regions` kept in the signature for parity with
+ * resolveFocus/focusKind (an admin-managed region focus is exactly the kind
+ * of legacy value that correctly falls through to 'full' below).
+ */
+export function focusPillarToken(value: string, regions: FocusChoice[]): string {
+  void regions;
+  const parts = parseFocusValue(value);
+  if (parts && isPillarToken(parts.pillarToken)) return parts.pillarToken;
+  if (FOCUS_PILLAR_STEP1_VALUES.includes(value)) return value;
+  return 'full'; // legacy bare muscle-group slug / region / bare rehab-area / 'mobility'
+}
+
 export interface IntensityChoice {
   value: Intensity;
   label: string;
@@ -323,6 +546,8 @@ export function intensityParams(i: Intensity): IntensityChoice {
 }
 
 export function focusChoice(value: string): FocusChoice {
+  const composite = parseCompositeFocus(value);
+  if (composite) return composite;
   return FOCUS_CHOICES.find((f) => f.value === value) ?? FOCUS_CHOICES[0];
 }
 

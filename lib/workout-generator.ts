@@ -3,7 +3,7 @@ import { SAMPLE_EXERCISES } from './exercises';
 import { exerciseTier, intensityPreferredTier } from './exercise-intensity';
 import { exerciseMode } from './exercise-mode';
 import { hasPillar, type Pillar } from './pillars';
-import { focusChoice, workoutParams, type FocusChoice, type Intensity, type Profile } from './profile';
+import { focusChoice, parseFocusValue, workoutParams, type FocusChoice, type Intensity, type Profile } from './profile';
 import { packToTime } from './workout-timing';
 
 const ALL_PILLARS: Pillar[] = ['strength', 'cardio', 'balance', 'flexibility'];
@@ -44,22 +44,12 @@ interface GenerateOpts {
   focusChoices?: FocusChoice[];
 }
 
-// Order the focus/equipment pool for variety AND intensity-type: bias toward the
-// intensity's preferred difficulty tier (soft — a weighted shuffle, never a hard
-// filter, so the pool can't empty), then take one exercise per muscle group
-// first and the remainder after — so packing favors a balanced, tier-appropriate
-// workout.
-function varietyOrdered(
-  profile: Profile,
-  focusValue: string,
-  preferTier: number,
-  source: Exercise[] = SAMPLE_EXERCISES,
-  rng: () => number = Math.random,
-  extraFocuses: FocusChoice[] = [],
-): Exercise[] {
-  const focus = extraFocuses.find((f) => f.value === focusValue) ?? focusChoice(focusValue);
-  const eq = new Set(profile.equipment);
-  let pool = source.filter((e) => e.equipment && eq.has(e.equipment));
+// Apply one focus's tag/area/mode/pillar/group filters to an already
+// equipment-filtered pool. Pulled out of varietyOrdered so the relaxation
+// ladder below can re-apply it against coarser rungs of the same composite
+// focus without re-deriving the equipment filter each time.
+function focusFilteredPool(equipmentPool: Exercise[], focus: FocusChoice): Exercise[] {
+  let pool = equipmentPool;
   // Clinical focuses select by tag instead of muscle group: the goal tag
   // (physical-therapy) ORs in the rehab pool, then an optional area (knee /
   // shoulder / ankle) ANDs it down to one body region.
@@ -74,11 +64,67 @@ function varietyOrdered(
   if (focus.mobility) {
     // Mobility = stretches + holds (any bodyweight hold), by tracking mode.
     pool = pool.filter((e) => exerciseMode(e) === 'hold');
-  } else if (focus.pillars && !focus.balanced) {
-    pool = pool.filter((e) => focus.pillars!.some((p) => hasPillar(e, p)));
-  } else if (focus.groups) {
-    pool = pool.filter((e) => focus.groups!.includes(e.muscle_group ?? ''));
+  } else {
+    // Pillar AND muscle group (a composite focus, e.g. strength:legs:quads,
+    // sets both) — sequential-AND, not else-if. Safe for every legacy focus:
+    // none of them set both `pillars` and `groups`, so this is a no-op there.
+    if (focus.pillars && !focus.balanced) pool = pool.filter((e) => focus.pillars!.some((p) => hasPillar(e, p)));
+    if (focus.groups) pool = pool.filter((e) => focus.groups!.includes(e.muscle_group ?? ''));
   }
+  return pool;
+}
+
+// A composite focus value (pillar[:group[:deep]]) walked from most to least
+// specific — the rungs the relaxation ladder falls back through when the
+// narrowest one comes up empty. A non-composite (legacy) value has nowhere to
+// relax to, so its ladder is just itself.
+function relaxationLadder(focusValue: string): string[] {
+  const parts = parseFocusValue(focusValue);
+  if (!parts) return [focusValue];
+  const ladder = [focusValue];
+  if (parts.deepSlug) ladder.push(`${parts.pillarToken}:${parts.groupSlug}`);
+  if (parts.groupSlug) ladder.push(parts.pillarToken);
+  return ladder;
+}
+
+// Order the focus/equipment pool for variety AND intensity-type: bias toward the
+// intensity's preferred difficulty tier (soft — a weighted shuffle, never a hard
+// filter, so the pool can't empty), then take one exercise per muscle group
+// first and the remainder after — so packing favors a balanced, tier-appropriate
+// workout.
+function varietyOrdered(
+  profile: Profile,
+  focusValue: string,
+  preferTier: number,
+  source: Exercise[] = SAMPLE_EXERCISES,
+  rng: () => number = Math.random,
+  extraFocuses: FocusChoice[] = [],
+): Exercise[] {
+  const resolve = (v: string) => extraFocuses.find((f) => f.value === v) ?? focusChoice(v);
+  let focus = resolve(focusValue);
+  const eq = new Set(profile.equipment);
+  const equipmentPool = source.filter((e) => e.equipment && eq.has(e.equipment));
+  let pool = focusFilteredPool(equipmentPool, focus);
+
+  // A too-narrow composite (e.g. a pillar+group+deep combo the equipment/tag
+  // filters leave empty) must never yield an empty workout — walk the
+  // ladder's coarser rungs and take the first one that isn't empty.
+  if (pool.length === 0) {
+    for (const rung of relaxationLadder(focusValue).slice(1)) {
+      const rungFocus = resolve(rung);
+      const rungPool = focusFilteredPool(equipmentPool, rungFocus);
+      if (rungPool.length > 0) {
+        focus = rungFocus;
+        pool = rungPool;
+        break;
+      }
+    }
+  }
+  // Even the bare pillar can be empty (equipment excludes it entirely) — a
+  // pre-existing edge case. Fall through to the full equipment-filtered pool,
+  // matching today's worst case rather than regressing to [].
+  if (pool.length === 0) pool = equipmentPool;
+
   // Lower key = earlier. Distance from the preferred tier dominates; a random
   // term keeps each generation varied within a tier.
   const shuffled = [...pool]
