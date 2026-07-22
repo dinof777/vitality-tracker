@@ -1,6 +1,6 @@
 import type { Equipment, Exercise } from './database.types';
 
-// Move library (226) — seeded into the Neon `exercises` table (same UUIDs).
+// Move library (227) — seeded into the Neon `exercises` table (same UUIDs).
 // EQUIPMENT CONSTRAINT: every movement uses ONLY dumbbells, a kettlebell, a tube
 // band (long/handled), a loop band (mini/booty band), a pull-up bar, a medicine
 // ball, a jump rope, or bodyweight (floor/wall). No benches, boxes, racks, or
@@ -278,6 +278,10 @@ export const SAMPLE_EXERCISES: Exercise[] = [
   // Loaded stage-3 hamstring curl — from Heath Mann DPT's knee HEP. The existing
   // Standing Hamstring Curl is bodyweight/stage-2; this adds the resisted version.
   E('d0000168-0000-4000-8000-000000000000', 'Band Standing Hamstring Curl', 'Hamstrings', 'tube_band', 'Loop the band at one ankle, stand on the other end · hold support · curl the heel to the glute · lower slow', null, ['knee-pt', 'stage-3', 'knee-flexion', 'strength', 'weight-bearing']),
+  // From the HEP's "Lunges – Pad". Dino signed off with Heath's context: a light
+  // towel graze for depth cueing, NOT resting weight on the knee (distinct from
+  // the section's excluded sustained-kneeling movements).
+  E('d0000169-0000-4000-8000-000000000000', 'Reverse Lunge to Towel Tap', 'Quads', 'calisthenics', 'Fold a towel behind you · step back, lower until the back knee lightly grazes it · don’t rest weight on it · drive through the front heel', null, ['knee-pt', 'stage-3', 'knee-flexion', 'strength', 'weight-bearing']),
 
   // ===== Shoulder rehab — rotator-cuff / impingement / scapular (12) =====
   // The library had 14 shoulder moves, all presses/raises and zero cuff work.
