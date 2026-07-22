@@ -92,6 +92,21 @@ const EQUIPMENT_SYNONYMS: Record<string, string> = {
   jumprope: 'jump rope',
   stretching: 'stretch',
   mobility: 'stretch',
+  'spin bike': 'stationary bike',
+  'exercise bike': 'stationary bike',
+  'recumbent bike': 'stationary bike',
+  stairmaster: 'stair climber',
+  stepmill: 'stair climber',
+  rower: 'rowing machine',
+  erg: 'rowing machine',
+  ergometer: 'rowing machine',
+  'cross trainer': 'elliptical',
+  bb: 'barbell',
+  'olympic bar': 'barbell',
+  'cable crossover': 'cable machine',
+  'cable stack': 'cable machine',
+  'functional trainer': 'cable machine',
+  'pulldown machine': 'lat pulldown machine',
 };
 
 // The anatomy vocabulary trainers actually type. Folds gym slang and the

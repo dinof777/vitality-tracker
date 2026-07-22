@@ -26,6 +26,21 @@ const STRENGTH_EQUIP: Equipment[] = [
   'loop_band',
   'pullup_bar',
   'medicine_ball',
+  'barbell',
+  'cable_machine',
+  'leg_press_machine',
+  'lat_pulldown_machine',
+  'rowing_machine', // rowing is both cardio + strength — see CARDIO_EQUIP below
+];
+
+// Cardio machines — heart-rate/conditioning equipment, beyond jump rope.
+const CARDIO_EQUIP: Equipment[] = [
+  'jump_rope',
+  'stationary_bike',
+  'treadmill',
+  'stair_climber',
+  'rowing_machine',
+  'elliptical',
 ];
 
 // Which pillar(s) a single exercise contributes to. Most belong to 1–2.
@@ -34,7 +49,7 @@ export function exercisePillars(ex: ExerciseLike): Pillar[] {
   const out = new Set<Pillar>();
 
   if (ex.equipment === 'stretch') out.add('flexibility');
-  if (ex.equipment === 'jump_rope' || CARDIO_NAME.test(n)) out.add('cardio');
+  if ((ex.equipment && CARDIO_EQUIP.includes(ex.equipment)) || CARDIO_NAME.test(n)) out.add('cardio');
   if (BALANCE_NAME.test(n)) out.add('balance');
   if (ex.equipment && STRENGTH_EQUIP.includes(ex.equipment)) out.add('strength');
 

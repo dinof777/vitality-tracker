@@ -131,6 +131,15 @@ export const SF_EQUIPMENT: Record<string, string | null> = {
   medicine_ball: 'Medicine ball',
   jump_rope: 'Jump rope',
   stretch: null,
+  stationary_bike: 'Stationary bike',
+  treadmill: 'Treadmill',
+  stair_climber: null, // no SyncroFit taxonomy equivalent
+  rowing_machine: 'Rowing machine',
+  elliptical: null, // no SyncroFit taxonomy equivalent
+  barbell: 'Barbell',
+  cable_machine: null, // no SyncroFit taxonomy equivalent
+  leg_press_machine: null, // no SyncroFit taxonomy equivalent
+  lat_pulldown_machine: null, // no SyncroFit taxonomy equivalent
 };
 function requiredEquipment(equipment: string | null): string[] | undefined {
   if (!equipment) return undefined;

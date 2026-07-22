@@ -1,11 +1,14 @@
 import type { Equipment, Exercise } from './database.types';
 
-// Move library (227) — seeded into the Neon `exercises` table (same UUIDs).
-// EQUIPMENT CONSTRAINT: every movement uses ONLY dumbbells, a kettlebell, a tube
-// band (long/handled), a loop band (mini/booty band), a pull-up bar, a medicine
-// ball, a jump rope, or bodyweight (floor/wall). No benches, boxes, racks, or
-// bars — the one exception is the knee-rehab section, where a sturdy chair or a
-// low step is core to the movement (documented there).
+// Move library (270) — seeded into the Neon `exercises` table (same UUIDs).
+// EQUIPMENT CONSTRAINT (home-gym tier): dumbbells, a kettlebell, a tube band
+// (long/handled), a loop band (mini/booty band), a pull-up bar, a medicine
+// ball, a jump rope, or bodyweight (floor/wall) — no benches, boxes, racks, or
+// bars, the one exception being the knee-rehab section, where a sturdy chair
+// or a low step is core to the movement (documented there). The gym-equipment
+// section below is a second tier, deliberately outside that constraint — it's
+// the machine/free-weight kit ("Gym equipment" trainer spec) a commercial gym
+// actually has, including barbells with rack access bundled into `barbell`.
 // image_url null = equipment-icon fallback until an illustration is generated.
 const E = (
   id: string,
@@ -323,6 +326,73 @@ export const SAMPLE_EXERCISES: Exercise[] = [
   E('f0000405-0000-4000-8000-000000000000', 'Single-Leg Eccentric Heel Drop', 'Calves', 'calisthenics', 'Low step, heel off the edge · rise on one foot · lower the heel below the step slowly', null, ['physical-therapy', 'ankle', 'stage-3', 'strength', 'weight-bearing']),
   E('f0000406-0000-4000-8000-000000000000', 'Lateral Hop-and-Stick', 'Calves', 'calisthenics', 'Small hop sideways · land soft and hold · stick the landing before the next hop', null, ['physical-therapy', 'ankle', 'stage-3', 'balance', 'weight-bearing']),
   E('f0000407-0000-4000-8000-000000000000', 'Single-Leg Balance with Reach', 'Full Body', 'calisthenics', 'Stand on one leg · reach the free foot forward, side, and back, tapping lightly · stay balanced', null, ['physical-therapy', 'ankle', 'stage-3', 'balance', 'stability', 'weight-bearing']),
+
+  // ===== Gym equipment (43) — stationary bike, treadmill, stair climber, rowing
+  // machine, elliptical, barbell, cable machine, leg press, lat pulldown. From
+  // the trainer's spec — the machine/free-weight tier the builder didn't have
+  // yet. image_url null → equipment-icon fallback until illustrations exist.
+
+  // ----- Stationary Bike (3) -----
+  E('g0000501-0000-4000-8000-000000000000', 'Bike Steady-State Ride', 'Conditioning', 'stationary_bike', 'Set a moderate resistance · hold a pace you can sustain the whole time · steady breathing', null, ['low-impact']),
+  E('g0000502-0000-4000-8000-000000000000', 'Bike Sprint Intervals', 'Conditioning', 'stationary_bike', 'Alternate 20-30s all-out effort with 60-90s easy spin · repeat for the set', null, ['low-impact']),
+  E('g0000503-0000-4000-8000-000000000000', 'Bike Hill Climb', 'Conditioning', 'stationary_bike', 'Increase resistance every minute · stay seated or rise out of the saddle · grind through', null, ['low-impact', 'strength']),
+
+  // ----- Treadmill (3) -----
+  E('g0000504-0000-4000-8000-000000000000', 'Treadmill Brisk Walk', 'Conditioning', 'treadmill', 'Flat or slight incline · quick walking pace · arms swinging · log minutes', null, ['low-impact', 'weight-bearing']),
+  E('g0000505-0000-4000-8000-000000000000', 'Treadmill Jog/Run Intervals', 'Conditioning', 'treadmill', 'Alternate a hard running pace with an easy jog/walk recovery · repeat for the set', null, ['weight-bearing']),
+  E('g0000506-0000-4000-8000-000000000000', 'Treadmill Incline Walk', 'Conditioning', 'treadmill', "Raise the incline · steady brisk pace · lean into the hill, don't hold the rails", null, ['weight-bearing']),
+
+  // ----- Stair Climber (2) -----
+  E('g0000507-0000-4000-8000-000000000000', 'Stair Climber Steady Climb', 'Conditioning', 'stair_climber', "Set a sustainable step rate · stand tall, don't lean on the rails · log minutes", null, ['weight-bearing']),
+  E('g0000508-0000-4000-8000-000000000000', 'Stair Climber Intervals', 'Conditioning', 'stair_climber', 'Alternate a fast climb with an easy-pace recovery · repeat for the set', null, ['weight-bearing']),
+
+  // ----- Rowing Machine (3) -----
+  E('g0000509-0000-4000-8000-000000000000', 'Row Steady-State', 'Conditioning', 'rowing_machine', 'Legs-hips-arms drive, arms-hips-legs return · smooth steady pace · log minutes/meters', null, ['low-impact']),
+  E('g0000510-0000-4000-8000-000000000000', 'Row Sprint Intervals', 'Conditioning', 'rowing_machine', '500m or 60s hard pulls · rest to recover · repeat for the set', null, ['low-impact']),
+  E('g0000511-0000-4000-8000-000000000000', 'Rowing Machine Pull (Strength Pace)', 'Back', 'rowing_machine', 'Slow controlled pulls · drive with the legs first · squeeze the shoulder blades at the finish', null, ['strength']),
+
+  // ----- Elliptical (2) -----
+  E('g0000512-0000-4000-8000-000000000000', 'Elliptical Steady-State', 'Conditioning', 'elliptical', 'Smooth continuous stride · even resistance · log minutes', null, ['low-impact']),
+  E('g0000513-0000-4000-8000-000000000000', 'Elliptical Intervals', 'Conditioning', 'elliptical', 'Push the pace/resistance for 30-60s · ease off to recover · repeat', null, ['low-impact']),
+
+  // ----- Barbell (11) — Smith machine folded in; rack access bundled with the
+  // equipment value; all avoid a bench.
+  E('g0000514-0000-4000-8000-000000000000', 'Barbell Back Squat', 'Legs', 'barbell', 'Bar on the upper back · sit back and down · drive through mid-foot', null, ['strength']),
+  E('g0000515-0000-4000-8000-000000000000', 'Barbell Front Squat', 'Quads', 'barbell', 'Bar in the front rack, elbows up · sit tall · drive up', null, ['strength']),
+  E('g0000516-0000-4000-8000-000000000000', 'Barbell Romanian Deadlift', 'Hamstrings', 'barbell', 'Hinge at the hips · bar close to the legs · flat back', null, ['strength']),
+  E('g0000517-0000-4000-8000-000000000000', 'Barbell Deadlift', 'Back', 'barbell', 'Hips back, flat back · drive the floor away · lock out tall', null, ['strength']),
+  E('g0000518-0000-4000-8000-000000000000', 'Barbell Bent-Over Row', 'Back', 'barbell', 'Hinge to 45° · flat back · drive elbows past the ribs', null, ['strength']),
+  E('g0000519-0000-4000-8000-000000000000', 'Barbell Overhead Press', 'Shoulders', 'barbell', 'Brace the core · press to full lockout overhead', null, ['strength']),
+  E('g0000520-0000-4000-8000-000000000000', 'Barbell Floor Press', 'Chest', 'barbell', 'Lying on the floor · elbows to the floor · press up', null, ['strength']),
+  E('g0000521-0000-4000-8000-000000000000', 'Barbell Glute Bridge', 'Glutes', 'barbell', 'Bar across the hips · drive through the heels · squeeze at the top', null, ['strength']),
+  E('g0000522-0000-4000-8000-000000000000', 'Barbell Reverse Lunge', 'Legs', 'barbell', 'Bar on the back · step back · drop the back knee · drive through the front heel', null, ['strength']),
+  E('g0000523-0000-4000-8000-000000000000', 'Barbell Bicep Curl', 'Biceps', 'barbell', 'No swing · full stretch at the bottom · curl to the top', null, ['strength']),
+  E('g0000524-0000-4000-8000-000000000000', 'Barbell Shrug', 'Traps', 'barbell', 'Shrug straight up against real load · pause · no rolling', null, ['strength']),
+
+  // ----- Cable Machine (13) -----
+  E('g0000525-0000-4000-8000-000000000000', 'Cable Standing Row', 'Back', 'cable_machine', 'Chest up · drive the elbows back · squeeze the shoulder blades', null, ['strength']),
+  E('g0000526-0000-4000-8000-000000000000', 'Cable Lat Pulldown', 'Back', 'cable_machine', 'Wide overhand grip · pull the bar to the upper chest · control up', null, ['strength']),
+  E('g0000527-0000-4000-8000-000000000000', 'Cable Straight-Arm Pulldown', 'Back', 'cable_machine', 'Arms straight · pull the bar down to the thighs · feel the lats', null, ['strength']),
+  E('g0000528-0000-4000-8000-000000000000', 'Cable Chest Press', 'Chest', 'cable_machine', 'Split stance · press straight out · control the return', null, ['strength']),
+  E('g0000529-0000-4000-8000-000000000000', 'Cable Standing Fly', 'Chest', 'cable_machine', 'Soft elbows · wide arc · squeeze at the finish', null, ['strength']),
+  E('g0000530-0000-4000-8000-000000000000', 'Cable Face Pull', 'Rear Delts', 'cable_machine', 'Rope at eye height · pull to the face · elbows high', null, ['strength']),
+  E('g0000531-0000-4000-8000-000000000000', 'Cable Rear-Delt Fly', 'Rear Delts', 'cable_machine', 'Cross-cable handles · pull out and back · squeeze the upper back', null, ['strength']),
+  E('g0000532-0000-4000-8000-000000000000', 'Cable Upright Row', 'Traps', 'cable_machine', 'Pull straight up to chest height · elbows lead · no shrug at the top', null, ['strength']),
+  E('g0000533-0000-4000-8000-000000000000', 'Cable Lateral Raise', 'Shoulders', 'cable_machine', 'Low pulley · raise out to shoulder height · no swing', null, ['strength']),
+  E('g0000534-0000-4000-8000-000000000000', 'Cable Triceps Pushdown', 'Triceps', 'cable_machine', 'Elbows pinned to the sides · press down to full lockout', null, ['strength']),
+  E('g0000535-0000-4000-8000-000000000000', 'Cable Bicep Curl', 'Biceps', 'cable_machine', 'Elbows still · curl to the top · slow negative', null, ['strength']),
+  E('g0000536-0000-4000-8000-000000000000', 'Cable Woodchop', 'Obliques', 'cable_machine', 'High anchor · rotate and chop diagonally across the body', null, ['stability']),
+  E('g0000537-0000-4000-8000-000000000000', 'Cable Pallof Press', 'Core', 'cable_machine', 'Resist the pull toward the machine · press straight out · brace', null, ['stability']),
+
+  // ----- Leg Press (3) -----
+  E('g0000538-0000-4000-8000-000000000000', 'Leg Press', 'Legs', 'leg_press_machine', 'Feet shoulder-width mid-platform · lower to 90° · drive through the heels', null, ['strength']),
+  E('g0000539-0000-4000-8000-000000000000', 'Single-Leg Leg Press', 'Legs', 'leg_press_machine', 'One foot centered on the platform · press through the heel · control the negative', null, ['strength', 'balance']),
+  E('g0000540-0000-4000-8000-000000000000', 'High Foot-Placement Leg Press', 'Glutes', 'leg_press_machine', 'Feet high on the platform, wider stance · drive through the heels to bias the glutes', null, ['strength']),
+
+  // ----- Lat Pulldown (3) -----
+  E('g0000541-0000-4000-8000-000000000000', 'Lat Pulldown (Wide Grip)', 'Back', 'lat_pulldown_machine', 'Wide overhand grip · pull the bar to the upper chest · control up', null, ['strength']),
+  E('g0000542-0000-4000-8000-000000000000', 'Close-Grip Lat Pulldown', 'Back', 'lat_pulldown_machine', 'Close neutral or underhand grip · drive the elbows down · squeeze the lats', null, ['strength']),
+  E('g0000543-0000-4000-8000-000000000000', 'Single-Arm Lat Pulldown', 'Back', 'lat_pulldown_machine', 'One handle · pull straight down to the hip · resist the twist', null, ['strength']),
 ];
 
 // Library moves that already serve knee rehab — tagged, not duplicated. Kneeling
@@ -375,6 +445,15 @@ export const EQUIPMENT_ORDER: Equipment[] = [
   'medicine_ball',
   'jump_rope',
   'stretch',
+  'stationary_bike',
+  'treadmill',
+  'stair_climber',
+  'rowing_machine',
+  'elliptical',
+  'barbell',
+  'cable_machine',
+  'leg_press_machine',
+  'lat_pulldown_machine',
 ];
 export const EQUIPMENT_LABEL: Record<Equipment, string> = {
   dumbbell: 'Dumbbell',
@@ -386,4 +465,13 @@ export const EQUIPMENT_LABEL: Record<Equipment, string> = {
   medicine_ball: 'Medicine Ball',
   jump_rope: 'Jump Rope',
   stretch: 'Stretch',
+  stationary_bike: 'Stationary Bike',
+  treadmill: 'Treadmill',
+  stair_climber: 'Stair Climber',
+  rowing_machine: 'Rowing Machine',
+  elliptical: 'Elliptical',
+  barbell: 'Barbell',
+  cable_machine: 'Cable Machine',
+  leg_press_machine: 'Leg Press',
+  lat_pulldown_machine: 'Lat Pulldown',
 };

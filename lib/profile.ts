@@ -65,6 +65,15 @@ export const EQUIPMENT_CHOICES: { value: Equipment; label: string; hint: string;
   { value: 'medicine_ball', label: 'Medicine Ball', hint: 'Slams, throws, twists', emoji: '🏐' },
   { value: 'jump_rope', label: 'Jump Rope', hint: 'Conditioning & cardio', emoji: '🪢' },
   { value: 'stretch', label: 'Stretching', hint: 'Mobility & recovery', emoji: '🧘' },
+  { value: 'stationary_bike', label: 'Stationary Bike', hint: 'Spin bike or upright — steady rides & intervals', emoji: '🚴' },
+  { value: 'treadmill', label: 'Treadmill', hint: 'Walk, jog, run, or hill intervals', emoji: '🏃' },
+  { value: 'stair_climber', label: 'Stair Climber', hint: 'Stepmill or stair machine — sustained climbs', emoji: '🪜' },
+  { value: 'rowing_machine', label: 'Rowing Machine', hint: 'Ergometer — full-body pulling cardio', emoji: '🚣' },
+  { value: 'elliptical', label: 'Elliptical', hint: 'Low-impact cross-trainer intervals', emoji: '🌀' },
+  { value: 'barbell', label: 'Barbell', hint: 'Bar + plates — squat, hinge, press, row', emoji: '🔩' },
+  { value: 'cable_machine', label: 'Cable Machine', hint: 'Adjustable pulley — presses, pulls, rotation', emoji: '🪝' },
+  { value: 'leg_press_machine', label: 'Leg Press', hint: 'Seated sled — quad/glute/hamstring drive', emoji: '🛝' },
+  { value: 'lat_pulldown_machine', label: 'Lat Pulldown', hint: 'Seated vertical pull for the back', emoji: '⬇️' },
 ];
 
 // Focus vs Muscle group: deliberately two different words for two different

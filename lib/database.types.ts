@@ -13,7 +13,16 @@ export type Equipment =
   | 'pullup_bar'
   | 'medicine_ball'
   | 'jump_rope'
-  | 'stretch';
+  | 'stretch'
+  | 'stationary_bike'
+  | 'treadmill'
+  | 'stair_climber'
+  | 'rowing_machine'
+  | 'elliptical'
+  | 'barbell'
+  | 'cable_machine'
+  | 'leg_press_machine'
+  | 'lat_pulldown_machine';
 
 export interface Exercise {
   id: string;
