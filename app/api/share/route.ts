@@ -33,7 +33,7 @@ export async function POST(req: Request) {
 
   const name = (body.name ?? '').trim().slice(0, 80) || 'Workout';
   const exercises = Array.isArray(body.exercises) ? body.exercises.slice(0, 30) : [];
-  if (exercises.length === 0) return NextResponse.json({ error: 'No moves to share.' }, { status: 400 });
+  if (exercises.length === 0) return NextResponse.json({ error: 'No exercises to share.' }, { status: 400 });
   const params = body.params;
   if (!params || typeof params.sets !== 'number') {
     return NextResponse.json({ error: 'Missing workout params.' }, { status: 400 });

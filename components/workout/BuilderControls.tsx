@@ -11,7 +11,7 @@ import {
   type Intensity,
 } from '@/lib/profile';
 import LengthDial from '@/components/home/LengthDial';
-import { MOVE } from '@/lib/vocabulary';
+import { EXERCISE } from '@/lib/vocabulary';
 
 export interface BuilderValue {
   focus: string;
@@ -85,7 +85,7 @@ export default function BuilderControls({ value, onChange, showEquipment = true,
           <span className="block text-caption text-text-muted">INTENSITY</span>
           <span className="block text-h3 text-text-primary">{ip.label}</span>
           <span className="block text-caption text-text-muted nums">
-            ≈ {estCount} {estCount === 1 ? MOVE.one : MOVE.many} · {sets} × {reps} · {restSec}s rest
+            ≈ {estCount} {estCount === 1 ? EXERCISE.one : EXERCISE.many} · {sets} × {reps} · {restSec}s rest
           </span>
         </span>
         <span className="text-text-faint">Change ›</span>

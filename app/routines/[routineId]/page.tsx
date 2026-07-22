@@ -235,7 +235,7 @@ export default function RoutineDetailPage() {
               type="button"
               onClick={() => remove(i)}
               className="text-caption text-destructive"
-              aria-label="Remove move"
+              aria-label="Remove exercise"
             >
               Remove
             </button>
@@ -243,7 +243,7 @@ export default function RoutineDetailPage() {
         ))}
         {rows.length === 0 && (
           <li className="rounded-md border border-dashed border-border p-5 text-center text-caption text-text-muted">
-            No moves yet. Add your first one.
+            No exercises yet. Add your first one.
           </li>
         )}
       </ul>
@@ -263,7 +263,7 @@ export default function RoutineDetailPage() {
           onClick={() => setPicking(true)}
           className="mt-4 flex h-12 w-full items-center justify-center rounded-md border border-border text-label text-text-primary active:scale-[0.97] active:bg-surface"
         >
-          + ADD MOVE
+          + ADD EXERCISE
         </button>
       )}
 

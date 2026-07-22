@@ -69,7 +69,7 @@ export async function PATCH(req: Request) {
   if (!id || !action) return NextResponse.json({ error: 'id and action are required' }, { status: 400 });
 
   const ex = (await sql`select id, name, is_global, tenant_id from exercises where id = ${id}`)[0];
-  if (!ex) return NextResponse.json({ error: 'Unknown move.' }, { status: 404 });
+  if (!ex) return NextResponse.json({ error: 'Unknown exercise.' }, { status: 404 });
 
   // ── Update ────────────────────────────────────────────────────────────────
   if (action === 'edit') {

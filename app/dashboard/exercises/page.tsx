@@ -256,9 +256,9 @@ export default function CustomExercises() {
         <Link href="/dashboard" className="text-caption text-text-muted">
           ← Dashboard
         </Link>
-        <h1 className="mb-1 mt-2 text-h1 text-text-primary">Your moves</h1>
+        <h1 className="mb-1 mt-2 text-h1 text-text-primary">Your exercises</h1>
         <p className="mb-6 text-body text-text-muted">
-          Add moves we don’t have. They join the {SAMPLE_EXERCISES.length}-move library only for your gym.
+          Add exercises we don’t have. They join the {SAMPLE_EXERCISES.length}-exercise library only for your gym.
         </p>
 
         {/* Add form */}
@@ -266,7 +266,7 @@ export default function CustomExercises() {
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Move name"
+            placeholder="Exercise name"
             className="h-11 w-full rounded-md border border-border bg-background px-3 text-body text-text-primary placeholder:text-text-faint"
           />
           <div className="flex gap-2">
@@ -397,7 +397,7 @@ export default function CustomExercises() {
                   disabled={saving}
                   className="h-9 flex-1 rounded-md border border-border px-3 text-caption text-text-primary disabled:opacity-50"
                 >
-                  It’s a different move
+                  It’s a different exercise
                 </button>
               </div>
             </div>
@@ -409,7 +409,7 @@ export default function CustomExercises() {
             disabled={saving || !name.trim()}
             className="h-12 w-full rounded-md bg-accent text-label text-on-accent disabled:opacity-50"
           >
-            {saving ? (editingId ? 'SAVING…' : 'ADDING…') : editingId ? 'SAVE CHANGES' : '+ ADD MOVE'}
+            {saving ? (editingId ? 'SAVING…' : 'ADDING…') : editingId ? 'SAVE CHANGES' : '+ ADD EXERCISE'}
           </button>
           {editingId && (
             <button
@@ -428,7 +428,7 @@ export default function CustomExercises() {
           <div className="h-16 animate-pulse rounded-lg bg-surface" />
         ) : list.length === 0 ? (
           <p className="rounded-lg border border-dashed border-border p-6 text-center text-body text-text-muted">
-            No custom moves yet.
+            No custom exercises yet.
           </p>
         ) : (
           <ul className="space-y-2">
@@ -491,14 +491,14 @@ export default function CustomExercises() {
 
         {/* Rename library moves (per-tenant aliases) */}
         <div className="mt-8">
-          <p className="mb-1 text-label text-accent">RENAME A MOVE</p>
+          <p className="mb-1 text-label text-accent">RENAME AN EXERCISE</p>
           <p className="mb-3 text-caption text-text-muted">
-            Call a library move whatever your gym calls it — changes the name only for you.
+            Call a library exercise whatever your gym calls it — changes the name only for you.
           </p>
           <input
             value={aliasQuery}
             onChange={(e) => setAliasQuery(e.target.value)}
-            placeholder={`Search the ${SAMPLE_EXERCISES.length}-move library…`}
+            placeholder={`Search the ${SAMPLE_EXERCISES.length}-exercise library…`}
             className="h-11 w-full rounded-md border border-border bg-surface px-3 text-body text-text-primary placeholder:text-text-faint"
           />
           {aliasQuery.trim() && (
@@ -527,7 +527,7 @@ export default function CustomExercises() {
                 </li>
               ))}
               {aliasMatches.length === 0 && (
-                <li className="px-1 text-caption text-text-faint">No library moves match “{aliasQuery}”.</li>
+                <li className="px-1 text-caption text-text-faint">No library exercises match “{aliasQuery}”.</li>
               )}
             </ul>
           )}

@@ -8,8 +8,11 @@ import type { TagCategory } from './tags';
 // trainer dashboard but as the raw "pattern" in admin. A trainer and an admin
 // talking about the same thing had no shared word for it.
 //
-// Round two (M2) swept the rest of the app for the same disease. Two more
-// synonym pairs turned out to be pure drift and got collapsed to one word:
+// Round two (M2) swept the rest of the app for the same disease and picked
+// "move" as the canonical noun. Round three reversed that call — the canonical
+// noun is "exercise" again — but the underlying discipline (one word, used
+// everywhere, imported rather than retyped) stands. Two more synonym pairs
+// turned out to be pure drift and got collapsed to one word along the way:
 //   - "gear" / "kit"  → always "equipment" now (FIELD_LABEL.equipment).
 //   - "circuit" (for a trainer's saved, shareable session) → always "workout"
 //     (WORKOUT below). "Circuit" survives ONLY where the copy is specifically
@@ -22,9 +25,9 @@ import type { TagCategory } from './tags';
 // Import from here rather than typing a label. lib/vocabulary.test.ts fails the
 // build if a surface hardcodes one of these instead.
 
-/** A single exercise, as the product says it out loud. Never "exercise" or
- *  "movement" in user-facing copy — those were the pre-M2 synonyms. */
-export const MOVE = { one: 'move', many: 'moves' } as const;
+/** A single exercise, as the product says it out loud. Never "move" or
+ *  "movement" in user-facing copy — "move" was the M2 synonym, now retired. */
+export const EXERCISE = { one: 'exercise', many: 'exercises' } as const;
 
 /**
  * A trainer's saved, shareable session (`tenant_workouts` / `/api/tenant/workouts`) —
@@ -48,7 +51,7 @@ export const ROUTINE = { one: 'routine', many: 'routines' } as const;
  * below) are two different things wearing similar clothes — deliberately NOT
  * unified:
  *   - Muscle group is a single exercise's taxonomy value ("Chest", "Legs"),
- *     governed in admin/taxonomy and shown under every move.
+ *     governed in admin/taxonomy and shown under every exercise.
  *   - Focus is a curated session preset a trainee picks on Home / Build. Some
  *     focuses map 1:1 onto a set of muscle groups ("Upper Body"), but others
  *     draw from pillars ("Cardio", "Balance") or a tagged rehab pool ("Physical
@@ -80,7 +83,7 @@ export const TAG_CATEGORY_HINT: Record<TagCategory, string> = {
   area: 'Which body area it is for',
 };
 
-// Trainer-pickable tag categories for a custom move. `area` is intentionally not
+// Trainer-pickable tag categories for a custom exercise. `area` is intentionally not
 // here — body-area tags belong to curated rehab content, not free trainer entry.
 export const TAG_CATEGORIES: TagCategory[] = ['goal', 'stage', 'pattern'];
 

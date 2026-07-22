@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
 // is per-gym. The /admin pages and their APIs enforce isAdmin server-side too;
 // hiding the link is convenience + defense-in-depth, not the only gate.
 const ADMIN_LINKS = [
-  { href: '/admin/exercises', title: 'Moves', hint: 'Every gym’s moves + the shared library' },
+  { href: '/admin/exercises', title: 'Exercises', hint: 'Every gym’s exercises + the shared library' },
   { href: '/admin/taxonomy', title: 'Muscle groups & tags', hint: 'The governed vocabulary, all gyms' },
   { href: '/admin/equipment', title: 'Equipment', hint: 'Approve, reject or merge proposed gear' },
 ];
@@ -137,8 +137,8 @@ export default async function Dashboard() {
               className="mt-3 flex items-center justify-between rounded-xl border border-border bg-surface p-4 active:bg-surface-raised"
             >
               <span>
-                <span className="block text-body font-semibold text-text-primary">Moves</span>
-                <span className="block text-caption text-text-muted">Custom moves + renames (shared gym library)</span>
+                <span className="block text-body font-semibold text-text-primary">Exercises</span>
+                <span className="block text-caption text-text-muted">Custom exercises + renames (shared gym library)</span>
               </span>
               <span className="text-text-faint">›</span>
             </Link>

@@ -30,7 +30,7 @@ export async function POST(req: Request) {
   const name = (body.name ?? '').trim().slice(0, 80);
   if (!name) return NextResponse.json({ error: 'Give the workout a name.' }, { status: 400 });
   const exercises = Array.isArray(body.exercises) ? body.exercises.slice(0, 30) : [];
-  if (exercises.length === 0) return NextResponse.json({ error: 'No moves to save.' }, { status: 400 });
+  if (exercises.length === 0) return NextResponse.json({ error: 'No exercises to save.' }, { status: 400 });
   if (!body.params || typeof body.params.sets !== 'number') {
     return NextResponse.json({ error: 'Missing workout params.' }, { status: 400 });
   }

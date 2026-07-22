@@ -172,7 +172,7 @@ export default function EquipmentAdmin() {
         </p>
         <nav className="mb-5 flex flex-wrap items-center gap-x-4 text-caption text-text-muted">
           <Link href="/admin/exercises" className="inline-flex h-8 items-center font-semibold text-accent">
-            Moves →
+            Exercises →
           </Link>
           <Link href="/admin/taxonomy" className="inline-flex h-8 items-center font-semibold text-accent">
             Muscle groups &amp; tags →

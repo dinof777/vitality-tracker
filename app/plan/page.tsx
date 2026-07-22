@@ -160,7 +160,7 @@ export default function PlanPage() {
                 <span className="min-w-0 flex-1">
                   <span className="block text-body font-semibold text-text-primary">{meta.label}</span>
                   <span className="block text-caption text-text-muted nums">
-                    {isRest ? meta.blurb : `${d.exercises.length} moves · ~${formatMinutes(est)}`}
+                    {isRest ? meta.blurb : `${d.exercises.length} exercises · ~${formatMinutes(est)}`}
                   </span>
                 </span>
                 {expandable && <span className="text-text-faint">{open === d.day ? '▾' : '›'}</span>}

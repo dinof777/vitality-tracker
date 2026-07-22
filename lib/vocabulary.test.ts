@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
-import { TAG_CATEGORY_LABEL, tagCategoryLabel, plural, SCOPE, MOVE, WORKOUT, ROUTINE } from './vocabulary';
+import { TAG_CATEGORY_LABEL, tagCategoryLabel, plural, SCOPE, EXERCISE, WORKOUT, ROUTINE } from './vocabulary';
 import { TAGS } from './tags';
 
 // Drift guard for user-facing wording.
@@ -17,6 +17,10 @@ import { TAGS } from './tags';
 // those retired words gets its own guard below: a literal-phrase check, not a
 // blanket word ban, so SyncroFit's own "circuit" (a different concept — see
 // lib/vocabulary.ts) is never falsely flagged.
+//
+// Round three reversed the "move" call from M2 — "exercise" is canonical again.
+// The guard below still checks the same direction the rest of this file checks
+// in (retired phrase → banned), just for the newly-retired word.
 
 const ROOT = join(__dirname, '..');
 const SKIP_DIRS = new Set(['node_modules', '.next', '.git', '.design', 'public', 'screenshots']);
@@ -80,41 +84,70 @@ describe('tag category labels', () => {
   });
 });
 
-describe('the move noun (M2)', () => {
-  it('MOVE says move/moves, not exercise(s) — the pre-M2 synonym', () => {
-    expect(MOVE.one).toBe('move');
-    expect(MOVE.many).toBe('moves');
+describe('the exercise noun (round three — reverses M2)', () => {
+  it('EXERCISE says exercise/exercises, not move(s) — the retired M2 synonym', () => {
+    expect(EXERCISE.one).toBe('exercise');
+    expect(EXERCISE.many).toBe('exercises');
   });
 
-  it('no surface reintroduces "exercise(s)" where "move(s)" is now the word', () => {
-    // These are the exact headings, labels, placeholders and error strings this
-    // M2 pass retired in favor of MOVE. The word "exercise" survives elsewhere on
-    // purpose — route paths (/exercises), module names (lib/exercises.ts), the
-    // Exercise TS type, and DB column/table names all keep it; this list only
-    // targets the specific user-facing strings that drifted.
+  it('no surface reintroduces "move(s)" as the exercise noun — "movement" (the pattern-category label) is a different word and is never flagged here', () => {
+    // These are the exact headings, labels, placeholders, aria-labels and error
+    // strings this pass retired in favor of EXERCISE. "movement"/"Movement" is
+    // deliberately absent from this list — it's the `pattern` tag-category label
+    // (TAG_CATEGORY_LABEL.pattern) and MOVEMENT_FAMILIES, a different concept,
+    // not the noun this guards. Route paths, JS identifiers ("move" as a
+    // reorder-array-item helper), and "Remove"/".move(" are untouched on
+    // purpose — see the sibling word-boundary carve-outs in this file's header.
     const offenders = findOffenders([
-      '>Exercises<',
-      'Your exercises',
-      'Exercise library',
-      'Exercise name',
-      'Search exercises',
-      'No exercises match',
-      'No custom exercises yet',
-      'Build from exercises',
-      'Exercises tab',
-      'own exercises and equipment',
-      'Custom exercises &amp; equipment',
-      'ADD EXERCISE',
-      'Remove exercise',
-      'No exercises yet. Add your first movement',
-      'no exercises here yet',
-      'Send exercise images',
-      'exercise images (where available)',
-      'Not your exercise.',
-      'Unknown exercise.',
-      'No exercises to save.',
-      'No exercises to share.',
-      '← Exercises',
+      '>Moves</h1>',
+      'Moves →',
+      "label: 'Moves'",
+      "title: 'Moves'",
+      '✚ PICK MY OWN MOVES',
+      '+ ADD MOVE',
+      'ADD MOVES',
+      'RENAME A MOVE',
+      'Move name',
+      '>Move library<',
+      'Moves, equipment, clients',
+      'Your moves',
+      'No custom moves yet',
+      'No moves yet. Add your first one',
+      'No moves match',
+      'No library moves match',
+      'Search moves',
+      'It’s a different move',
+      'Build from moves',
+      'from the Moves tab',
+      'Don’t like a move?',
+      'aria-label="Remove move"',
+      'calls out every move, set and rest',
+      'calls out each move, set and rest',
+      'Send move images',
+      'move images (where available)',
+      'No moves to save.',
+      'No moves to share.',
+      'Not your move.',
+      'Unknown move.',
+      'on one move.',
+      'no moves here yet',
+      'brand, moves, and equipment',
+      'Gentler moves · fewer sets',
+      'Explosive moves · high volume',
+      '← Moves',
+      '-move illustrated library',
+      '-move library',
+      "move{picked.length === 1 ? '' : 's'}",
+      "MOVE{picked.length === 1 ? '' : 'S'}",
+      '{count} MOVES</p>',
+      'matching move{poolSource.length',
+      '{workout.length} moves</span>',
+      'for another move`}',
+      'illustrated moves ·',
+      'move’s equipment tags through',
+      'Per-move images',
+      'add my own moves and equipment',
+      'add custom moves, rename library moves',
     ]);
     expect(offenders).toEqual([]);
   });

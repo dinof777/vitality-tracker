@@ -52,7 +52,7 @@ export default function ExercisePicker({
         autoFocus
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search moves…"
+        placeholder="Search exercises…"
         className="h-12 w-full rounded-md bg-surface-raised px-3 text-body text-text-primary outline-none focus:ring-2 focus:ring-accent"
       />
       <div className="max-h-80 space-y-3 overflow-y-auto">

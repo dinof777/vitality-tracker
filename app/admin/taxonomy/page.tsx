@@ -5,7 +5,7 @@ import Link from 'next/link';
 import LifecycleRow from '@/components/admin/LifecycleRow';
 import ScopeSelect, { GLOBAL, type Gym } from '@/components/admin/ScopeSelect';
 import { promotionThreshold } from '@/lib/taxonomy';
-import { FIELD_LABEL_PLURAL, MOVE, SCOPE, plural, tagCategoryLabel } from '@/lib/vocabulary';
+import { FIELD_LABEL_PLURAL, EXERCISE, SCOPE, plural, tagCategoryLabel } from '@/lib/vocabulary';
 
 // Admin lifecycle for the vocabulary — muscle groups and tags — at both scopes.
 // Same layout contract as /admin/exercises: a scannable list, controls behind
@@ -91,7 +91,7 @@ export default function VocabularyAdmin() {
 
   const usageLabel = (t: Term) =>
     [
-      t.exercises_using ? plural(t.exercises_using, MOVE.one, MOVE.many) : '',
+      t.exercises_using ? plural(t.exercises_using, EXERCISE.one, EXERCISE.many) : '',
       t.gyms_using ? plural(t.gyms_using, 'gym') : '',
     ]
       .filter(Boolean)
@@ -121,7 +121,7 @@ export default function VocabularyAdmin() {
   const remove = async (t: Term) => {
     const used = usageLabel(t);
     const msg = used
-      ? `“${t.name}” is used by ${used}.\n\nIt will be archived, not deleted — it leaves the pickers but every ${MOVE.one} using it keeps its tag.`
+      ? `“${t.name}” is used by ${used}.\n\nIt will be archived, not deleted — it leaves the pickers but every ${EXERCISE.one} using it keeps its tag.`
       : `Delete “${t.name}”? Nothing uses it, so it will be removed completely.`;
     if (!window.confirm(msg)) return;
     await act(t.id, 'delete');
@@ -141,7 +141,7 @@ export default function VocabularyAdmin() {
         <p className="text-label text-accent">ADMIN</p>
         <h1 className="mb-1 text-h1 text-text-primary">Muscle groups &amp; tags</h1>
         <p className="mb-4 text-body text-text-muted">
-          The words gyms can file a {MOVE.one} under. Tap one to rename it, change where it lives, merge or retire it.
+          The words gyms can file a {EXERCISE.one} under. Tap one to rename it, change where it lives, merge or retire it.
         </p>
         <p className="mb-4 rounded-lg border border-border bg-surface p-3 text-caption text-text-muted">
           The <span className="text-text-primary">Focus</span> presets on Home &amp; Build (Full Body, Cardio, Physical
@@ -149,7 +149,7 @@ export default function VocabularyAdmin() {
         </p>
         <nav className="mb-5 flex flex-wrap items-center gap-x-4 text-caption text-text-muted">
           <Link href="/admin/exercises" className="inline-flex h-8 items-center font-semibold text-accent">
-            Moves →
+            Exercises →
           </Link>
           <Link href="/admin/equipment" className="inline-flex h-8 items-center font-semibold text-accent">
             Equipment →
@@ -308,7 +308,7 @@ export default function VocabularyAdmin() {
                               </button>
                             </div>
                             <span className="mt-1 block text-caption text-text-faint">
-                              Rewrites every {MOVE.one} using “{t.name}” onto the target — nothing is orphaned.
+                              Rewrites every {EXERCISE.one} using “{t.name}” onto the target — nothing is orphaned.
                             </span>
                           </label>
                         ) : (

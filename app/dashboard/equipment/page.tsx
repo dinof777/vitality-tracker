@@ -180,7 +180,7 @@ export default function GymEquipment() {
                   <span className="min-w-0">
                     <span className="block truncate text-body font-semibold text-text-primary">{e.name}</span>
                     {!usable && (
-                      <span className="block text-caption text-text-faint">On SyncroFit — no moves here yet</span>
+                      <span className="block text-caption text-text-faint">On SyncroFit — no exercises here yet</span>
                     )}
                     {e.status === 'pending' && (
                       <span className="block text-caption text-energy">In review</span>

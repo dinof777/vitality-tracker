@@ -69,7 +69,7 @@ export default function StartSheet({ exercises, params, name, onLogInApp, onClos
         <span className="mx-auto mb-3 block h-1 w-10 rounded-full bg-border" />
         <p className="text-h3 text-text-primary">Build my workout</p>
         <p className="mb-3 text-caption text-text-muted nums">
-          {exercises.length} moves · ~{formatMinutes(est)} · {params.sets} × {params.reps}
+          {exercises.length} exercises · ~{formatMinutes(est)} · {params.sets} × {params.reps}
         </p>
 
         {/* The exercises this session will run */}
@@ -107,7 +107,7 @@ export default function StartSheet({ exercises, params, name, onLogInApp, onClos
           className="mt-3 flex w-full items-center justify-between rounded-md border border-border bg-surface p-3 text-left"
         >
           <span className="pr-3">
-            <span className="block text-caption font-semibold text-text-primary">Send move images</span>
+            <span className="block text-caption font-semibold text-text-primary">Send exercise images</span>
             <span className="block text-caption text-text-muted">
               On by default. Turn off only for an older SyncroFit build.
             </span>
@@ -128,7 +128,7 @@ export default function StartSheet({ exercises, params, name, onLogInApp, onClos
         ) : (
           <p className="mt-3 text-caption text-text-muted">
             {useV2
-              ? 'New format: sends sets, reps, rest + move images (where available).'
+              ? 'New format: sends sets, reps, rest + exercise images (where available).'
               : 'Classic format: sends sets, reps, hold & rest (no images on the old build).'}
           </p>
         )}

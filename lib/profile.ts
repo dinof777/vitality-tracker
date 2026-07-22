@@ -120,9 +120,9 @@ export interface IntensityChoice {
 }
 
 export const INTENSITY_CHOICES: IntensityChoice[] = [
-  { value: 'light', label: 'Light', desc: 'Gentler moves · fewer sets', count: 4, sets: 2, reps: '10-12', repsNum: 11, repSec: 3, restSec: 45, holdSec: 30, tempo: '2-0-1' },
+  { value: 'light', label: 'Light', desc: 'Gentler exercises · fewer sets', count: 4, sets: 2, reps: '10-12', repsNum: 11, repSec: 3, restSec: 45, holdSec: 30, tempo: '2-0-1' },
   { value: 'moderate', label: 'Moderate', desc: 'Balanced mix · moderate volume', count: 5, sets: 3, reps: '8-12', repsNum: 10, repSec: 5, restSec: 60, holdSec: 40, tempo: '3-1-1' },
-  { value: 'intense', label: 'Intense', desc: 'Explosive moves · high volume', count: 6, sets: 4, reps: '6-10', repsNum: 8, repSec: 5, restSec: 75, holdSec: 50, tempo: '3-1-1' },
+  { value: 'intense', label: 'Intense', desc: 'Explosive exercises · high volume', count: 6, sets: 4, reps: '6-10', repsNum: 8, repSec: 5, restSec: 75, holdSec: 50, tempo: '3-1-1' },
 ];
 
 export function intensityParams(i: Intensity): IntensityChoice {

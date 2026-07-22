@@ -17,7 +17,7 @@ export default function Trainers() {
         <h1 className="mb-1 mt-2 text-h1 text-text-primary">Trainers</h1>
         <p className="mb-4 text-body text-text-muted">
           Invite trainers to your gym and manage access. Each trainer sees only their own clients &amp; workouts; you,
-          the owner, see everyone’s. The gym’s brand, moves, and equipment are shared.
+          the owner, see everyone’s. The gym’s brand, exercises, and equipment are shared.
         </p>
         <div className="mb-4">
           <OrganizationSwitcher hidePersonal afterSelectOrganizationUrl="/dashboard/trainers" />

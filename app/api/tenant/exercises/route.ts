@@ -104,7 +104,7 @@ async function findNameClash(sql: Sql, tenantId: string, name: string, excludeId
   return {
     similar: similar.match,
     reason: similar.reason,
-    message: `The library already has “${similar.match.name}”. Rename it for your gym instead of adding a second copy — that keeps everyone's logged history on one move.`,
+    message: `The library already has “${similar.match.name}”. Rename it for your gym instead of adding a second copy — that keeps everyone's logged history on one exercise.`,
   };
 }
 
@@ -210,7 +210,7 @@ export async function PATCH(req: Request) {
   const owned = (await sql`
     select id, name, archived_at from exercises where id = ${body.id} and tenant_id = ${tenant.id}
   `)[0];
-  if (!owned) return NextResponse.json({ error: 'Not your move.' }, { status: 404 });
+  if (!owned) return NextResponse.json({ error: 'Not your exercise.' }, { status: 404 });
 
   if (body.restore) {
     const rows = await sql`
@@ -259,7 +259,7 @@ export async function DELETE(req: Request) {
   if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 });
 
   const owned = (await sql`select id, name from exercises where id = ${id} and tenant_id = ${tenant.id}`)[0];
-  if (!owned) return NextResponse.json({ error: 'Not your move.' }, { status: 404 });
+  if (!owned) return NextResponse.json({ error: 'Not your exercise.' }, { status: 404 });
 
   const usage = await exerciseUsage(id);
   if (deleteEffect(usage) === 'archived') {

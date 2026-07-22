@@ -24,7 +24,7 @@ routes, tables, or integrations change.
 | Route | What it is |
 |---|---|
 | `/` | Home — build today's workout (length · focus · intensity · equipment) or run a scheduled plan day |
-| `/exercises` | The 227-move illustrated library; search, tap for detail, + to a routine |
+| `/exercises` | The 227-exercise illustrated library; search, tap for detail, + to a routine |
 | `/routines` | Reusable blueprints — build, favorite, delete, send to SyncroFit |
 | `/routines/[routineId]` | Routine detail — reorder, send to SyncroFit, **SyncroFit Activity** card |
 | `/plan` | Weekly plan across the 4 pillars (strength/cardio/balance/flexibility) |
@@ -44,7 +44,7 @@ routes, tables, or integrations change.
 | `/g/<slug>/branding` | Brand autopilot (paste URL → logo/colors/name) + pickers |
 | `/admin/equipment` | Global equipment-catalog moderation queue — approve/reject/merge a gym's proposed piece (admins only) |
 | `/admin/taxonomy` | Muscle-group + tag lifecycle at both scopes — rename, merge, archive/delete, promote/demote scope, via the disclosure-row pattern (admins only) |
-| `/admin/exercises` | Exercise lifecycle at both scopes — edit any move, archive/delete, move it between shared and gym-owned, via the same disclosure-row pattern (admins only) |
+| `/admin/exercises` | Exercise lifecycle at both scopes — edit any exercise, archive/delete, move it between shared and gym-owned, via the same disclosure-row pattern (admins only) |
 
 ### Vitality Pro — public tenant surfaces
 | Route | What it is |
@@ -65,8 +65,8 @@ database. `supabase/migrations/NNNN_*.sql` are the incremental steps for a
 database that already exists; every change lands in both so they can't drift.
 
 - **exercises** — the master library. `is_global` rows = shared 227; a gym's
-  custom moves carry `tenant_id`. `equipment` is the 9-value enum;
-  `equipment_catalog_id` links custom-equipment moves.
+  custom exercises carry `tenant_id`. `equipment` is the 9-value enum;
+  `equipment_catalog_id` links custom-equipment exercises.
 - **routines / routine_exercises / workouts / log_entries** — training data;
   `log_entries` is the progressive-overload spine (`side` for unilateral).
 - **mobility_logs** — Daily 5.
@@ -108,7 +108,7 @@ mandatory query helper; isolation is unit-tested.
 `tenant-library` / `scoped-db` (multi-tenancy) · `taxonomy` (the vocabulary
 governance engine — normalize, synonym folding, fuzzy dedup, promotion rules) /
 `taxonomy-db` (its server-side reads/writes) / `equipment-normalize` (a shim over
-it) · `exercise-dedup` (near-duplicate move names → offer the alias, never fork) ·
+it) · `exercise-dedup` (near-duplicate exercise names → offer the alias, never fork) ·
 `syncrofit` / `syncrofit-events` (integration) · `profile` (params + choices) ·
 `lifecycle` (add/update/delete/move-scope rules, pure + unit-tested) /
 `lifecycle-db` (its usage-count queries).
@@ -119,7 +119,7 @@ Everything a trainer or admin owns (exercises, muscle groups, tags) has the same
 four operations, governed by `lib/lifecycle`:
 
 - **Delete means archive when it's in use.** `routine_exercises` and `log_entries`
-  CASCADE off `exercises`, so hard-deleting a trained move destroys the history
+  CASCADE off `exercises`, so hard-deleting a trained exercise destroys the history
   it's the evidence for. Unused records are really deleted; anything referenced
   sets `archived_at` — it leaves pickers, filters and generation but every
   routine and logged set still resolves, and it can be restored.
@@ -129,7 +129,7 @@ four operations, governed by `lib/lifecycle`:
 - Renaming a term carries its exercises with it (muscle groups are stored by
   display value, tags by slug), so a rename can't orphan anything.
 
-Trainers get add/update/delete for their own gym's moves at
+Trainers get add/update/delete for their own gym's exercises at
 `/dashboard/exercises`; admins get all four plus scope at `/admin/exercises` and
 `/admin/taxonomy`. Both admin screens are built on the same shared component
 pair — see "Disclosure row" in `DESIGN.md` §6.

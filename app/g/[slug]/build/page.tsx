@@ -246,7 +246,7 @@ export default async function TenantBuild({
         />
 
         <div className="mb-1 flex items-center justify-between print:hidden">
-          <span className="text-caption text-text-faint nums">{workout.length} moves</span>
+          <span className="text-caption text-text-faint nums">{workout.length} exercises</span>
           <Link
             href={qs(focusVal, count, variant + 1)}
             className="flex h-9 items-center gap-1 rounded-md border border-accent/40 bg-accent/10 px-3 text-caption font-semibold text-accent active:scale-[0.97]"
@@ -255,7 +255,7 @@ export default async function TenantBuild({
           </Link>
         </div>
         <p className="mb-4 text-caption text-text-faint print:hidden">
-          Don’t like a move? Tap ↻ next to it to swap just that one.
+          Don’t like an exercise? Tap ↻ next to it to swap just that one.
         </p>
 
         {/* Narrow the pool the generator draws from — same facets as Pick my own */}
@@ -287,7 +287,7 @@ export default async function TenantBuild({
             ))}
           {selectedTags.length > 0 && (
             <p className="mt-1 text-caption text-text-faint nums">
-              Drawing from {poolSource.length} matching move{poolSource.length === 1 ? '' : 's'} ·{' '}
+              Drawing from {poolSource.length} matching exercise{poolSource.length === 1 ? '' : 's'} ·{' '}
               <Link href={`/g/${tenant.slug}/build?focus=${focusVal}&len=${count}&v=1`} className="text-accent">
                 Clear
               </Link>
@@ -297,12 +297,12 @@ export default async function TenantBuild({
 
         {/* Print-only header */}
         <div className="mb-4 hidden print:block">
-          <p className="text-label text-text-muted">{focusLabel.toUpperCase()} · {count} MOVES</p>
+          <p className="text-label text-text-muted">{focusLabel.toUpperCase()} · {count} EXERCISES</p>
         </div>
 
         {workout.length === 0 ? (
           <p className="rounded-lg border border-dashed border-border p-6 text-center text-body text-text-muted">
-            No moves match that focus in {name}’s library yet.
+            No exercises match that focus in {name}’s library yet.
           </p>
         ) : (
           <ul className="space-y-2">
@@ -332,7 +332,7 @@ export default async function TenantBuild({
                   {/* Swap just this move, keeping the rest of the workout */}
                   <Link
                     href={rerollHref(i)}
-                    aria-label={`Swap ${display?.name ?? ex.name} for another move`}
+                    aria-label={`Swap ${display?.name ?? ex.name} for another exercise`}
                     className="flex h-9 shrink-0 items-center gap-1 rounded-md border border-border px-2 text-caption text-text-muted active:scale-95 active:text-accent print:hidden"
                   >
                     ↻ <span className="hidden sm:inline">Swap</span>

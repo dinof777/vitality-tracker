@@ -61,7 +61,7 @@ export default function SavedWorkouts() {
                 <Link href={`/dashboard/workouts/${w.id}`} className="min-w-0 flex-1 active:opacity-70">
                   <p className="truncate text-body font-semibold text-text-primary">{w.name}</p>
                   <p className="truncate text-caption text-text-muted nums">
-                    {w.moves} move{Number(w.moves) === 1 ? '' : 's'}
+                    {w.moves} exercise{Number(w.moves) === 1 ? '' : 's'}
                     {Number(w.shares) > 0 &&
                       ` · ${w.shares} share${Number(w.shares) === 1 ? '' : 's'} · ${w.opens} open${Number(w.opens) === 1 ? '' : 's'}`}
                     {Number(w.completions) > 0 && ` · ✓ ${w.completions} done`}

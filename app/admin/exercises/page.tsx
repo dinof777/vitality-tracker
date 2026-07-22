@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import LifecycleRow from '@/components/admin/LifecycleRow';
 import ScopeSelect, { GLOBAL, type Gym } from '@/components/admin/ScopeSelect';
-import { MOVE, SCOPE, plural } from '@/lib/vocabulary';
+import { EXERCISE, SCOPE, plural } from '@/lib/vocabulary';
 
 // Admin lifecycle for the exercise library at both scopes.
 //
@@ -110,7 +110,7 @@ export default function ExerciseAdmin() {
   const remove = async (ex: AdminExercise) => {
     const used = usageLabel(ex);
     const msg = used
-      ? `“${ex.name}” is used by ${used}.\n\nIt will be archived, not deleted — it leaves the ${MOVE.many} you can build from, but everything using it keeps working.`
+      ? `“${ex.name}” is used by ${used}.\n\nIt will be archived, not deleted — it leaves the ${EXERCISE.many} you can build from, but everything using it keeps working.`
       : `Delete “${ex.name}”? Nothing uses it, so it will be removed completely.`;
     if (!window.confirm(msg)) return;
     await act(ex.id, 'delete');
@@ -119,7 +119,7 @@ export default function ExerciseAdmin() {
   if (denied) {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-background px-6 text-center">
-        <p className="text-body text-text-muted">You don’t have access to the {MOVE.one} library admin.</p>
+        <p className="text-body text-text-muted">You don’t have access to the {EXERCISE.one} library admin.</p>
       </div>
     );
   }
@@ -128,9 +128,9 @@ export default function ExerciseAdmin() {
     <div className="min-h-dvh bg-background text-text-primary">
       <main className="shell px-5 pb-20 pt-10">
         <p className="text-label text-accent">ADMIN</p>
-        <h1 className="mb-1 text-h1 text-text-primary">Moves</h1>
+        <h1 className="mb-1 text-h1 text-text-primary">Exercises</h1>
         <p className="mb-4 text-body text-text-muted">
-          Every {MOVE.one} in the library. Tap one to edit it, change where it lives, or retire it.
+          Every {EXERCISE.one} in the library. Tap one to edit it, change where it lives, or retire it.
         </p>
         <nav className="mb-5 flex items-center text-caption text-text-muted">
           <Link href="/admin/taxonomy" className="inline-flex h-8 items-center font-semibold text-accent">
@@ -141,8 +141,8 @@ export default function ExerciseAdmin() {
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder={`Search ${MOVE.many}…`}
-          aria-label={`Search ${MOVE.many}`}
+          placeholder={`Search ${EXERCISE.many}…`}
+          aria-label={`Search ${EXERCISE.many}`}
           className="mb-3 h-12 w-full rounded-md bg-surface-raised px-4 text-body text-text-primary outline-none placeholder:text-text-faint focus:ring-2 focus:ring-accent"
         />
 
@@ -171,11 +171,11 @@ export default function ExerciseAdmin() {
           <div className="h-16 animate-pulse rounded-lg bg-surface" />
         ) : shown.length === 0 ? (
           <p className="rounded-lg border border-dashed border-border p-6 text-center text-body text-text-muted">
-            No {MOVE.many} match.
+            No {EXERCISE.many} match.
           </p>
         ) : (
           <>
-            <p className="mb-2 text-caption text-text-faint">{plural(shown.length, MOVE.one, MOVE.many)}</p>
+            <p className="mb-2 text-caption text-text-faint">{plural(shown.length, EXERCISE.one, EXERCISE.many)}</p>
             <ul className="space-y-2">
               {shown.map((ex) => (
                 <LifecycleRow

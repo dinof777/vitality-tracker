@@ -74,7 +74,7 @@ export default function BuildYourOwn() {
       </Link>
       <header className="mb-5 mt-2">
         <p className="text-label text-accent">BUILD YOUR OWN</p>
-        <h1 className="text-h1 text-text-primary">Pick your moves</h1>
+        <h1 className="text-h1 text-text-primary">Pick your exercises</h1>
         <p className="text-body text-text-muted">
           Search the full library, filter by what you&rsquo;re working on, and run it.
         </p>
@@ -85,7 +85,7 @@ export default function BuildYourOwn() {
         <div className="mb-2 flex items-baseline justify-between">
           <p className="text-label text-accent">YOUR SESSION</p>
           <span className="text-caption text-text-faint nums">
-            {picked.length} move{picked.length === 1 ? '' : 's'}
+            {picked.length} exercise{picked.length === 1 ? '' : 's'}
           </span>
         </div>
 
@@ -121,7 +121,7 @@ export default function BuildYourOwn() {
       {/* Find moves */}
       <section>
         <div className="mb-2 flex items-baseline justify-between gap-2">
-          <p className="text-label text-accent">ADD MOVES</p>
+          <p className="text-label text-accent">ADD EXERCISES</p>
           {myGear && (
             <button type="button" onClick={() => setShowAll(!showAll)} className="text-caption text-accent">
               {showAll ? 'Just my equipment' : 'Show everything'}
@@ -150,7 +150,7 @@ export default function BuildYourOwn() {
               onClick={start}
               className="flex h-13 flex-1 items-center justify-center rounded-md bg-accent text-label text-on-accent active:scale-[0.98]"
             >
-              START — {picked.length} MOVE{picked.length === 1 ? '' : 'S'}
+              START — {picked.length} EXERCISE{picked.length === 1 ? '' : 'S'}
             </button>
           </div>
         </div>

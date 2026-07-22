@@ -117,7 +117,7 @@ export default function SettingsPage() {
           <p className="mb-3 text-caption text-text-muted">The shared library and vocabulary across every gym.</p>
           <div className="space-y-2">
             {[
-              { href: '/admin/exercises', title: 'Moves' },
+              { href: '/admin/exercises', title: 'Exercises' },
               { href: '/admin/taxonomy', title: 'Muscle groups & tags' },
               { href: '/admin/equipment', title: 'Equipment' },
             ].map((l) => (
@@ -301,7 +301,7 @@ export default function SettingsPage() {
               { href: '/dashboard/workouts', label: 'Workouts', hint: 'Saved & shareable' },
               { href: '/dashboard/clients', label: 'Clients', hint: 'Engagement' },
               { href: '/dashboard/equipment', label: 'Equipment', hint: 'Your equipment' },
-              { href: '/dashboard/exercises', label: 'Moves', hint: 'Custom + renames' },
+              { href: '/dashboard/exercises', label: 'Exercises', hint: 'Custom + renames' },
               { href: '/dashboard/embed', label: 'Add to site', hint: 'Button, embed, QR' },
               { href: '/dashboard', label: 'Dashboard', hint: 'Everything else' },
             ].map((t) => (

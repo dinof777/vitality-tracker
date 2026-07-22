@@ -93,7 +93,7 @@ export default function CustomWorkoutBuilder({ library, workoutName, params, cir
         <div className="mb-2 flex items-baseline justify-between">
           <p className="text-label text-accent">YOUR WORKOUT</p>
           <span className="text-caption text-text-faint nums">
-            {picked.length} move{picked.length === 1 ? '' : 's'}
+            {picked.length} exercise{picked.length === 1 ? '' : 's'}
           </span>
         </div>
 

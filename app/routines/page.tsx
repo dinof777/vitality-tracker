@@ -10,7 +10,7 @@ import {
   setRoutineFavorite,
   type RoutineWithExercises,
 } from '@/lib/routines';
-import { MOVE } from '@/lib/vocabulary';
+import { EXERCISE } from '@/lib/vocabulary';
 
 export default function RoutinesPage() {
   const [routines, setRoutines] = useState<RoutineWithExercises[]>([]);
@@ -67,7 +67,7 @@ export default function RoutinesPage() {
           <p className="text-body text-text-muted">★ a routine to pin it to your Profile.</p>
         </div>
         <Link href="/exercises" className="mt-1 shrink-0 text-caption text-text-muted underline">
-          Build from moves ›
+          Build from exercises ›
         </Link>
       </header>
 
@@ -81,7 +81,7 @@ export default function RoutinesPage() {
               <div className="min-w-0">
                 <p className="truncate text-h3 text-text-primary">{r.name}</p>
                 <p className="text-caption text-text-muted nums">
-                  {r.exercises.length} {r.exercises.length === 1 ? MOVE.one : MOVE.many}
+                  {r.exercises.length} {r.exercises.length === 1 ? EXERCISE.one : EXERCISE.many}
                   {r.day_of_week ? ` · ${DAY_LABELS[r.day_of_week]}` : ''}
                 </p>
                 {engagement[r.id] && (engagement[r.id].imports > 0 || engagement[r.id].completions > 0) && (
@@ -115,7 +115,7 @@ export default function RoutinesPage() {
 
         {!loading && routines.length === 0 && !adding && (
           <p className="rounded-lg border border-dashed border-border p-6 text-center text-body text-text-muted">
-            No routines yet. Build one from the Moves tab, or start fresh below.
+            No routines yet. Build one from the Exercises tab, or start fresh below.
           </p>
         )}
         {loading && (

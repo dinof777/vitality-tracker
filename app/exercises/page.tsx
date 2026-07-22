@@ -10,7 +10,7 @@ import ExerciseThumb from '@/components/workout/ExerciseThumb';
 import ExerciseDetailSheet from '@/components/workout/ExerciseDetailSheet';
 import AddToRoutineSheet from '@/components/workout/AddToRoutineSheet';
 
-// Move library — browse / search all moves, tap for detail (with the recent
+// Exercise library — browse / search all exercises, tap for detail (with the recent
 // progressive-overload trend), or + to add to a routine / saved workout.
 export default function ExercisesPage() {
   const [query, setQuery] = useState('');
@@ -57,7 +57,7 @@ export default function ExercisesPage() {
       <header className="mb-4 flex items-start justify-between">
         <div>
           <p className="text-label text-accent">LIBRARY</p>
-          <h1 className="text-h1 text-text-primary">Moves</h1>
+          <h1 className="text-h1 text-text-primary">Exercises</h1>
           <p className="text-body text-text-muted">Tap for detail, or + to add to a routine.</p>
         </div>
         <Link href="/routines" className="mt-1 shrink-0 text-caption text-text-muted underline">
@@ -104,13 +104,13 @@ export default function ExercisesPage() {
       <input
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search moves…"
+        placeholder="Search exercises…"
         className="mb-4 h-12 w-full rounded-md bg-surface-raised px-4 text-body text-text-primary outline-none focus:ring-2 focus:ring-accent"
       />
 
       {total === 0 ? (
         <p className="rounded-md border border-dashed border-border p-6 text-center text-body text-text-muted">
-          No moves match “{query}”.
+          No exercises match “{query}”.
         </p>
       ) : (
         <div className="space-y-5">

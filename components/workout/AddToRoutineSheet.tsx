@@ -7,7 +7,7 @@ import {
   saveRoutineExercises,
   type RoutineWithExercises,
 } from '@/lib/routines';
-import { MOVE } from '@/lib/vocabulary';
+import { EXERCISE } from '@/lib/vocabulary';
 
 interface AddToRoutineSheetProps {
   exerciseId: string;
@@ -95,7 +95,7 @@ export default function AddToRoutineSheet({ exerciseId, exerciseName, onClose }:
                     <span>
                       <span className="block text-body font-semibold text-text-primary">{r.name}</span>
                       <span className="block text-caption text-text-muted">
-                        {r.exercises.length} {r.exercises.length === 1 ? MOVE.one : MOVE.many}
+                        {r.exercises.length} {r.exercises.length === 1 ? EXERCISE.one : EXERCISE.many}
                       </span>
                     </span>
                     <span className={`text-label ${added ? 'text-accent' : 'text-text-faint'}`}>

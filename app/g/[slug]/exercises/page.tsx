@@ -43,9 +43,9 @@ export default async function TenantExercises({ params }: { params: { slug: stri
         <Link href={`/g/${tenant.slug}`} className="text-caption text-text-muted">
           ← {name}
         </Link>
-        <h1 className="mb-1 mt-2 text-h1 text-text-primary">Move library</h1>
+        <h1 className="mb-1 mt-2 text-h1 text-text-primary">Exercise library</h1>
         <p className="mb-6 text-body text-text-muted">
-          {exercises.length} moves{customCount > 0 ? ` · ${customCount} custom to ${name}` : ''}.
+          {exercises.length} exercises{customCount > 0 ? ` · ${customCount} custom to ${name}` : ''}.
         </p>
 
         {groups.map((g) => (

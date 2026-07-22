@@ -78,7 +78,7 @@ export default async function WorkoutDetail({ params }: { params: { id: string }
         <p className="mt-2 text-label text-accent">{gym.toUpperCase()}</p>
         <h1 className="mb-1 text-h1 text-text-primary">{workout.name}</h1>
         <p className="mb-6 text-body text-text-muted nums">
-          {exercises.length} moves · {wp.sets} sets · {wp.restSec}s rest
+          {exercises.length} exercises · {wp.sets} sets · {wp.restSec}s rest
         </p>
 
         {/* The circuit */}

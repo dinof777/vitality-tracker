@@ -202,7 +202,7 @@ export default function WorkoutSession({
           onClick={() => setPicking(true)}
           className="mt-4 flex h-12 w-full items-center justify-center rounded-md border border-border text-label text-text-primary transition-all duration-150 active:scale-[0.97] active:bg-surface"
         >
-          + ADD MOVE
+          + ADD EXERCISE
         </button>
       )}
 

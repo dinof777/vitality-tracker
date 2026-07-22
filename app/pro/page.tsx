@@ -6,7 +6,7 @@ import { SAMPLE_EXERCISES, EQUIPMENT_ORDER } from '@/lib/exercises';
 
 // Counts come from the library module itself — the same source /llms.txt reads,
 // so marketing copy can never drift from what's actually shipped.
-const MOVES = SAMPLE_EXERCISES.length;
+const EXERCISES = SAMPLE_EXERCISES.length;
 const EQUIP = EQUIPMENT_ORDER.length;
 
 const fadeUp: Variants = {
@@ -66,7 +66,7 @@ function PhoneMock() {
 
 const FEATURES = [
   { icon: '🎨', title: 'Brand autopilot', body: 'Paste your website — we pull your logo, colors, and name automatically. Your app, looking like you, in seconds.' },
-  { icon: '🏋️', title: 'Your own library', body: `${MOVES} illustrated movements, plus your own custom moves and the names your gym actually uses.` },
+  { icon: '🏋️', title: 'Your own library', body: `${EXERCISES} illustrated exercises, plus your own custom exercises and the names your gym actually uses.` },
   { icon: '📲', title: 'Build & share', body: 'Generate a workout, print it with a QR code, and your client scans to load and run it.' },
   { icon: '⏱️', title: 'SyncroFit built in', body: 'Push workouts straight to the SyncroFit interval timer — no copying, no fuss.' },
   { icon: '📊', title: 'Real engagement', body: 'See which routines your clients import and finish — with durations — not just guesses.' },
@@ -89,7 +89,7 @@ const SEGMENTS = [
 const FAQ = [
   { q: 'Do my clients need to download anything or sign up?', a: 'No. Clients open a workout from a link or QR code — no account, no login. To run the timer, they use the free SyncroFit app.' },
   { q: 'Do I need to be technical?', a: "Not at all. Paste your website, we grab your branding, and you're sharing workouts within minutes." },
-  { q: 'Can I add my own moves and equipment?', a: "Yes — add custom moves, rename library moves to your gym's language, and register your own equipment (we dedupe so the list stays clean)." },
+  { q: 'Can I add my own exercises and equipment?', a: "Yes — add custom exercises, rename library exercises to your gym's language, and register your own equipment (we dedupe so the list stays clean)." },
   { q: 'What is the SyncroFit part?', a: 'SyncroFit is the interval timer your workouts run on. Send a workout in one tap; it reports back when a client imports or finishes it, so you see real engagement.' },
   { q: 'Can I use my own domain?', a: 'You start at vitalitypro.app/g/yourgym for free. Custom domains come with Pro.' },
   { q: 'Is it really free?', a: 'Yes — the core platform is free to start. Pro adds custom domains, client analytics, and more coaches.' },
@@ -123,7 +123,7 @@ export default function ProLanding() {
             </motion.h1>
             <motion.p variants={fadeUp} className="mx-auto mt-5 max-w-xl text-body text-text-muted sm:text-lg lg:mx-0">
               Give your members a fully-branded workout app — your logo, your colors, your URL. Build from a{' '}
-              {MOVES}-move illustrated library, share by QR, push to SyncroFit, and see who actually trained.
+              {EXERCISES}-exercise illustrated library, share by QR, push to SyncroFit, and see who actually trained.
             </motion.p>
             <motion.div variants={fadeUp} className="mt-8 flex flex-col items-center gap-3 sm:flex-row lg:justify-start">
               <Link href="/sign-up" className="flex h-13 w-full items-center justify-center rounded-md bg-accent px-7 py-3 text-label text-on-accent transition active:scale-[0.98] sm:w-auto">
@@ -134,7 +134,7 @@ export default function ProLanding() {
               </Link>
             </motion.div>
             <motion.p variants={fadeUp} className="mt-6 text-caption text-text-faint">
-              {MOVES} illustrated moves · {EQUIP} equipment types · SyncroFit-connected
+              {EXERCISES} illustrated exercises · {EQUIP} equipment types · SyncroFit-connected
             </motion.p>
           </motion.div>
           <motion.div variants={fadeUp} initial="hidden" animate="show" className="flex justify-center">
@@ -203,11 +203,11 @@ export default function ProLanding() {
           <div className="mx-auto mt-6 grid max-w-2xl gap-3 text-left sm:grid-cols-3">
             <div className="rounded-lg border border-border bg-background p-3">
               <p className="text-body font-semibold text-text-primary">Equipment-aware</p>
-              <p className="text-caption text-text-muted">Each move’s equipment tags through, so your workouts filter correctly in SyncroFit’s browser.</p>
+              <p className="text-caption text-text-muted">Each exercise’s equipment tags through, so your workouts filter correctly in SyncroFit’s browser.</p>
             </div>
             <div className="rounded-lg border border-border bg-background p-3">
               <p className="text-body font-semibold text-text-primary">Your cues travel</p>
-              <p className="text-caption text-text-muted">Per-move images &amp; coaching notes ride along into the timer.</p>
+              <p className="text-caption text-text-muted">Per-exercise images &amp; coaching notes ride along into the timer.</p>
             </div>
             <div className="rounded-lg border border-border bg-background p-3">
               <p className="text-body font-semibold text-text-primary">Real results back</p>
@@ -248,8 +248,8 @@ export default function ProLanding() {
             <p className="my-2 text-display text-text-primary">$0</p>
             <ul className="space-y-1.5 text-body text-text-muted">
               <li>✓ Your branded /g/ space</li>
-              <li>✓ Full {MOVES}-move library</li>
-              <li>✓ Custom moves &amp; equipment</li>
+              <li>✓ Full {EXERCISES}-exercise library</li>
+              <li>✓ Custom exercises &amp; equipment</li>
               <li>✓ QR + SyncroFit sharing</li>
             </ul>
           </Reveal>

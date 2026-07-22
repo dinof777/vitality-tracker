@@ -68,7 +68,7 @@ export default function SyncroFitButton({ url, disabled = false }: { url: string
           <p className="mb-1 text-body font-semibold text-text-primary">SyncroFit didn’t open</p>
           <p className="mb-3 text-caption text-text-muted">
             That almost always means it isn’t installed yet. SyncroFit is the free interval timer that actually runs
-            this workout — it calls out every move, set and rest so you never touch your phone mid-set.
+            this workout — it calls out every exercise, set and rest so you never touch your phone mid-set.
           </p>
           <a
             href={SYNCROFIT_SITE}
@@ -103,7 +103,7 @@ export default function SyncroFitButton({ url, disabled = false }: { url: string
         <div className="mt-2 rounded-lg border border-border bg-surface p-3">
           <ol className="mb-2 list-inside list-decimal space-y-1 text-caption text-text-muted">
             <li>Tap the button — SyncroFit opens with this workout already loaded.</li>
-            <li>Press start. It calls out each move, set and rest.</li>
+            <li>Press start. It calls out each exercise, set and rest.</li>
             <li>When you finish, it reports back so your progress shows up here.</li>
           </ol>
           <p className="text-caption text-text-muted">

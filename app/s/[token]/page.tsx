@@ -47,7 +47,7 @@ export default async function SharedWorkout({ params }: { params: { token: strin
         <p className="text-label text-accent">{gym.toUpperCase()}</p>
         <h1 className="mb-1 mt-1 text-h1 text-text-primary">{name}</h1>
         <p className="mb-6 text-body text-text-muted">
-          {exercises.length} moves · {wp.sets} sets · {wp.restSec}s rest
+          {exercises.length} exercises · {wp.sets} sets · {wp.restSec}s rest
         </p>
 
         <ul className="space-y-2 md:grid md:grid-cols-2 md:gap-2 md:space-y-0 lg:grid-cols-3">
