@@ -1,6 +1,6 @@
 import type { Equipment, Exercise } from './database.types';
 
-// Move library (225) — seeded into the Neon `exercises` table (same UUIDs).
+// Move library (226) — seeded into the Neon `exercises` table (same UUIDs).
 // EQUIPMENT CONSTRAINT: every movement uses ONLY dumbbells, a kettlebell, a tube
 // band (long/handled), a loop band (mini/booty band), a pull-up bar, a medicine
 // ball, a jump rope, or bodyweight (floor/wall). No benches, boxes, racks, or
@@ -275,6 +275,9 @@ export const SAMPLE_EXERCISES: Exercise[] = [
   // Low-impact conditioning — the first non-jump-rope cardio in the library.
   E('d0000166-0000-4000-8000-000000000000', 'Standing March in Place', 'Conditioning', 'calisthenics', 'Stand tall · march the knees up at an easy pace · swing the arms · stay light', null, ['low-impact']),
   E('d0000167-0000-4000-8000-000000000000', 'Step Touch', 'Conditioning', 'calisthenics', 'Step side to side, tap the trailing foot · add an arm swing · stay light on the feet', null, ['low-impact']),
+  // Loaded stage-3 hamstring curl — from Heath Mann DPT's knee HEP. The existing
+  // Standing Hamstring Curl is bodyweight/stage-2; this adds the resisted version.
+  E('d0000168-0000-4000-8000-000000000000', 'Band Standing Hamstring Curl', 'Hamstrings', 'tube_band', 'Loop the band at one ankle, stand on the other end · hold support · curl the heel to the glute · lower slow', null, ['knee-pt', 'stage-3', 'knee-flexion', 'strength', 'weight-bearing']),
 
   // ===== Shoulder rehab — rotator-cuff / impingement / scapular (12) =====
   // The library had 14 shoulder moves, all presses/raises and zero cuff work.
@@ -344,6 +347,12 @@ const RETRO_TAGS: Record<string, string[]> = {
   // new Dead Bug already carry `stability`; tag the other two to match.
   'Plank': ['stability'],
   'Band Pallof Press': ['stability'],
+  // From Heath Mann DPT's knee HEP — these on-kit moves already serve it.
+  'Band Lateral Walk': ['knee-pt', 'stage-3', 'weight-bearing'],
+  'Banded Monster Walk': ['knee-pt', 'stage-3', 'weight-bearing'],
+  // The bike's low-impact warm-up intent (not a true non-weight-bearing match).
+  'Standing March in Place': ['knee-pt', 'stage-3', 'low-impact'],
+  'Step Touch': ['knee-pt', 'stage-3', 'low-impact'],
 };
 
 for (const ex of SAMPLE_EXERCISES) {

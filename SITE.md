@@ -24,7 +24,7 @@ routes, tables, or integrations change.
 | Route | What it is |
 |---|---|
 | `/` | Home — build today's workout (length · focus · intensity · equipment) or run a scheduled plan day |
-| `/exercises` | The 225-move illustrated library; search, tap for detail, + to a routine |
+| `/exercises` | The 226-move illustrated library; search, tap for detail, + to a routine |
 | `/routines` | Reusable blueprints — build, favorite, delete, send to SyncroFit |
 | `/routines/[routineId]` | Routine detail — reorder, send to SyncroFit, **SyncroFit Activity** card |
 | `/plan` | Weekly plan across the 4 pillars (strength/cardio/balance/flexibility) |
@@ -64,7 +64,7 @@ routes, tables, or integrations change.
 database. `supabase/migrations/NNNN_*.sql` are the incremental steps for a
 database that already exists; every change lands in both so they can't drift.
 
-- **exercises** — the master library. `is_global` rows = shared 225; a gym's
+- **exercises** — the master library. `is_global` rows = shared 226; a gym's
   custom moves carry `tenant_id`. `equipment` is the 9-value enum;
   `equipment_catalog_id` links custom-equipment moves.
 - **routines / routine_exercises / workouts / log_entries** — training data;
@@ -102,7 +102,7 @@ mandatory query helper; isolation is unit-tested.
 
 ## Key libraries (`lib/`)
 
-`exercises` (the 225 + equipment order/labels) · `workout-generator`
+`exercises` (the 226 + equipment order/labels) · `workout-generator`
 (time-budgeted, accepts a custom pool + seeded RNG) · `exercise-mode` /
 `exercise-intensity` / `pillars` (classifiers) · `tenant` / `current-tenant` /
 `tenant-library` / `scoped-db` (multi-tenancy) · `taxonomy` (the vocabulary

@@ -1,7 +1,7 @@
 import { getSql } from './db';
 import type { Equipment } from './database.types';
 
-// One gym's effective exercise library: the global 225 + that gym's own custom
+// One gym's effective exercise library: the global 226 + that gym's own custom
 // moves, with the gym's local aliases applied to the display name. Server-only.
 
 export interface LibraryExercise {
