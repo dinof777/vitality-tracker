@@ -33,6 +33,9 @@ export const TAGS: Tag[] = [
   { id: 'knee', category: 'area', label: 'Knee', description: 'Knee rehab — post-replacement or knee-injury recovery', clinical: true },
   { id: 'shoulder', category: 'area', label: 'Shoulder', description: 'Rotator-cuff, impingement and scapular recovery', clinical: true },
   { id: 'ankle', category: 'area', label: 'Ankle', description: 'Post-sprain strength, balance and range', clinical: true },
+  { id: 'hip', category: 'area', label: 'Hip', description: 'Hip rehab — post-op, arthritic, or impingement-safe hip mobility and loading', clinical: true },
+  { id: 'low-back', category: 'area', label: 'Low Back', description: 'Lumbar spine — safe core stabilization and hip-hinge patterning for a deconditioned or disc-sensitive user', clinical: true },
+  { id: 'upper-back', category: 'area', label: 'Upper/Mid Back', description: 'Thoracic spine, scapular control, and rounded-shoulder posture recovery', clinical: true },
 
   // ── Stage: where it sits in a recovery/progression arc ─────────────────────
   // Joint-agnostic: the same three-stage arc drives knee, shoulder and ankle

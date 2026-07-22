@@ -25,10 +25,15 @@ describe('exercise tags', () => {
     expect(rehab.length).toBeGreaterThanOrEqual(30);
   });
 
-  it('every rehab movement is assigned exactly one recovery stage', () => {
+  it('every rehab movement is assigned at least one recovery stage', () => {
+    // Was "exactly one" until the hip/low-back/upper-back expansion introduced
+    // deliberate cross-tags: a move like Banded Clamshell now legitimately
+    // carries stage-1 (hip) AND stage-2 (knee) at once — "dual stage expected"
+    // per the PT spec, since the same movement sits at a different point in
+    // each area's own recovery arc. The real invariant is just "not zero".
     for (const ex of rehab) {
       const stages = (ex.tags ?? []).filter((t) => (STAGE_ORDER as readonly string[]).includes(t));
-      expect(stages.length, `"${ex.name}" should have exactly one stage, got [${stages}]`).toBe(1);
+      expect(stages.length, `"${ex.name}" should have at least one stage, got [${stages}]`).toBeGreaterThanOrEqual(1);
     }
   });
 
@@ -48,7 +53,14 @@ describe('exercise tags', () => {
   it('knee early stage stays off the feet; later stages load the leg', () => {
     // Knee-specific: stage-1 knee work is off the feet. Not true across all
     // areas (shoulder stage-1 is standing), so scope to the knee area.
-    const kneeEarly = SAMPLE_EXERCISES.filter((e) => hasTag(e, 'knee') && hasTag(e, 'stage-1'));
+    // Excludes exercises that are ALSO cross-tagged to another area (e.g.
+    // Glute Bridge Hold: knee/stage-2 + hip/stage-1) — there the co-occurring
+    // stage-1 belongs to the OTHER area, not to knee, so it isn't a knee
+    // stage-1 movement for the purpose of this "off the feet" check.
+    const otherAreas = ['shoulder', 'ankle', 'hip', 'low-back', 'upper-back'];
+    const kneeEarly = SAMPLE_EXERCISES.filter(
+      (e) => hasTag(e, 'knee') && hasTag(e, 'stage-1') && !otherAreas.some((a) => hasTag(e, a)),
+    );
     expect(kneeEarly.length).toBeGreaterThan(0);
     expect(kneeEarly.every((e) => hasTag(e, 'seated-lying')), 'knee stage-1 should be seated/lying').toBe(true);
     expect(rehab.filter((e) => hasTag(e, 'weight-bearing')).length).toBeGreaterThanOrEqual(6);

@@ -110,20 +110,24 @@ export const SPECIAL_FOCUSES: FocusChoice[] = [
 ];
 
 // Best-available emoji per rehab area (lib/tags#tagsInCategory('area')).
-// Thin coverage for the same reason MUSCLE_GROUP_EMOJI below is — v1 is only
-// knee/shoulder/ankle, each hand-picked; a future area falls back to 🩹.
+// Thin coverage for the same reason MUSCLE_GROUP_EMOJI below is — each area is
+// hand-picked and deliberately distinct from the muscle-tree emoji above it;
+// a future area falls back to 🩹.
 const REHAB_AREA_EMOJI: Record<string, string> = {
   knee: '🦿',
   shoulder: '🫱',
   ankle: '🦶',
+  hip: '🚶',
+  'low-back': '🧎',
+  'upper-back': '🦅',
 };
 
 /**
  * One focus per rehab area tag (lib/tags.ts `category: 'area'`) — generated,
  * never hand-typed, the same reasoning as MUSCLE_GROUP_FOCUSES below: today
- * that's exactly knee/shoulder/ankle (v1 scope), and a future area tag reaches
- * a focus the moment it's added to the tag registry instead of needing a
- * second hand-authored entry to stay in sync.
+ * that's knee/shoulder/ankle/hip/low-back/upper-back, and a future area tag
+ * reaches a focus the moment it's added to the tag registry instead of
+ * needing a second hand-authored entry to stay in sync.
  */
 export const REHAB_AREA_FOCUSES: FocusChoice[] = tagsInCategory('area').map((tag) => ({
   value: tag.id,
