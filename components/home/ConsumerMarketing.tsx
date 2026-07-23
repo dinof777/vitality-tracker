@@ -28,6 +28,11 @@ const FEATURES = [
     body: "Pick a focus, your equipment, and how long you've got. Live Elevated assembles the workout — you don't have to.",
   },
   {
+    icon: '⏱️',
+    title: 'Send to SyncroFit',
+    body: "One tap hands your workout to SyncroFit's interval, AMRAP, or EMOM timer — cues and images ride along, no re-typing.",
+  },
+  {
     icon: '📈',
     title: 'Progressive overload, tracked',
     body: 'Log weight and reps per set. Every exercise remembers your last session and shows a sparkline, so you can see yourself getting stronger.',
@@ -43,16 +48,17 @@ const FEATURES = [
     body: 'Turn a workout into a routine, then schedule it across your week so "what do I do today" is already answered.',
   },
   {
-    icon: '⏱️',
-    title: 'Send to SyncroFit',
-    body: "One tap hands your workout to SyncroFit's interval, AMRAP, or EMOM timer — cues and images ride along, no re-typing.",
-  },
-  {
     icon: '🔓',
     title: 'Free, no account',
     body: 'The whole app runs from your device. No login, no signup wall, to start training.',
   },
 ];
+
+// Empty by design — see .design/marketing-home-refinements/DESIGN_BRIEF.md.
+// Populate with real member quotes ({ quote, name, role }) once Dino
+// supplies them; the section switches from the honest-empty statement to
+// the 3-card quote grid automatically. Never fabricate an entry here.
+const TESTIMONIALS: { quote: string; name: string; role: string }[] = [];
 
 const STEPS = [
   {
@@ -89,7 +95,7 @@ export default function ConsumerMarketing() {
       <section className="px-5 pb-14 pt-6 text-center">
         <motion.div variants={stagger} initial="hidden" animate="show">
           <motion.p variants={fadeUp} className="mb-3 text-label text-accent">LIVE ELEVATED</motion.p>
-          <motion.h1 variants={fadeUp} className="text-balance text-h1 font-extrabold leading-tight text-text-primary sm:text-[2.5rem]">
+          <motion.h1 variants={fadeUp} className="text-balance text-[2.5rem] font-extrabold leading-[1.05] tracking-tight text-text-primary sm:text-[3.5rem]">
             A workout, built around you — in under a minute.
           </motion.h1>
           <motion.p variants={fadeUp} className="mx-auto mt-4 max-w-xl text-body text-text-muted">
@@ -188,6 +194,58 @@ export default function ConsumerMarketing() {
               <p className="text-caption text-text-muted">One tap sends the whole workout.</p>
             </div>
           </div>
+        </Reveal>
+      </section>
+
+      {/* Social proof — empty-safe; see .design/marketing-home-refinements/DESIGN_BRIEF.md §2 */}
+      <section className="px-5 py-12">
+        {TESTIMONIALS.length === 0 ? (
+          <Reveal className="mx-auto max-w-2xl text-center">
+            <p className="mb-2 text-label text-accent">REAL PEOPLE, REAL WORKOUTS</p>
+            <h2 className="text-h2 font-bold text-text-primary">Built by training, not by marketing.</h2>
+            <p className="mx-auto mt-3 max-w-xl text-body text-text-muted">
+              Live Elevated is brand new — the reviews are still being written. As real members log real
+              workouts, their stories will show up right here.
+            </p>
+          </Reveal>
+        ) : (
+          <>
+            <Reveal className="mx-auto mb-8 max-w-2xl text-center">
+              <p className="mb-2 text-label text-accent">REAL PEOPLE, REAL WORKOUTS</p>
+              <h2 className="text-h2 font-bold text-text-primary">What members are saying.</h2>
+            </Reveal>
+            <motion.div
+              variants={stagger}
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: true, margin: '-60px' }}
+              className="mx-auto grid max-w-5xl gap-4 sm:grid-cols-3"
+            >
+              {TESTIMONIALS.map((t) => (
+                <motion.div key={t.name} variants={fadeUp} className="rounded-xl border border-border bg-surface p-5 text-left">
+                  <p className="mb-3 text-h2 text-accent">&ldquo;</p>
+                  <p className="text-body italic text-text-primary">{t.quote}</p>
+                  <p className="mt-3 text-caption text-text-muted">{t.name} · {t.role}</p>
+                </motion.div>
+              ))}
+            </motion.div>
+          </>
+        )}
+      </section>
+
+      {/* Pro exit-ramp — quiet, secondary CTA; never competes with the consumer CTA below */}
+      <section className="px-5 py-8">
+        <Reveal className="mx-auto max-w-2xl rounded-2xl border border-border bg-surface/60 p-6 text-center">
+          <h2 className="text-h3 font-semibold text-text-primary">Run a gym or train clients?</h2>
+          <p className="mx-auto mt-2 max-w-md text-body text-text-muted">
+            Give every member this exact workout experience — branded as yours.
+          </p>
+          <Link
+            href="/pro"
+            className="mx-auto mt-5 flex h-12 w-full max-w-xs items-center justify-center rounded-md border border-border bg-transparent text-label text-text-primary transition-all duration-150 active:scale-[0.97] active:bg-surface"
+          >
+            SEE LIVE ELEVATED PRO →
+          </Link>
         </Reveal>
       </section>
 

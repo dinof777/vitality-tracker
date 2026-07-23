@@ -422,7 +422,9 @@ Shared scroll-reveal + card recipes for the app's sales surfaces — `/pro`
 (trainers/gyms) and the consumer sales content (`components/home/
 ConsumerMarketing.tsx`, hosted at `/`'s first-time state and standalone at
 `/welcome`) — so a second sales page doesn't reinvent motion or card shape.
-Full consumer copy/IA: `.design/consumer-sales-home/DESIGN_BRIEF.md`.
+Full consumer copy/IA: `.design/consumer-sales-home/DESIGN_BRIEF.md`. Hero
+scale, social-proof slot, and the Pro exit-ramp callout below:
+`.design/marketing-home-refinements/DESIGN_BRIEF.md`.
 
 **Reveal wrapper** — `components/marketing/Reveal.tsx` (extracted from
 `/pro`'s original inline definition). Exports `fadeUp`, `stagger`, and a
@@ -457,6 +459,64 @@ hero's primary CTA, built from live source counts (e.g.
 `SAMPLE_EXERCISES.length`, `EQUIPMENT_ORDER.length` from `lib/exercises.ts`)
 so marketing copy can never drift from the shipped library — never a
 hand-typed number.
+
+**Marketing hero headline** — a step above `h1` (32px, §2) reserved for a
+long-scroll sales page's single top-of-page H1. First used at `/pro`
+(`app/pro/page.tsx:102`); promoted to a documented shared recipe here once
+`ConsumerMarketing`'s hero adopted the same treatment for visual parity
+between the app's two hero states. Not baked into the `fontSize` token table
+(§2) because it's a one-per-page headline, always applied as an explicit
+class stack rather than a `text-*` shorthand:
+```
+text-balance text-[2.5rem] font-extrabold leading-[1.05] tracking-tight
+sm:text-[3.5rem]
+```
+40px → 56px at `sm:`. Same top-end size as `display` (§2) but with a tighter
+`1.05` line-height tuned for a headline sentence that wraps across several
+lines, versus `display`'s `1.0` tuning for a single-line numeric readout.
+Confirmed safe at a 320px viewport with the standard `px-5` section gutter —
+every word in both hero sentences wraps comfortably inside the ~280px
+remaining column; a hero is expected to wrap to multiple short lines on a
+phone (`text-balance` distributes them evenly), that's not a defect.
+
+**Social-proof section (empty-safe)** — Cialdini social proof, designed to
+ship truthfully empty today and become a populated grid later with **zero
+markup changes**. Backing data is one array —
+`TESTIMONIALS: { quote: string; name: string; role: string }[]` — declared
+at the top of the hosting file, empty (`[]`) until real quotes exist. The
+section branches on `TESTIMONIALS.length`:
+- **Empty (ship now):** one centered `<Reveal>` block — no card grid, no
+  boxes. An empty card grid reads as broken; a single honest sentence reads
+  as intentional. `text-label text-accent` eyebrow + `text-h2 font-bold`
+  headline + one `text-body text-text-muted` line stating plainly that
+  proof is on the way. Never a stat placeholder (`"0 workouts built"`) and
+  never a "trusted by" logo row with no logos in it — both read as either
+  fake or broken; a plain sentence reads as neither.
+- **Populated:** `sm:grid-cols-3` grid of the Feature-card shell above —
+  opening `"` glyph at `text-h2 text-accent`, `text-body italic
+  text-text-primary` quote, `text-caption text-text-muted` `Name · role`
+  attribution line.
+
+Never fabricate a quote, name, gym, or usage number to fill this section —
+same discipline as the Micro-proof line's live-sourced counts above: real
+data or an honest gap, never invented. Sits after the last product-proof
+section (e.g. a SyncroFit-style callout) and before any exit-ramp or Final
+CTA — proof of the product, then proof of the people, then the ask.
+
+**Quiet exit-ramp callout** — for a secondary, non-competing CTA embedded
+inside otherwise single-audience sales content (e.g. Home's consumer pitch
+surfacing a Pro path mid-scroll). Related to but visibly smaller/quieter
+than the Callout box above — same rounded-2xl family, tighter footprint, a
+muted (not accent) eyebrow/headline, and a Ghost button (§6) rather than a
+Primary button, so it can never read as competing with the surface's real
+CTA:
+```
+rounded-2xl border border-border bg-surface/60 p-6 text-center, max-w-2xl
+  > headline: text-h3 font-semibold text-text-primary (not text-h2 — stays
+    visually subordinate to the page's real section headlines)
+  > body: text-body text-text-muted
+  > CTA: Ghost button (§6), max-w-xs (narrower than a Primary CTA's max-w-sm)
+```
 
 ---
 
