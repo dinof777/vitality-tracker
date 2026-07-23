@@ -424,7 +424,9 @@ ConsumerMarketing.tsx`, hosted at `/`'s first-time state and standalone at
 `/welcome`) — so a second sales page doesn't reinvent motion or card shape.
 Full consumer copy/IA: `.design/consumer-sales-home/DESIGN_BRIEF.md`. Hero
 scale, social-proof slot, and the Pro exit-ramp callout below:
-`.design/marketing-home-refinements/DESIGN_BRIEF.md`.
+`.design/marketing-home-refinements/DESIGN_BRIEF.md`. Photoreal lifestyle
+photography treatment, placements, and shot list for both pages:
+`.design/marketing-imagery/DESIGN_BRIEF.md`.
 
 **Reveal wrapper** — `components/marketing/Reveal.tsx` (extracted from
 `/pro`'s original inline definition). Exports `fadeUp`, `stagger`, and a
@@ -501,7 +503,10 @@ Never fabricate a quote, name, gym, or usage number to fill this section —
 same discipline as the Micro-proof line's live-sourced counts above: real
 data or an honest gap, never invented. Sits after the last product-proof
 section (e.g. a SyncroFit-style callout) and before any exit-ramp or Final
-CTA — proof of the product, then proof of the people, then the ask.
+CTA — proof of the product, then proof of the people, then the ask. This
+section never carries a photo (see Marketing photography below) — pairing
+imagery with this exact slot would visually imply a real member testimonial
+that doesn't exist yet.
 
 **Quiet exit-ramp callout** — for a secondary, non-competing CTA embedded
 inside otherwise single-audience sales content (e.g. Home's consumer pitch
@@ -517,6 +522,55 @@ rounded-2xl border border-border bg-surface/60 p-6 text-center, max-w-2xl
   > body: text-body text-text-muted
   > CTA: Ghost button (§6), max-w-xs (narrower than a Primary CTA's max-w-sm)
 ```
+
+**Marketing photography (photoreal lifestyle)** — full spec, placements, and
+shot list: `.design/marketing-imagery/DESIGN_BRIEF.md`. Reserved for the
+sales-page surfaces only — `ConsumerMarketing.tsx` and `/pro` — never the
+in-app exercise library (`components/workout/ExerciseThumb.tsx`'s lime
+line-art icon / per-exercise photo is a different visual job: identifying a
+specific move, not selling the product) and never tenant (`/g/[slug]`)
+surfaces (app-isolation — a gym's white-label app shows the gym's own brand,
+not Live Elevated's marketing photography).
+
+Grade, so a set of photoreal images reads as one cohesive shoot rather than
+assorted stock:
+- Low-key, moody gym lighting — deep shadows crushing toward `#121316`
+  (`background` token), practical light sources (gym LEDs, a phone screen's
+  glow) doing the highlight work rather than flat, bright commercial-gym
+  lighting.
+- Overall desaturated except a deliberate lime pop (`#A3E635`) — phone-screen
+  glow, an apparel accent, gym signage/equipment tape — so the accent reads
+  instantly across every image, the same job the token does everywhere else
+  in the product.
+- High contrast, slightly warm skin-tone highlights against cool/neutral
+  shadows; subtle grain — reads as a graded photoreal shoot, not the smoothed
+  gloss of generic stock photography.
+- Mid-movement, not posed-and-smiling-at-camera — "real training," not a
+  fitness-ad cliché.
+- Composition leaves deliberate negative space (rule-of-thirds, subject
+  off-center) wherever an image sits behind or beside copy, so text never
+  fights the subject for attention.
+
+Legibility scrim — any image with copy directly on top (hero, Final-CTA
+bookend, `/pro` hero backdrop) gets a gradient scrim, not a flat overlay, so
+the photo still reads as a photo underneath the text:
+```
+bg-gradient-to-r from-background/95 via-background/60 to-transparent   (text beside image)
+bg-gradient-to-t from-background/90 via-background/40 to-transparent   (text below/centered)
+```
+Gallery-band tiles (no overlaid copy) carry the grade only — no scrim.
+
+Aspect ratios, fixed per slot so the grid holds shape at every breakpoint:
+- Hero image (Consumer split-hero right column / mobile-stacked): `aspect-[4/5]`.
+- Gallery-band tile: `aspect-[4/5]`, 3-up (`sm:grid-cols-3`).
+- Full-bleed band (Final-CTA bookend, `/pro` hero backdrop, `/pro` "who it's
+  for" band): `aspect-[21/9]` desktop, `object-cover object-top` crops taller
+  on mobile from the same source image.
+
+Alt text describes the action and, where a phone/app is visible, states that
+the Live Elevated app is shown on screen — never a name or testimonial
+framing (the data-honesty invariant behind the empty-safe Social-proof
+section above extends to imagery too).
 
 ---
 

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { SAMPLE_EXERCISES, EQUIPMENT_ORDER } from '@/lib/exercises';
 import { Reveal, fadeUp, stagger } from '@/components/marketing/Reveal';
@@ -95,6 +96,18 @@ export default function ProLanding() {
 
       {/* Hero */}
       <section className="relative overflow-hidden px-5 pb-20 pt-12 sm:pt-16">
+        <div className="absolute inset-0 -z-10">
+          <Image
+            src="/marketing/gallery-strength.jpg"
+            alt=""
+            fill
+            aria-hidden
+            loading="lazy"
+            sizes="100vw"
+            className="object-cover opacity-30"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/90 to-background" />
+        </div>
         <div aria-hidden className="pointer-events-none absolute left-1/2 top-0 h-96 w-[44rem] -translate-x-1/2 rounded-full bg-accent/10 blur-3xl" />
         <div className="relative mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-2">
           <motion.div variants={stagger} initial="hidden" animate="show" className="text-center lg:text-left">
@@ -138,6 +151,20 @@ export default function ProLanding() {
             </motion.div>
           ))}
         </motion.div>
+      </section>
+
+      {/* Who it's for — photo band */}
+      <section className="px-5 py-4">
+        <div className="relative mx-auto aspect-[21/9] max-w-5xl overflow-hidden rounded-2xl border border-border">
+          <Image
+            src="/marketing/pro-coach-client.jpg"
+            alt="A trainer coaching a client through a set, phone in hand showing the Live Elevated app"
+            fill
+            loading="lazy"
+            sizes="(min-width: 1024px) 80vw, 100vw"
+            className="object-cover object-top"
+          />
+        </div>
       </section>
 
       {/* Features */}
