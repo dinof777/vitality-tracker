@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { FOCUS_CHOICES, MUSCLE_GROUP_FOCUSES } from './profile';
+import {
+  FOCUS_CHOICES,
+  MUSCLE_GROUP_FOCUSES,
+  WORKOUT_STYLE_CHOICES,
+  workoutParams,
+  workoutStyleLabel,
+  type Profile,
+} from './profile';
 import { CANON_MUSCLE_GROUPS } from './taxonomy';
 
 // Focus vs muscle groups. Focus is a curated preset, not the muscle-group list
@@ -35,5 +42,42 @@ describe('every muscle group is reachable from a focus', () => {
     const canon = new Set(CANON_MUSCLE_GROUPS as readonly string[]);
     const ghosts = [...grouped].filter((g) => !canon.has(g));
     expect(ghosts).toEqual([]);
+  });
+});
+
+// SyncroFit v2 — workout style. workoutParams() is the one place ad-hoc
+// (Profile-backed) mode/amrapMinutes/emomMinutes get resolved with defaults;
+// WORKOUT_STYLE_CHOICES is what the UI renders from.
+describe('workout style resolution', () => {
+  const baseProfile: Profile = { equipment: [], focus: 'full', intensity: 'moderate' };
+
+  it('WORKOUT_STYLE_CHOICES has exactly the four contract-defined modes, each with a hint', () => {
+    expect(WORKOUT_STYLE_CHOICES.map((c) => c.value).sort()).toEqual(
+      ['amrap', 'emom', 'forTime', 'intervals'].sort(),
+    );
+    for (const c of WORKOUT_STYLE_CHOICES) {
+      expect(c.hint.length, `${c.value} has no hint`).toBeGreaterThan(0);
+    }
+  });
+
+  it('workoutParams() defaults to intervals/12/12 when the profile has no style set', () => {
+    const p = workoutParams(baseProfile);
+    expect(p.mode).toBe('intervals');
+    expect(p.amrapMinutes).toBe(12);
+    expect(p.emomMinutes).toBe(12);
+  });
+
+  it('workoutParams() honors an explicit profile style', () => {
+    const p = workoutParams({ ...baseProfile, mode: 'amrap', amrapMinutes: 20 });
+    expect(p.mode).toBe('amrap');
+    expect(p.amrapMinutes).toBe(20);
+    expect(p.emomMinutes).toBe(12); // untouched default
+  });
+
+  it('workoutStyleLabel strips the leading emoji, falling back to Intervals for an unknown mode', () => {
+    expect(workoutStyleLabel('amrap')).toBe('AMRAP');
+    expect(workoutStyleLabel('forTime')).toBe('For Time');
+    expect(workoutStyleLabel('emom')).toBe('EMOM');
+    expect(workoutStyleLabel('intervals')).toBe('Intervals');
   });
 });

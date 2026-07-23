@@ -16,6 +16,8 @@ import ExercisePicker from '@/components/workout/ExercisePicker';
 import ExerciseThumb from '@/components/workout/ExerciseThumb';
 import { syncrofitRunUrlFromRoutine } from '@/lib/syncrofit';
 import { EQUIPMENT_LABEL } from '@/lib/exercises';
+import WorkoutStyleControl, { type WorkoutStylePatch } from '@/components/workout/WorkoutStyleControl';
+import { setRoutineMode, setRoutineSetOrder } from '@/lib/routines';
 
 interface SfRecent {
   id: string;
@@ -126,6 +128,23 @@ export default function RoutineDetailPage() {
   };
 
   const remove = (index: number) => persist(rows.filter((_, i) => i !== index));
+
+  // Persist a workout-style change (mode/minutes/set order) — optimistic
+  // local update + the PATCH that writes it to the routine's DB columns.
+  const updateStyle = (patch: WorkoutStylePatch) => {
+    if (!routine) return;
+    const next = {
+      mode: patch.mode ?? routine.mode,
+      amrap_minutes: patch.amrapMinutes ?? routine.amrap_minutes,
+      emom_minutes: patch.emomMinutes ?? routine.emom_minutes,
+      set_order: patch.setOrder ?? routine.set_order,
+    };
+    setRoutine({ ...routine, ...next });
+    if (patch.setOrder !== undefined) void setRoutineSetOrder(routine.id, patch.setOrder);
+    if (patch.mode !== undefined || patch.amrapMinutes !== undefined || patch.emomMinutes !== undefined) {
+      void setRoutineMode(routine.id, next.mode, next.amrap_minutes, next.emom_minutes);
+    }
+  };
 
   // Hand this routine to SyncroFit as a timed circuit. Copy the import link to
   // the clipboard (so SyncroFit's in-app Import works) AND open the deep link
@@ -266,6 +285,21 @@ export default function RoutineDetailPage() {
           + ADD EXERCISE
         </button>
       )}
+
+      {/* Workout style — how this routine runs once handed to SyncroFit.
+          Always visible, not behind a sheet: a trainer is already editing a
+          saved, persistent thing, and the exercise list itself is fully
+          expanded above, not summarized. */}
+      <section className="mt-5">
+        <p className="mb-2 text-label text-accent">WORKOUT STYLE</p>
+        <WorkoutStyleControl
+          mode={routine.mode}
+          amrapMinutes={routine.amrap_minutes}
+          emomMinutes={routine.emom_minutes}
+          setOrder={routine.set_order}
+          onChange={updateStyle}
+        />
+      </section>
 
       {/* Send to SyncroFit as a timed interval circuit */}
       {rows.length > 0 && (

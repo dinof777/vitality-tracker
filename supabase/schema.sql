@@ -147,12 +147,17 @@ create table if not exists exercise_aliases (
 -- routines: a named training day / blueprint (e.g. "Upper Pump — Week 1").
 -- day_of_week is 1=Mon … 7=Sun, nullable for routines not tied to a weekday.
 create table if not exists routines (
-  id          uuid primary key default gen_random_uuid(),
-  name        text not null,
-  day_of_week int check (day_of_week between 1 and 7),
-  sort_order  int not null default 0,
-  from_plan   boolean not null default false, -- part of the single weekly plan
-  created_at  timestamptz not null default now()
+  id            uuid primary key default gen_random_uuid(),
+  name          text not null,
+  day_of_week   int check (day_of_week between 1 and 7),
+  sort_order    int not null default 0,
+  from_plan     boolean not null default false, -- part of the single weekly plan
+  -- set_order/mode/amrap_minutes/emom_minutes: SyncroFit v2 handoff (0010, 0011).
+  set_order     text not null default 'straightSets' check (set_order in ('circuit', 'straightSets')),
+  mode          text not null default 'intervals' check (mode in ('intervals', 'forTime', 'amrap', 'emom')),
+  amrap_minutes int not null default 12 check (amrap_minutes between 1 and 60),
+  emom_minutes  int not null default 12 check (emom_minutes between 1 and 60),
+  created_at    timestamptz not null default now()
 );
 
 -- routine_exercises: the ordered exercises that make up a routine, with the

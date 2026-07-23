@@ -1,5 +1,6 @@
 import { randomBytes } from 'crypto';
 import { getSql } from './db';
+import type { WorkoutMode } from './database.types';
 
 // A tokenized, public share of a specific workout. The trainer creates one from
 // the builder; the client opens /s/<token> (no login), runs it, and sends it to
@@ -19,6 +20,14 @@ export interface ShareParams {
   restSec: number;
   tempo: string;
   setupSec: number;
+  // SyncroFit v2 handoff — mirrors lib/profile#WorkoutParams (required there,
+  // required here too) so a saved/shared circuit remembers the workout style
+  // it was built with. A share saved before this field existed has neither at
+  // runtime despite the type — lib/syncrofit.ts's senders default defensively
+  // (mode ?? 'intervals', same as workoutParams() does for a fresh Profile).
+  mode: WorkoutMode;
+  amrapMinutes: number;
+  emomMinutes: number;
 }
 export interface SharePayload {
   name: string;

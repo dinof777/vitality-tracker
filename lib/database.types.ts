@@ -41,12 +41,20 @@ export interface Exercise {
   tags?: string[];
 }
 
+export type SetOrder = 'circuit' | 'straightSets';
+export type WorkoutMode = 'intervals' | 'forTime' | 'amrap' | 'emom';
+
 export interface Routine {
   id: string;
   name: string;
   day_of_week: number | null; // 1=Mon .. 7=Sun
   sort_order: number;
   created_at: string;
+  // SyncroFit v2 handoff — see supabase/migrations/0010, 0011.
+  set_order: SetOrder;
+  mode: WorkoutMode;
+  amrap_minutes: number;
+  emom_minutes: number;
 }
 
 export interface RoutineExercise {

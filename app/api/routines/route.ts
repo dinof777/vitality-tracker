@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
 // Routines with their ordered exercises (joined to the exercise library).
 const ROUTINES_SELECT = (sql: NonNullable<ReturnType<typeof getSql>>) => sql`
   select r.id, r.name, r.day_of_week, r.sort_order, r.from_plan, r.favorite,
+    r.set_order, r.mode, r.amrap_minutes, r.emom_minutes,
     coalesce(
       json_agg(
         json_build_object(
@@ -60,7 +61,8 @@ export async function POST(req: Request) {
     const rows = await sql`
       insert into routines (name, day_of_week, from_plan)
       values (${body.name.trim()}, ${body.dayOfWeek ?? null}, ${body.fromPlan ?? false})
-      returning id, name, day_of_week, sort_order, from_plan
+      returning id, name, day_of_week, sort_order, from_plan,
+        set_order, mode, amrap_minutes, emom_minutes
     `;
     return NextResponse.json({ routine: { ...rows[0], exercises: [] } });
   } catch (e) {

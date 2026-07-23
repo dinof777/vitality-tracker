@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import type { Exercise } from '@/lib/database.types';
-import type { WorkoutParams } from '@/lib/profile';
+import { workoutStyleLabel, type WorkoutParams } from '@/lib/profile';
 import { syncrofitRunUrl, syncrofitUrlFromWorkout } from '@/lib/syncrofit';
 import { formatMinutes, totalSeconds } from '@/lib/workout-timing';
 import ExerciseThumb from './ExerciseThumb';
@@ -27,6 +27,10 @@ export default function StartSheet({ exercises, params, name, onLogInApp, onClos
   // explicitly turned it OFF keeps the classic no-image format.
   const [useV2, setUseV2] = useState(true);
   const est = totalSeconds(exercises, params);
+  // Handoff-honesty: mode/minutes default 'intervals' when undefined (an
+  // older stored WorkoutParams predating this field). See DESIGN.md §6.
+  const mode = params.mode ?? 'intervals';
+  const styleMinutes = mode === 'emom' ? params.emomMinutes : params.amrapMinutes;
 
   useEffect(() => {
     try {
@@ -96,9 +100,11 @@ export default function StartSheet({ exercises, params, name, onLogInApp, onClos
         <button
           type="button"
           onClick={sendToTimer}
-          className="flex h-14 w-full items-center justify-center rounded-md border border-border bg-surface text-label text-text-primary active:bg-surface-raised"
+          className={`flex h-14 w-full items-center justify-center rounded-md border text-label active:bg-surface-raised ${
+            mode !== 'intervals' ? 'border-accent bg-accent/10 text-accent' : 'border-border bg-surface text-text-primary'
+          }`}
         >
-          ⏱ SEND TO INTERVAL TIMER
+          ⏱ SEND TO SYNCROFIT
         </button>
 
         <button
@@ -124,6 +130,13 @@ export default function StartSheet({ exercises, params, name, onLogInApp, onClos
         {sent ? (
           <p className="mt-3 text-caption text-text-muted">
             Opening SyncroFit… if nothing happens, the link is copied — open SyncroFit ▸ Import to paste it.
+          </p>
+        ) : mode !== 'intervals' ? (
+          <p className="mt-3 text-caption text-text-muted">
+            <span className="font-semibold text-text-primary">{workoutStyleLabel(mode)}</span>
+            {(mode === 'amrap' || mode === 'emom') && styleMinutes ? ` · ${styleMinutes} min` : ''} runs on a live
+            clock — tap Send to SyncroFit to have it called out for you. Logging in the app still tracks your sets,
+            but won&apos;t time the round.
           </p>
         ) : (
           <p className="mt-3 text-caption text-text-muted">

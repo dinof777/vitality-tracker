@@ -5,7 +5,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 // SyncroFit engagement for this routine. circuit_id on the events equals the
-// routine id (see lib/syncrofit.ts → syncrofitImportUrl), so we key on it.
+// routine id (see lib/syncrofit.ts → syncrofitRunUrlFromRoutine), so we key on it.
 export async function GET(_req: Request, { params }: { params: { routineId: string } }) {
   const [summary, recent] = await Promise.all([
     circuitEngagement(params.routineId),

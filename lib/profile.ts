@@ -1,4 +1,4 @@
-import type { Equipment } from './database.types';
+import type { Equipment, WorkoutMode } from './database.types';
 import type { Pillar } from './pillars';
 import { CANON_MUSCLE_GROUPS } from './taxonomy';
 import { tagsInCategory } from './tags';
@@ -19,6 +19,13 @@ export interface Profile {
   // Weekly-plan preferences.
   goal?: import('./pillars').Goal;
   daysPerWeek?: number;
+  // SyncroFit v2 handoff — ad-hoc workouts don't persist to routines, so the
+  // chosen workout style rides along on the Profile itself (localStorage), the
+  // same way sets/reps/restSec already do. setOrder is straightSets-fixed for
+  // ad-hoc — no per-session ordering toggle, so it's not stored here.
+  mode?: WorkoutMode;
+  amrapMinutes?: number;
+  emomMinutes?: number;
 }
 
 // Resolved per-set prescription + timing inputs used to fit a workout to time.
@@ -30,6 +37,11 @@ export interface WorkoutParams {
   holdSec: number; // seconds per set for timed moves (isometric/stretch/jump rope)
   setupSec: number; // transition time before each exercise
   tempo: string;
+  // SyncroFit v2 handoff — see Profile.mode above. Always resolved (never
+  // undefined) so every WorkoutParams consumer can read them unconditionally.
+  mode: WorkoutMode;
+  amrapMinutes: number;
+  emomMinutes: number;
 }
 
 export function workoutParams(profile: Profile): WorkoutParams {
@@ -42,6 +54,9 @@ export function workoutParams(profile: Profile): WorkoutParams {
     holdSec: ip.holdSec,
     setupSec: 25,
     tempo: ip.tempo,
+    mode: profile.mode ?? 'intervals',
+    amrapMinutes: profile.amrapMinutes ?? 12,
+    emomMinutes: profile.emomMinutes ?? 12,
   };
 }
 
@@ -600,6 +615,29 @@ export const INTENSITY_CHOICES: IntensityChoice[] = [
 
 export function intensityParams(i: Intensity): IntensityChoice {
   return INTENSITY_CHOICES.find((x) => x.value === i) ?? INTENSITY_CHOICES[1];
+}
+
+// How a circuit runs once handed to SyncroFit — handoff-first (owner decision):
+// Vitality picks the style + minutes, SyncroFit runs the clock. No native
+// AMRAP/EMOM/for-time timer this pass. See WorkoutStyleControl + DESIGN.md §6.
+export interface WorkoutStyleChoice {
+  value: WorkoutMode;
+  label: string; // emoji + label together, shown as the row title
+  hint: string;
+}
+
+export const WORKOUT_STYLE_CHOICES: WorkoutStyleChoice[] = [
+  { value: 'intervals', label: '⏱ Intervals', hint: 'Timed work and rest, exercise by exercise' },
+  { value: 'forTime', label: '🏁 For Time', hint: 'Finish the whole thing as fast as you can' },
+  { value: 'amrap', label: '🔁 AMRAP', hint: 'As many rounds as possible in the time' },
+  { value: 'emom', label: '⏰ EMOM', hint: 'A fresh round starts every minute, on the minute' },
+];
+
+// Plain-text style name (no emoji) — for copy that reads it inline, e.g. the
+// StartSheet caption ("AMRAP · 12 min runs on a live clock…").
+export function workoutStyleLabel(mode: WorkoutMode): string {
+  const c = WORKOUT_STYLE_CHOICES.find((x) => x.value === mode);
+  return c ? c.label.replace(/^\S+\s*/, '') : 'Intervals';
 }
 
 export function focusChoice(value: string): FocusChoice {

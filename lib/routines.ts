@@ -1,4 +1,4 @@
-import type { Equipment } from './database.types';
+import type { Equipment, SetOrder, WorkoutMode } from './database.types';
 
 // A routine's exercise row — routine_exercises joined with the exercise.
 export interface RoutineExerciseRow {
@@ -22,6 +22,11 @@ export interface RoutineWithExercises {
   sort_order: number;
   from_plan: boolean; // true = part of the (single) weekly plan
   favorite: boolean; // pinned to Profile › My Routines
+  // SyncroFit v2 handoff — see supabase/migrations/0010, 0011.
+  set_order: SetOrder;
+  mode: WorkoutMode;
+  amrap_minutes: number;
+  emom_minutes: number;
   exercises: RoutineExerciseRow[];
 }
 
@@ -83,6 +88,29 @@ export async function setRoutineFavorite(id: string, favorite: boolean): Promise
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ favorite }),
+  });
+}
+
+// Circuit vs Straight Sets — how a routine's sets are ordered when run.
+export async function setRoutineSetOrder(id: string, setOrder: SetOrder): Promise<void> {
+  await fetch(`/api/routines/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ setOrder }),
+  });
+}
+
+// Workout style (Intervals/For Time/AMRAP/EMOM) + the AMRAP/EMOM minute cap.
+export async function setRoutineMode(
+  id: string,
+  mode: WorkoutMode,
+  amrapMinutes?: number,
+  emomMinutes?: number,
+): Promise<void> {
+  await fetch(`/api/routines/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ mode, amrapMinutes, emomMinutes }),
   });
 }
 

@@ -89,7 +89,9 @@ export default async function TenantHome({
   // Today's suggestion is a real workout, so it gets the same actions as any other.
   const todayName = `${name} — Today`;
   const displayToday = workout.map((ex) => ({ ...ex, name: byId.get(ex.id)?.name ?? ex.name }));
-  const sfUrl = workout.length ? syncrofitRunUrl(todayName, displayToday, wp, '', `${tenant.slug}-today`) : '#';
+  const sfUrl = workout.length
+    ? syncrofitRunUrl(todayName, displayToday, wp, '', `${tenant.slug}-today`, { name, organization: 'Live Elevated' })
+    : '#';
   void swParam;
   const todaySnapshot = workout.map((ex) => ({
     name: byId.get(ex.id)?.name ?? ex.name,

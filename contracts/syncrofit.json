@@ -1,9 +1,9 @@
 {
   "$comment": "CANONICAL SOURCE OF TRUTH for SyncroFit's third-party integration. Partner apps (e.g. Vitality Tracker) validate against this file. When you change IntegrationCodec.swift or PartnerWebhook.swift, update this file AND bump `version`, then run scripts/verify-contract.mjs. See INTEGRATION.md.",
   "name": "SyncroFit Partner Integration Contract",
-  "version": 1,
-  "updated": "2026-06-08",
-  "derivedFrom": ["IntegrationCodec.swift", "PartnerWebhook.swift", "IntervalPreset.swift"],
+  "version": 2,
+  "updated": "2026-07-23",
+  "derivedFrom": ["IntegrationCodec.swift", "PartnerWebhook.swift", "IntervalPreset.swift", "TimerGroup.swift"],
   "outbound": {
     "description": "Links a partner opens to hand a workout to SyncroFit. All forms resolve to the same parser.",
     "urlFormats": [
@@ -26,6 +26,7 @@
         "mode": "string? — intervals | forTime | amrap | emom (default: intervals)",
         "amrapMinutes": "int? — AMRAP cap, default 12, clamped 1..60 (only when mode=amrap)",
         "emomMinutes": "int? — EMOM cap, default 12, clamped 1..60 (only when mode=emom)",
+        "setOrder": "string? — circuit | straightSets (default: circuit). circuit = interleave one set of each exercise per round, then repeat (classic circuit training, current default behavior). straightSets = finish all sets of exercise 1, then all sets of exercise 2, etc. Only meaningful when every exercise's mode is intervals (or omitted) — mixed-mode circuits (any forTime/amrap/emom present) always run sequentially regardless of this field.",
         "exercises": "PartnerJSONExercise[]"
       },
       "exercise": {

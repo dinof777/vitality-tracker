@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { headers } from 'next/headers';
 import QRCode from 'qrcode';
-import type { Exercise } from '@/lib/database.types';
+import type { Exercise, WorkoutMode } from '@/lib/database.types';
 import { brandingToCssVars, fetchTenantBySlug } from '@/lib/tenant';
 import { tenantLibrary } from '@/lib/tenant-library';
 import { generateWorkout } from '@/lib/workout-generator';
@@ -50,7 +50,22 @@ export default async function TenantBuild({
   searchParams,
 }: {
   params: { slug: string };
-  searchParams: { focus?: string; len?: string; mins?: string; intensity?: string; v?: string; mode?: string; tags?: string; sw?: string };
+  searchParams: {
+    focus?: string;
+    len?: string;
+    mins?: string;
+    intensity?: string;
+    v?: string;
+    mode?: string; // custom-vs-generated build switch — NOT the workout style, see `style` below
+    tags?: string;
+    sw?: string;
+    // SyncroFit v2 workout style. Deliberately NOT `mode` — this page already
+    // spends that key on the custom-vs-generated build switch above; reusing
+    // it here would silently break `?mode=custom`. See syncrofit-mode-ui-spec.md.
+    style?: string;
+    amrapMin?: string;
+    emomMin?: string;
+  };
 }) {
   const tenant = await fetchTenantBySlug(params.slug);
   if (!tenant) notFound();
@@ -107,6 +122,25 @@ export default async function TenantBuild({
   const focusLabel = resolveFocus(focusVal, regions).label;
   const custom = searchParams.mode === 'custom';
 
+  // SyncroFit v2 workout style — see the `style` param note above.
+  const workoutMode: WorkoutMode = (['intervals', 'forTime', 'amrap', 'emom'] as const).includes(
+    searchParams.style as WorkoutMode,
+  )
+    ? (searchParams.style as WorkoutMode)
+    : 'intervals';
+  const amrapMinutes = searchParams.amrapMin
+    ? Math.min(60, Math.max(1, Number(searchParams.amrapMin) || 12))
+    : 12;
+  const emomMinutes = searchParams.emomMin
+    ? Math.min(60, Math.max(1, Number(searchParams.emomMin) || 12))
+    : 12;
+  // Style params carried along on every link this page generates, so refreshing
+  // a slot or toggling a tag filter doesn't silently reset the chosen style.
+  const styleParam =
+    (workoutMode !== 'intervals' ? `&style=${workoutMode}` : '') +
+    (workoutMode === 'amrap' ? `&amrapMin=${amrapMinutes}` : '') +
+    (workoutMode === 'emom' ? `&emomMin=${emomMinutes}` : '');
+
   // Tag facets narrow the pool the generator draws from — so "Stage 3 + Knee PT"
   // generates a stage-3 knee session rather than a general workout.
   const selectedTags = (searchParams.tags ?? '').split(',').map((t) => t.trim()).filter(Boolean);
@@ -132,7 +166,14 @@ export default async function TenantBuild({
     tags: e.tags,
   }));
 
-  const profile: Profile = { equipment: allowedEquipment, focus: focusVal, intensity };
+  const profile: Profile = {
+    equipment: allowedEquipment,
+    focus: focusVal,
+    intensity,
+    mode: workoutMode,
+    amrapMinutes,
+    emomMinutes,
+  };
   const generated = generateWorkout(profile, { focus: focusVal, count, pool, rng, focusChoices: regions });
 
   // A rehab session should read early → late. Sorting the pool doesn't survive
@@ -159,7 +200,10 @@ export default async function TenantBuild({
   // SyncroFit shows the gym's names; circuit id is tenant-scoped so feedback maps back.
   const displayExercises = workout.map((ex) => ({ ...ex, name: byId.get(ex.id)?.name ?? ex.name }));
   const sfUrl = workout.length
-    ? syncrofitRunUrl(`${name} — ${focusLabel}`, displayExercises, wp, '', `${tenant.slug}-build`)
+    ? syncrofitRunUrl(`${name} — ${focusLabel}`, displayExercises, wp, '', `${tenant.slug}-build`, {
+        name,
+        organization: 'Live Elevated',
+      })
     : '#';
 
   // Snapshot (with prescriptions) for a stable, shareable /s/<token> link.
@@ -176,19 +220,20 @@ export default async function TenantBuild({
   });
 
   const tagParam = selectedTags.length ? `&tags=${selectedTags.join(',')}` : '';
-  const qs = (f: string, l: number, v = variant) => `?focus=${f}&mins=${minutes}&intensity=${intensity}&v=${v}${tagParam}${v === variant ? swParam : ''}`;
+  const qs = (f: string, l: number, v = variant) =>
+    `?focus=${f}&mins=${minutes}&intensity=${intensity}&v=${v}${tagParam}${styleParam}${v === variant ? swParam : ''}`;
   // Toggle one tag, keeping focus/length; reset the shuffle so the new pool is used.
   const tagHref = (id: string) => {
     const next = selectedTags.includes(id) ? selectedTags.filter((t) => t !== id) : [...selectedTags, id];
     const q = next.length ? `&tags=${next.join(',')}` : '';
-    return `/g/${tenant.slug}/build?focus=${focusVal}&mins=${minutes}&intensity=${intensity}&v=1${q}`;
+    return `/g/${tenant.slug}/build?focus=${focusVal}&mins=${minutes}&intensity=${intensity}&v=1${q}${styleParam}`;
   };
   const swParam = swaps.size ? `&sw=${Array.from(swaps).map(([i, k]) => `${i}:${k}`).join(',')}` : '';
   const rerollHref = (i: number) => {
     const next = new Map(swaps);
     next.set(i, (next.get(i) ?? 0) + 1);
     const sw = Array.from(next).map(([idx, k]) => `${idx}:${k}`).join(',');
-    return `/g/${tenant.slug}/build?focus=${focusVal}&mins=${minutes}&intensity=${intensity}&v=${variant}${tagParam}&sw=${sw}`;
+    return `/g/${tenant.slug}/build?focus=${focusVal}&mins=${minutes}&intensity=${intensity}&v=${variant}${tagParam}${styleParam}&sw=${sw}`;
   };
   const usedTagIds = new Set(library.flatMap((e) => e.tags ?? []));
 
@@ -243,7 +288,7 @@ export default async function TenantBuild({
             <span className="block text-caption text-text-muted">We choose</span>
           </Link>
           <Link
-            href={`/g/${tenant.slug}/build?mode=custom`}
+            href={`/g/${tenant.slug}/build?mode=custom${styleParam}`}
             className={`rounded-lg border p-3 text-center ${custom ? 'border-accent bg-accent/10' : 'border-border bg-surface'}`}
           >
             <span className="block text-body font-semibold text-text-primary">✚ My own</span>
@@ -257,6 +302,7 @@ export default async function TenantBuild({
             workoutName={`${name} — Custom`}
             params={wp}
             circuitId={`${tenant.slug}-custom`}
+            from={{ name, organization: 'Live Elevated' }}
           />
         ) : (
         <>
@@ -266,6 +312,9 @@ export default async function TenantBuild({
           intensity={intensity}
           minutes={minutes}
           tags={selectedTags}
+          mode={workoutMode}
+          amrapMinutes={amrapMinutes}
+          emomMinutes={emomMinutes}
           equipmentNote={
             isMyGym ? (
               <p className="text-caption text-text-faint">
@@ -320,7 +369,7 @@ export default async function TenantBuild({
           {selectedTags.length > 0 && (
             <p className="mt-1 text-caption text-text-faint nums">
               Drawing from {poolSource.length} matching exercise{poolSource.length === 1 ? '' : 's'} ·{' '}
-              <Link href={`/g/${tenant.slug}/build?focus=${focusVal}&len=${count}&v=1`} className="text-accent">
+              <Link href={`/g/${tenant.slug}/build?focus=${focusVal}&len=${count}&v=1${styleParam}`} className="text-accent">
                 Clear
               </Link>
             </p>

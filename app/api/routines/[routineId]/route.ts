@@ -13,6 +13,7 @@ export async function GET(
   try {
     const rows = await sql`
       select r.id, r.name, r.day_of_week, r.sort_order, r.from_plan, r.favorite,
+        r.set_order, r.mode, r.amrap_minutes, r.emom_minutes,
         coalesce(
           json_agg(
             json_build_object(
@@ -43,14 +44,24 @@ export async function GET(
   }
 }
 
-// PATCH /api/routines/[routineId] — update routine flags (currently `favorite`).
+// PATCH /api/routines/[routineId] — update routine flags: favorite, set_order
+// (circuit/straightSets), and workout mode (intervals/forTime/amrap/emom) +
+// its AMRAP/EMOM minute caps. Every field is optional and independently
+// settable — unset fields are left untouched via coalesce, so e.g. flipping
+// the workout style doesn't clobber `favorite`.
 export async function PATCH(
   req: Request,
   { params }: { params: { routineId: string } },
 ) {
   const sql = getSql();
   if (!sql) return NextResponse.json({ error: 'Database not configured' }, { status: 503 });
-  let body: { favorite?: boolean };
+  let body: {
+    favorite?: boolean;
+    setOrder?: 'circuit' | 'straightSets';
+    mode?: 'intervals' | 'forTime' | 'amrap' | 'emom';
+    amrapMinutes?: number;
+    emomMinutes?: number;
+  };
   try {
     body = await req.json();
   } catch {
@@ -58,9 +69,14 @@ export async function PATCH(
   }
   try {
     const rows = await sql`
-      update routines set favorite = ${body.favorite ?? false}
+      update routines set
+        favorite = coalesce(${body.favorite ?? null}, favorite),
+        set_order = coalesce(${body.setOrder ?? null}, set_order),
+        mode = coalesce(${body.mode ?? null}, mode),
+        amrap_minutes = coalesce(${body.amrapMinutes ?? null}, amrap_minutes),
+        emom_minutes = coalesce(${body.emomMinutes ?? null}, emom_minutes)
       where id = ${params.routineId}
-      returning id, favorite
+      returning id, favorite, set_order, mode, amrap_minutes, emom_minutes
     `;
     return NextResponse.json({ routine: rows[0] ?? null });
   } catch (e) {

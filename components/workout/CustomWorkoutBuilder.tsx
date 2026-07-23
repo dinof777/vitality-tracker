@@ -11,6 +11,7 @@ import ShareWorkoutButton from './ShareWorkoutButton';
 import ExerciseFilterPicker, { type PickerItem } from './ExerciseFilterPicker';
 import SaveCircuitBox from './SaveCircuitBox';
 import SyncroFitButton from './SyncroFitButton';
+import WorkoutStyleRow from './WorkoutStyleRow';
 import { familyOf } from '@/lib/movement-families';
 
 interface Props {
@@ -18,12 +19,24 @@ interface Props {
   workoutName: string;
   params: WorkoutParams;
   circuitId: string;
+  /** Tenant-branded creator attribution for the SyncroFit payload — this
+   *  builder only ever renders inside a gym's build page. Defaults to
+   *  Vitality's own attribution if a host doesn't pass one. */
+  from?: { name: string; organization: string };
 }
 
 // Pick-your-own workout: search the gym's whole library, filter by tag or gear,
 // add moves in the order you want, then share it exactly like a generated one.
-export default function CustomWorkoutBuilder({ library, workoutName, params, circuitId }: Props) {
+export default function CustomWorkoutBuilder({ library, workoutName, params, circuitId, from }: Props) {
   const [picked, setPicked] = useState<LibraryExercise[]>([]);
+  // Workout style is LOCAL to this builder, seeded from the resolved
+  // WorkoutParams — never round-tripped through the URL (see the URL-collision
+  // note on TenantBuilderControls; this page's `?mode=` already means
+  // custom-vs-generated).
+  const [mode, setMode] = useState(params.mode);
+  const [amrapMinutes, setAmrapMinutes] = useState(params.amrapMinutes);
+  const [emomMinutes, setEmomMinutes] = useState(params.emomMinutes);
+  const styledParams = { ...params, mode, amrapMinutes, emomMinutes };
 
   const pickedIds = useMemo(() => new Set(picked.map((p) => p.id)), [picked]);
 
@@ -78,7 +91,9 @@ export default function CustomWorkoutBuilder({ library, workoutName, params, cir
   };
 
   const displayExercises = picked.map((e) => ({ ...toExercise(e), name: e.name }));
-  const sfUrl = picked.length ? syncrofitRunUrl(workoutName, displayExercises, params, '', circuitId) : '#';
+  const sfUrl = picked.length
+    ? syncrofitRunUrl(workoutName, displayExercises, styledParams, '', circuitId, from)
+    : '#';
   const shareExercises = picked.map((e) => ({
     name: e.name,
     equipment: e.equipment,
@@ -121,10 +136,21 @@ export default function CustomWorkoutBuilder({ library, workoutName, params, cir
               ))}
             </ul>
 
-            <SaveCircuitBox exercises={shareExercises} params={params} defaultName={workoutName} />
+            <WorkoutStyleRow
+              mode={mode}
+              amrapMinutes={amrapMinutes}
+              emomMinutes={emomMinutes}
+              onChange={(patch) => {
+                if (patch.mode !== undefined) setMode(patch.mode);
+                if (patch.amrapMinutes !== undefined) setAmrapMinutes(patch.amrapMinutes);
+                if (patch.emomMinutes !== undefined) setEmomMinutes(patch.emomMinutes);
+              }}
+            />
+
+            <SaveCircuitBox exercises={shareExercises} params={styledParams} defaultName={workoutName} />
 
             <div className="mt-3"><SyncroFitButton url={sfUrl} /></div>
-            <ShareWorkoutButton name={workoutName} exercises={shareExercises} params={params} />
+            <ShareWorkoutButton name={workoutName} exercises={shareExercises} params={styledParams} />
             <button type="button" onClick={() => setPicked([])} className="mt-2 w-full text-center text-caption text-text-faint">
               Clear all
             </button>

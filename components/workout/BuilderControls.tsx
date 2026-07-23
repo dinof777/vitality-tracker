@@ -1,10 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { Equipment } from '@/lib/database.types';
+import type { Equipment, WorkoutMode } from '@/lib/database.types';
 import {
   INTENSITY_CHOICES,
   EQUIPMENT_CHOICES,
+  workoutStyleLabel,
   intensityParams,
   lengthToCount,
   regionFocus,
@@ -17,6 +18,7 @@ import {
 } from '@/lib/profile';
 import LengthDial from '@/components/home/LengthDial';
 import FocusPicker from '@/components/workout/FocusPicker';
+import WorkoutStyleControl from '@/components/workout/WorkoutStyleControl';
 import { EXERCISE } from '@/lib/vocabulary';
 
 export interface BuilderValue {
@@ -27,6 +29,11 @@ export interface BuilderValue {
   sets?: number;
   reps?: number;
   restSec?: number;
+  // SyncroFit v2 handoff — see lib/profile#WORKOUT_STYLE_CHOICES. Optional so
+  // a host that hasn't wired workout style yet still compiles unchanged.
+  mode?: WorkoutMode;
+  amrapMinutes?: number;
+  emomMinutes?: number;
 }
 
 interface Props {
@@ -67,7 +74,7 @@ export default function BuilderControls({
   onRegions,
   onSetDefaultFocus,
 }: Props) {
-  const [sheet, setSheet] = useState<'focus' | 'intensity' | 'equipment' | null>(null);
+  const [sheet, setSheet] = useState<'focus' | 'intensity' | 'equipment' | 'style' | null>(null);
   const [regionRows, setRegionRows] = useState<{ region: string; groups: string[] }[]>([]);
   const regions = regionRows.map(regionFocus);
 
@@ -109,6 +116,9 @@ export default function BuilderControls({
   const sets = value.sets ?? ip.sets;
   const reps = value.reps ?? ip.repsNum;
   const restSec = value.restSec ?? ip.restSec;
+  const mode = value.mode ?? 'intervals';
+  const amrapMinutes = value.amrapMinutes ?? 12;
+  const emomMinutes = value.emomMinutes ?? 12;
 
   const eqSummary =
     value.equipment.length === 0
@@ -154,6 +164,18 @@ export default function BuilderControls({
         <span className="text-text-faint">Change ›</span>
       </button>
 
+      <button
+        type="button"
+        onClick={() => setSheet('style')}
+        className="mb-2 flex w-full items-center justify-between rounded-lg border border-border bg-surface p-4 text-left active:bg-surface-raised"
+      >
+        <span>
+          <span className="block text-caption text-text-muted">STYLE</span>
+          <span className="block text-h3 text-text-primary">{workoutStyleLabel(mode)}</span>
+        </span>
+        <span className="text-text-faint">Change ›</span>
+      </button>
+
       {showEquipment ? (
         <button
           type="button"
@@ -176,7 +198,13 @@ export default function BuilderControls({
           <button className="absolute inset-0 bg-black/60" onClick={() => setSheet(null)} aria-label="Close" />
           <div className="relative z-10 max-h-[85dvh] w-full max-w-md overflow-y-auto rounded-t-2xl border-t border-border bg-surface p-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
             <p className="mb-3 text-h3 text-text-primary">
-              {sheet === 'focus' ? 'Choose a focus' : sheet === 'intensity' ? 'Intensity & volume' : 'Your equipment'}
+              {sheet === 'focus'
+                ? 'Choose a focus'
+                : sheet === 'intensity'
+                  ? 'Intensity & volume'
+                  : sheet === 'style'
+                    ? 'Workout style'
+                    : 'Your equipment'}
             </p>
 
             {sheet === 'focus' && (
@@ -271,6 +299,24 @@ export default function BuilderControls({
                     </div>
                   ))}
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setSheet(null)}
+                  className="mt-3 flex h-12 w-full items-center justify-center rounded-md bg-accent text-label text-on-accent active:scale-[0.97]"
+                >
+                  DONE
+                </button>
+              </>
+            )}
+
+            {sheet === 'style' && (
+              <>
+                <WorkoutStyleControl
+                  mode={mode}
+                  amrapMinutes={amrapMinutes}
+                  emomMinutes={emomMinutes}
+                  onChange={(patch) => onChange(patch)}
+                />
                 <button
                   type="button"
                   onClick={() => setSheet(null)}

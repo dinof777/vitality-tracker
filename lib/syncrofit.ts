@@ -49,32 +49,18 @@ function newId(): string {
   );
 }
 
+// AMRAP/EMOM minute caps are contract-clamped 1..60 — guard against a stale
+// stored value (or a future UI bug) ever sending something outside that range.
+function clamp(n: number, lo: number, hi: number): number {
+  return Math.min(hi, Math.max(lo, n));
+}
+
 // UTF-8 → URL-safe base64 (matches SyncroFit's urlSafeBase64: +→-, /→_, strip =).
 function toBase64Url(str: string): string {
   const bytes = new TextEncoder().encode(str);
   let bin = '';
   bytes.forEach((b) => (bin += String.fromCharCode(b)));
   return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
-
-function toPreset(re: RoutineWithExercises['exercises'][number], groupId: string): SfPreset {
-  const sets = re.default_sets && re.default_sets > 0 ? re.default_sets : 3;
-  const prescription = [re.default_reps, re.default_tempo].filter(Boolean).join(' @ ');
-  const notes = [re.default_cue, prescription].filter(Boolean).join(' · ');
-  const base = { id: newId(), name: re.name, notes, sets, volume: 0.8, speakUpDown: true, groupIDs: [groupId] };
-
-  if (isTimed(re)) {
-    const fallback = re.equipment === 'stretch' ? 45 : 40;
-    return { ...base, reps: 1, actionTime: holdSeconds(re.default_reps, fallback), restTime: 0, betweenSetRest: 20 };
-  }
-  // Rep-based: time the tempo across the rep target.
-  return {
-    ...base,
-    reps: repsMid(re.default_reps) ?? 10,
-    actionTime: tempoSeconds(re.default_tempo) ?? 4,
-    restTime: 0,
-    betweenSetRest: 60,
-  };
 }
 
 // Map a generated-workout exercise (uniform WorkoutParams) to a SyncroFit preset,
@@ -169,6 +155,7 @@ export function syncrofitRunUrl(
   p: WorkoutParams,
   origin = '',
   circuitId?: string,
+  from: { name: string; organization: string } = { name: 'Vitality', organization: 'Live Elevated' },
 ): string {
   const exs = exercises.map((ex) => {
     const timed = isTimed(ex);
@@ -190,13 +177,23 @@ export function syncrofitRunUrl(
       ...(reqEquip ? { requiredEquipment: reqEquip } : {}),
     };
   });
+  // SyncroFit v2 handoff — see syncrofitRunUrlFromRoutine's comment. Ad-hoc
+  // workouts have no per-session set-order toggle (owner decision) — always
+  // straightSets, Vitality's actual structure, sent whenever mode is intervals.
+  const mode = p.mode ?? 'intervals';
+  const amrapMinutes = p.amrapMinutes ?? 12;
+  const emomMinutes = p.emomMinutes ?? 12;
   const payload = {
     id: circuitId ?? newId(),
     name,
     description: 'Sent from Vitality Tracker',
-    from: { name: 'Vitality', organization: 'Live Elevated' },
-    restBetweenExercises: 30,
+    from,
+    restBetweenExercises: p.setupSec,
     webhook: SYNCROFIT_WEBHOOK,
+    ...(mode !== 'intervals' ? { mode } : {}),
+    ...(mode === 'amrap' ? { amrapMinutes: clamp(amrapMinutes, 1, 60) } : {}),
+    ...(mode === 'emom' ? { emomMinutes: clamp(emomMinutes, 1, 60) } : {}),
+    ...(mode === 'intervals' ? { setOrder: 'straightSets' as const } : {}),
     exercises: exs,
   };
   return `syncrofit://run?circuit=${encodeURIComponent(JSON.stringify(payload))}`;
@@ -205,7 +202,10 @@ export function syncrofitRunUrl(
 // NEW-format routine hand-off (syncrofit://run) — carries the webhook + the
 // routine id, so SyncroFit's import/completion feedback flows back and lands on
 // the routine's SyncroFit Activity card. Preferred over the legacy import URL.
-export function syncrofitRunUrlFromRoutine(routine: RoutineWithExercises): string {
+export function syncrofitRunUrlFromRoutine(
+  routine: RoutineWithExercises,
+  from: { name: string; organization: string } = { name: 'Vitality', organization: 'Live Elevated' },
+): string {
   const exs = routine.exercises.map((re) => {
     const timed = isTimed(re);
     const sets = re.default_sets && re.default_sets > 0 ? re.default_sets : 3;
@@ -227,35 +227,27 @@ export function syncrofitRunUrlFromRoutine(routine: RoutineWithExercises): strin
     }
     return { ...base, reps: repsMid(re.default_reps) ?? 10, actionTime: tempoSeconds(re.default_tempo) ?? 4, betweenSetRest: 60 };
   });
+  // SyncroFit v2 handoff: workout style (Intervals/For Time/AMRAP/EMOM) + set
+  // order — omitted at their contract defaults (intervals / circuit) so we
+  // don't clutter the payload with values SyncroFit would infer anyway, EXCEPT
+  // straightSets: Vitality routines are set-by-set structured, the opposite of
+  // SyncroFit's own default, so it's sent explicitly whenever it applies.
+  const mode = routine.mode ?? 'intervals';
+  const amrapMinutes = routine.amrap_minutes ?? 12;
+  const emomMinutes = routine.emom_minutes ?? 12;
+  const setOrder = routine.set_order ?? 'straightSets';
   const payload = {
     id: routine.id,
     name: routine.name,
     description: 'Sent from Vitality Tracker',
-    from: { name: 'Vitality', organization: 'Live Elevated' },
+    from,
     restBetweenExercises: 30,
     webhook: SYNCROFIT_WEBHOOK,
+    ...(mode !== 'intervals' ? { mode } : {}),
+    ...(mode === 'amrap' ? { amrapMinutes: clamp(amrapMinutes, 1, 60) } : {}),
+    ...(mode === 'emom' ? { emomMinutes: clamp(emomMinutes, 1, 60) } : {}),
+    ...(mode === 'intervals' && setOrder === 'straightSets' ? { setOrder } : {}),
     exercises: exs,
   };
   return `syncrofit://run?circuit=${encodeURIComponent(JSON.stringify(payload))}`;
-}
-
-// Build the intervaltimer://import-circuit link for a routine. The circuit id IS
-// the routine's id, so SyncroFit's import/completion feedback (circuit.id)
-// correlates straight back to this routine. See app/api/syncrofit/events.
-export function syncrofitImportUrl(routine: RoutineWithExercises): string {
-  const groupId = routine.id;
-  const presets = routine.exercises.map((re) => toPreset(re, groupId));
-  const payload = {
-    version: 2,
-    group: {
-      id: groupId,
-      name: routine.name,
-      workoutDescription: 'Sent from Vitality Tracker',
-      presetOrder: presets.map((p) => p.id),
-      circuitBetweenSetRest: 30,
-      announceNextExercise: true,
-    },
-    presets,
-  };
-  return `intervaltimer://import-circuit?data=${toBase64Url(JSON.stringify(payload))}`;
 }

@@ -121,6 +121,8 @@ rule never contradict each other again:
 - `/build`'s ▲/▼ reorder pair on picked-exercise rows (same-family,
   non-destructive — the adjacent ✕ remove button is a *different*, destructive
   action and stays at the 48px default with a full 8px gutter from the pair)
+- `WorkoutStyleControl`'s Straight Sets/Circuit order toggle and its
+  AMRAP/EMOM minutes-stepper `−`/`+` pair (same-family, non-destructive)
 
 Nothing else gets to claim this exception without a doc update here first.
 
@@ -141,8 +143,9 @@ for Phase 4+ component builds.
 Every selectable tile/row pairs its `border-accent bg-accent/10` (or solid
 accent fill) with a non-color signal, so state never depends on color
 perception alone:
-- **Full-width list row** (Goal/Intensity steps, `app/setup/page.tsx`): a
-  trailing accent `●` dot, shown only when selected.
+- **Full-width list row** (Goal/Intensity steps, `app/setup/page.tsx`;
+  `WorkoutStyleControl`'s 4-style list): a trailing accent `●` dot, shown only
+  when selected.
 - **Checkbox-style row** (Equipment step): a `✓` inside a small bordered
   square that fills accent when selected.
 - **Grid/emoji tile** (`MuscleDrillDown` — muscle picker + `FocusPicker` step
@@ -245,6 +248,59 @@ inline-flex rounded-full bg-surface-raised p-1
   > each side: h-11 w-16 rounded-full text-caption font-semibold
   > selected: bg-accent text-on-accent
 ```
+
+### Workout style control
+Two-tier picker for how a circuit runs once handed to SyncroFit (Intervals ·
+For Time · AMRAP · EMOM) — `components/workout/WorkoutStyleControl.tsx`. Top
+tier reuses the **full-width list row** recipe from the Intensity step
+(`BuilderControls.tsx`'s `sheet === 'intensity'` list), not the emoji-tile
+grid — these four options each carry a full-sentence hint ("As many rounds as
+possible in the time"), which is what that row shape is for; the tile+corner-✓
+grid (`MuscleDrillDown`) is reserved for short single-word labels.
+```
+space-y-2
+  > each row: flex w-full items-center justify-between rounded-lg border p-3 text-left
+              border-accent bg-accent/10 (selected) | border-border bg-surface
+  > title: text-body font-semibold text-text-primary (emoji + label)
+  > hint:  text-caption text-text-muted
+  > selected signal: trailing accent ● (§6 selection-state rule)
+```
+Exactly one conditional second tier appears directly below the list, in the
+same expanded-panel chrome `MuscleDrillDown` uses for its own drill-down
+(`rounded-lg border border-border bg-surface-raised/50 p-2.5`) — never both at
+once, since ordering and duration are mutually exclusive by style:
+- **Intervals selected** → Straight Sets/Circuit order toggle. Reuses the
+  AMRAP-toggle segmented recipe above with 2 segments instead of 4. Default
+  Straight Sets.
+- **AMRAP or EMOM selected** → a minutes stepper (BuilderControls' fine-tune
+  row recipe: `− value +`, `h-9 w-9 rounded-full border` buttons; the value
+  span gets `aria-live="polite"` so the new total is announced without
+  refocusing), range 1–60 default 12. Quick-pick chips (`10 · 12 · 15 · 20`,
+  the Tempo-preset pill recipe above) sit above the stepper so picking a
+  common length doesn't mean up to 59 taps of `+`.
+- **For Time selected** → no second tier; nothing to configure.
+
+A persistent footer line under the control states the SyncroFit handoff
+plainly, so picking AMRAP never implies the app itself runs a live AMRAP
+clock:
+```
+text-caption text-text-faint
+  intervals: "SyncroFit runs the timer when you send this workout."
+  other:     "SyncroFit runs the {Style} clock — Vitality doesn't have a
+              built-in timer for this style yet."
+```
+Two hosting shapes for the same `WorkoutStyleControl`:
+- **Inline, always-visible** — the routine builder
+  (`app/routines/[routineId]/page.tsx`), where a trainer is already editing a
+  persistent, saved thing and the exercise list itself is fully expanded, not
+  summarized behind a sheet.
+- **Row + sheet** — a `STYLE` row added to `BuilderControls` alongside
+  FOCUS/INTENSITY/EQUIPMENT (covers both the personal Home builder and the
+  gym "For me" flow, which already share `BuilderControls`), and
+  `WorkoutStyleRow` — a small standalone row+sheet wrapper around the same
+  control — for hosts with no sheet plumbing of their own
+  (`CustomWorkoutBuilder`). A repeat visitor who never touches it sees one
+  calm "Change ›" row reading "Intervals," never the full list.
 
 ### Rest timer display
 ```

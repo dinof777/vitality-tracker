@@ -218,6 +218,9 @@ export default function Home() {
                   sets: params?.sets,
                   reps: params?.reps,
                   restSec: params?.restSec,
+                  mode: profile.mode,
+                  amrapMinutes: profile.amrapMinutes,
+                  emomMinutes: profile.emomMinutes,
                 }}
                 onRegions={setRegions}
                 onChange={(patch) => {
@@ -228,7 +231,7 @@ export default function Home() {
                   if (patch.focus !== undefined) setRefineFocus(patch.focus);
                   if (patch.intensity !== undefined) setIntensity(patch.intensity);
                   const rest: Partial<Profile> = {};
-                  for (const k of ['intensity', 'equipment', 'sets', 'reps', 'restSec'] as const) {
+                  for (const k of ['intensity', 'equipment', 'sets', 'reps', 'restSec', 'mode', 'amrapMinutes', 'emomMinutes'] as const) {
                     if (patch[k] !== undefined) (rest as Record<string, unknown>)[k] = patch[k];
                   }
                   if (Object.keys(rest).length) persist(rest);
