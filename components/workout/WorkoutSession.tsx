@@ -90,7 +90,11 @@ export default function WorkoutSession({
   const [finished, setFinished] = useState(false);
   const [showLegend, setShowLegend] = useState(false);
 
-  const handleLogSet = async (entry: LoggedSet) => {
+  // Returns the persisted entry id so ExerciseCard can attach it to the set it
+  // just optimistically added — Undo needs that id to also delete server-side.
+  // `id: null` means "never persisted" (503/local-only, or the POST failed),
+  // in which case Undo only has to remove the set locally.
+  const handleLogSet = async (entry: LoggedSet): Promise<{ id: string | null }> => {
     setSetCount((n) => n + 1);
     setSync('syncing');
     try {
@@ -101,16 +105,21 @@ export default function WorkoutSession({
       });
       if (res.status === 503) {
         setSync('local'); // DB not configured yet — kept on-device
-        return;
+        return { id: null };
       }
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
       if (data.workoutId && !workoutId) setWorkoutId(data.workoutId);
       setSync('synced');
+      return { id: data?.entry?.id ?? null };
     } catch {
       setSync('local');
+      return { id: null };
     }
   };
+
+  // Undo (most-recent set only, see ExerciseCard) mirrors the increment above.
+  const handleUndoSet = () => setSetCount((n) => Math.max(0, n - 1));
 
   const finishWorkout = async () => {
     setFinished(true);
@@ -181,7 +190,7 @@ export default function WorkoutSession({
 
       <div className="space-y-4">
         {exercises.map((ex) => (
-          <ExerciseCard key={ex.id} exercise={ex} onLogSet={handleLogSet} />
+          <ExerciseCard key={ex.id} exercise={ex} onLogSet={handleLogSet} onUndoSet={handleUndoSet} />
         ))}
       </div>
 

@@ -47,6 +47,12 @@ export default function MuscleDrillDown({ nodes, value, onSelect, columns = 3 }:
               key={n.value}
               type="button"
               aria-expanded={hasChildren ? expanded === n.value : undefined}
+              aria-pressed={hasChildren ? undefined : on}
+              aria-label={
+                hasChildren && childSelected
+                  ? `${n.label}, ${n.children!.find((c) => c.value === value)?.label} selected`
+                  : n.label
+              }
               onClick={() => {
                 if (hasChildren) {
                   setExpanded((cur) => (cur === n.value ? null : n.value));
@@ -55,7 +61,7 @@ export default function MuscleDrillDown({ nodes, value, onSelect, columns = 3 }:
                   onSelect(n.value);
                 }
               }}
-              className={`rounded-lg border p-2.5 text-center transition-colors ${
+              className={`relative rounded-lg border p-2.5 text-center transition-colors ${
                 on ? 'border-accent bg-accent/10' : 'border-border bg-surface'
               }`}
             >
@@ -70,6 +76,11 @@ export default function MuscleDrillDown({ nodes, value, onSelect, columns = 3 }:
                     : expanded === n.value
                       ? '▾ narrow'
                       : '▸ narrow'}
+                </span>
+              )}
+              {value === n.value && (
+                <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-on-accent text-[10px] font-bold leading-none">
+                  ✓
                 </span>
               )}
             </button>
@@ -90,7 +101,8 @@ export default function MuscleDrillDown({ nodes, value, onSelect, columns = 3 }:
                   key={c.value}
                   type="button"
                   onClick={() => onSelect(c.value)}
-                  className={`rounded-md border p-2 text-center transition-colors ${
+                  aria-pressed={on}
+                  className={`relative rounded-md border p-2 text-center transition-colors ${
                     on ? 'border-accent bg-accent/10' : 'border-border bg-surface'
                   }`}
                 >
@@ -98,6 +110,11 @@ export default function MuscleDrillDown({ nodes, value, onSelect, columns = 3 }:
                   <span className="mt-0.5 block text-caption font-semibold leading-tight text-text-primary">
                     {c.label}
                   </span>
+                  {on && (
+                    <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-on-accent text-[10px] font-bold leading-none">
+                      ✓
+                    </span>
+                  )}
                 </button>
               );
             })}

@@ -14,7 +14,12 @@ import ExerciseDetailSheet from './ExerciseDetailSheet';
 
 interface ExerciseCardProps {
   exercise: Exercise;
-  onLogSet: (entry: LoggedSet) => void;
+  // Resolves once the POST round-trips, with the persisted entry id (or null
+  // if it was never persisted) — see WorkoutSession.handleLogSet.
+  onLogSet: (entry: LoggedSet) => Promise<{ id: string | null }>;
+  // Undo (most-recent set only) needs to decrement the session-wide set count
+  // that lives in WorkoutSession, since ExerciseCard only owns its own list.
+  onUndoSet: () => void;
 }
 
 interface LastSet {
@@ -29,7 +34,7 @@ const setTypeLabel = (v: string) =>
 // One exercise within a workout: name + cue, a summary of completed sets, the
 // rest timer (shown after a set is logged), and the active set-log row. The row
 // pre-fills from this session's previous set, or the last logged set in the DB.
-export default function ExerciseCard({ exercise, onLogSet }: ExerciseCardProps) {
+export default function ExerciseCard({ exercise, onLogSet, onUndoSet }: ExerciseCardProps) {
   const [sets, setSets] = useState<LoggedSet[]>([]);
   const [showTimer, setShowTimer] = useState(false);
   const [dbLast, setDbLast] = useState<LastSet | null>(null);
@@ -61,10 +66,29 @@ export default function ExerciseCard({ exercise, onLogSet }: ExerciseCardProps) 
     };
   }, [exercise.id]);
 
-  const handleLogSet = (entry: LoggedSet) => {
+  const handleLogSet = async (entry: LoggedSet) => {
+    const index = sets.length; // position this entry will land at, for the id patch below
     setSets((prev) => [...prev, entry]);
     setShowTimer(true);
-    onLogSet(entry);
+    const { id } = await onLogSet(entry);
+    if (id) {
+      setSets((prev) => prev.map((s, i) => (i === index ? { ...s, id } : s)));
+    }
+  };
+
+  // Undo (most-recent set only, DESIGN.md §6): removes the set locally, hides
+  // its rest timer, decrements the session-wide count, and — only if it made
+  // it to the DB — deletes it server-side too. No confirm; low-stakes and
+  // immediately reversible by relogging.
+  const handleUndo = (entry: LoggedSet) => {
+    setSets((prev) => prev.slice(0, -1));
+    setShowTimer(false);
+    onUndoSet();
+    if (entry.id) {
+      fetch(`/api/log/${entry.id}`, { method: 'DELETE' }).catch(() => {
+        /* best effort — matches routines' delete pattern */
+      });
+    }
   };
 
   // Pre-fill priority: this session's previous set, else the DB's last set.
@@ -135,6 +159,15 @@ export default function ExerciseCard({ exercise, onLogSet }: ExerciseCardProps) 
                   <span className={s.setType === 'amrap' ? 'text-energy' : 'text-text-muted'}>
                     {setTypeLabel(s.setType)}
                   </span>
+                )}
+                {i === sets.length - 1 && (
+                  <button
+                    type="button"
+                    onClick={() => handleUndo(s)}
+                    className="text-caption font-semibold text-destructive underline decoration-dotted underline-offset-2 active:opacity-70"
+                  >
+                    Undo
+                  </button>
                 )}
               </span>
             </li>

@@ -96,7 +96,7 @@ export default function RoutinesPage() {
               onClick={() => toggleFav(r)}
               aria-label={r.favorite ? 'Unfavorite' : 'Favorite'}
               aria-pressed={r.favorite}
-              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-2xl ${
+              className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-2xl ${
                 r.favorite ? 'text-accent' : 'text-text-faint'
               }`}
             >
@@ -106,7 +106,7 @@ export default function RoutinesPage() {
               type="button"
               onClick={() => remove(r)}
               aria-label={`Delete ${r.name}`}
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-lg text-text-faint active:text-red-500"
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-lg text-text-faint active:text-red-500"
             >
               🗑
             </button>

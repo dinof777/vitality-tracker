@@ -102,7 +102,7 @@ export default function ExercisesPage() {
             type="button"
             onClick={() => setAddTarget(ex)}
             aria-label={`Add ${ex.name} to a routine`}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-h2 text-accent active:bg-surface-raised"
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-h2 text-accent active:bg-surface-raised"
           >
             +
           </button>

@@ -26,6 +26,7 @@ export const LAST_INFO = 'Your most recent logged set for this exercise — pre-
 // What SetLogRow hands back to its parent when a set is logged.
 // For timed moves (hold/cardio/carry) the seconds are stored in `reps`.
 export interface LoggedSet {
+  id?: string; // set once the server round-trip resolves (see WorkoutSession.handleLogSet) — undefined for on-device-only / not-yet-persisted sets
   exerciseId: string;
   setNumber: number;
   weight: number | null;
@@ -33,4 +34,12 @@ export interface LoggedSet {
   tempo: string;
   setType: SetType;
   side?: 'L' | 'R' | null; // unilateral moves logged per side
+}
+
+// LOG SET is disabled until there's a real value to log (DESIGN.md §6,
+// "Log-set validation"). `reps` is the shared field for both strength mode
+// (reps) and timed mode (seconds) — weight is intentionally NOT required,
+// since a valid bodyweight set logs with weight: null.
+export function canLogSet(reps: string): boolean {
+  return reps !== '' && Number(reps) >= 1;
 }

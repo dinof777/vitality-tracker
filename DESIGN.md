@@ -93,9 +93,41 @@ Screen gutter: `px-4` (16px). Card padding: `p-4`. Section gap: `space-y-6`.
 
 ## 5. Touch targets
 
-**Minimum 48px (`h-12`) for anything tappable.** Buttons, input rows, toggles,
-nav items, badges-that-are-buttons. Primary actions `h-14` (56px). Spacing
-between adjacent targets ≥ 8px so fat thumbs don't mis-tap mid-set.
+**Default minimum: 48px (`h-12`).** Buttons, input rows, toggles, nav items,
+and any **standalone** icon action — a control that is the only (or dominant)
+tappable thing in its row/area (favorite ★, delete 🗑, add-to-routine +, the
+Daily 5 row-button, ghost/primary buttons). Primary actions `h-14` (56px).
+Spacing between adjacent *independent* targets ≥ 8px so fat thumbs don't
+cross into a different action mid-set.
+
+**Dense in-row exception — 44px floor, never lower.** A small, named set of
+mid-set logging controls packs several same-family options into one already-
+dense row. These may drop to a firm **44px** minimum (not 48, never below 44)
+when *both* hold:
+1. The control is part of a grouped/segmented set of same-family,
+   **non-destructive** options — reselecting a neighbor only changes a value,
+   it never deletes or logs anything. In that case its segments may sit
+   edge-to-edge with **no internal gap requirement** (a true segmented
+   control, same as iOS's own pattern).
+2. Any two controls that are **not** same-family — especially anywhere one is
+   destructive — still need the full ≥8px gutter regardless of which band
+   either one sits in.
+
+This exception is scoped to exactly these controls, so §6's recipes and this
+rule never contradict each other again:
+- `SetLogRow`'s tempo-preset pills + Custom-tempo button/input
+- `SetLogRow`'s AMRAP/dropset/half-rep segmented control
+- `SetLogRow`'s L/R side toggle
+- `/build`'s ▲/▼ reorder pair on picked-exercise rows (same-family,
+  non-destructive — the adjacent ✕ remove button is a *different*, destructive
+  action and stays at the 48px default with a full 8px gutter from the pair)
+
+Nothing else gets to claim this exception without a doc update here first.
+
+A decorative element nested inside a properly-sized tap target — e.g. the
+28px checkbox glyph inside Daily 5's 48px+ row-button
+(`components/daily5/ChecklistItem.tsx`) — is not itself "a target" and isn't
+bound by either number; only the actual `<button>`/`<a>` wrapping it is.
 
 ---
 
@@ -103,6 +135,24 @@ between adjacent targets ≥ 8px so fat thumbs don't mis-tap mid-set.
 
 Class recipes assume Tailwind + the tokens above. These are the source of truth
 for Phase 4+ component builds.
+
+### Selection state — never color alone
+
+Every selectable tile/row pairs its `border-accent bg-accent/10` (or solid
+accent fill) with a non-color signal, so state never depends on color
+perception alone:
+- **Full-width list row** (Goal/Intensity steps, `app/setup/page.tsx`): a
+  trailing accent `●` dot, shown only when selected.
+- **Checkbox-style row** (Equipment step): a `✓` inside a small bordered
+  square that fills accent when selected.
+- **Grid/emoji tile** (`MuscleDrillDown` — muscle picker + `FocusPicker` step
+  1/2): a small accent-filled `✓` badge in the tile's top-right corner, so it
+  doesn't crowd the centered emoji/label.
+
+Pair with `aria-pressed` on plain toggle/select tiles, or an `aria-label` that
+states the selection when the same button also carries `aria-expanded`
+(disclosure tiles) — never rely on `border-accent` alone for assistive tech
+either.
 
 ### Primary button
 ```
@@ -119,6 +169,16 @@ h-12 rounded-md border border-border bg-transparent text-text-primary text-label
 active:bg-surface active:scale-[0.97] transition-all duration-150 ease-out
 ```
 
+### Row icon button (standalone)
+Single icon action inside a list row (add-to-routine +, favorite ★, delete
+🗑) — the row's only extra control beyond the row-tap itself. Full 48px
+default (§5), not the dense-in-row exception.
+```
+flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-h2
+active:bg-surface-raised                       (non-destructive)
+active:text-red-500                            (destructive, e.g. delete)
+```
+
 ### Set-log input row
 One row per set: set #, weight input, reps input, tempo badge, set-type, ✓.
 ```
@@ -127,22 +187,63 @@ flex items-center gap-3 h-14 px-3 rounded-md bg-surface border border-border
 - Number inputs: `w-20 h-12 bg-surface-raised rounded-md text-display text-2xl
   text-center tabular-nums text-text-primary` (large, centered, thumb-typed).
 - Completed row: `border-success/40` + a `text-success` check.
+- LOG SET is a Primary button (`h-14`) whose `disabled` state gates on
+  validation — see "Log-set validation" below. Tempo, set-type and L/R
+  controls below the inputs are the dense-in-row exception (§5) — see their
+  own recipes.
 
-### Tempo badge (pill)
+### Log-set validation
+LOG SET is **disabled** (`disabled:opacity-40`, same Primary-button recipe
+above — no new pattern) until the set has a real value to log:
+- Strength/reps mode: `reps` filled and ≥ 1. `weight` is intentionally **not**
+  required — bodyweight moves are a valid logged set with `weight: null`.
+- Timed mode (hold/cardio/carry): the seconds field (`reps`) filled and ≥ 1.
+
+This removes the mis-tap-logs-a-blank-set failure at the source, rather than
+cleaning it up after the fact.
+
+### Undo (most-recent set only)
+The **last** row in a exercise's completed-set list gets an inline "Undo" —
+not a permanent delete affordance on every historical row (that's a bigger,
+noisier change than the problem calls for). Undo disappears the moment the
+next set for that exercise is logged; it's a grace-period correction for "the
+thing I just did," not a session-log editor.
+```
+text-caption font-semibold text-destructive underline decoration-dotted
+underline-offset-2 active:opacity-70
+```
+No confirm dialog — low-stakes and immediately reversible by relogging,
+unlike the `window.confirm` reserved for irreversible actions elsewhere
+(e.g. deleting a whole routine, `app/routines/page.tsx`).
+
+### Tempo preset button (pill)
+Interactive — dense-in-row exception (§5): same-family, non-destructive.
 Shows eccentric-pause-concentric, e.g. `3-1-1`.
 ```
-inline-flex items-center h-8 px-3 rounded-full bg-accent/15 text-accent
+inline-flex items-center h-11 px-3 rounded-full bg-accent/15 text-accent
 text-caption font-semibold tabular-nums
 ```
-Active/selected: solid `bg-accent text-on-accent`.
+Active/selected: solid `bg-accent text-on-accent`. The Custom-tempo button and
+its text input match the same `h-11` so the wrapped row stays visually even.
 
 ### AMRAP toggle
-Segmented set-type control: `normal · amrap · dropset · half_rep`.
+Segmented set-type control: `normal · amrap · dropset · half_rep`. Dense-in-row
+exception (§5) — segments sit edge-to-edge inside the shared pill, no internal
+gap.
 ```
-inline-flex rounded-full bg-surface-raised p-1 h-10
-  > each option: h-8 px-3 rounded-full text-caption
+inline-flex w-full rounded-full bg-surface-raised p-1
+  > each option: h-11 flex-1 rounded-full text-caption
   > selected: bg-accent text-on-accent
   > amrap selected: bg-energy text-on-accent   (amber = push state)
+```
+
+### L/R side toggle
+Unilateral moves. Dense-in-row exception (§5) — two segments, edge-to-edge,
+no internal gap.
+```
+inline-flex rounded-full bg-surface-raised p-1
+  > each side: h-11 w-16 rounded-full text-caption font-semibold
+  > selected: bg-accent text-on-accent
 ```
 
 ### Rest timer display
@@ -176,6 +277,19 @@ flex items-center gap-3 h-12 px-3 rounded-md bg-surface
   > label: text-body text-text-primary, checked → line-through text-faint
 streak pill (top of list): bg-energy/15 text-energy rounded-full
 ```
+
+### Picked-list row controls (reorder / remove)
+`/build`'s picked-exercise rows: ▲/▼ reorder (same-family, non-destructive —
+dense-in-row exception, no gap needed between the pair) + ✕ remove
+(destructive — full 48px default, ≥8px gutter from the reorder pair).
+```
+▲/▼: h-11 w-11 flex items-center justify-center rounded-md text-text-faint
+     active:text-accent disabled:opacity-30 · stacked with gap-1 between them
+✕:   h-12 w-12 flex items-center justify-center rounded-full text-destructive
+     active:bg-surface-raised · ≥8px (gap-2+) from the ▲/▼ stack
+```
+The row's height grows to fit these targets — the buttons never shrink to fit
+the row.
 
 ### Two admin-list patterns — pick by whether there's something to illustrate
 

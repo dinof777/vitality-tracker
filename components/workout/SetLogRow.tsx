@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import type { SetType } from '@/lib/database.types';
 import { modeWorkLabel, type ExerciseMode } from '@/lib/exercise-mode';
-import { SET_TYPES, SET_TYPE_INFO, TEMPO_INFO, TEMPO_PRESETS, type LoggedSet } from '@/lib/workout-types';
+import { SET_TYPES, SET_TYPE_INFO, TEMPO_INFO, TEMPO_PRESETS, canLogSet, type LoggedSet } from '@/lib/workout-types';
 
 interface SetLogRowProps {
   exerciseId: string;
@@ -50,6 +50,8 @@ export default function SetLogRow({
       side: perSide ? side : null,
     });
   };
+
+  const canLog = canLogSet(reps);
 
   const inputClass =
     'h-12 w-full rounded-md bg-surface-raised text-center text-2xl font-extrabold nums text-text-primary placeholder:text-text-faint outline-none focus:ring-2 focus:ring-accent';
@@ -112,7 +114,7 @@ export default function SetLogRow({
                 key={s}
                 type="button"
                 onClick={() => setSide(s)}
-                className={`h-9 w-16 rounded-full text-caption font-semibold transition-colors ${
+                className={`h-11 w-16 rounded-full text-caption font-semibold transition-colors ${
                   side === s ? 'bg-accent text-on-accent' : 'text-text-muted'
                 }`}
               >
@@ -138,7 +140,7 @@ export default function SetLogRow({
                     setCustomTempo(false);
                     setTempo(t);
                   }}
-                  className={`h-8 rounded-full px-3 text-caption font-semibold nums transition-colors ${
+                  className={`h-11 rounded-full px-3 text-caption font-semibold nums transition-colors ${
                     active ? 'bg-accent text-on-accent' : 'bg-accent/15 text-accent'
                   }`}
                 >
@@ -149,7 +151,7 @@ export default function SetLogRow({
             <button
               type="button"
               onClick={() => setCustomTempo(true)}
-              className={`h-8 rounded-full px-3 text-caption font-semibold transition-colors ${
+              className={`h-11 rounded-full px-3 text-caption font-semibold transition-colors ${
                 customTempo ? 'bg-accent text-on-accent' : 'bg-surface-raised text-text-muted'
               }`}
             >
@@ -161,7 +163,7 @@ export default function SetLogRow({
                 value={tempo}
                 onChange={(e) => setTempo(e.target.value)}
                 placeholder="e.g. 2-1-X"
-                className="h-8 w-24 rounded-full bg-surface-raised px-3 text-caption nums text-text-primary outline-none focus:ring-2 focus:ring-accent"
+                className="h-11 w-24 rounded-full bg-surface-raised px-3 text-caption nums text-text-primary outline-none focus:ring-2 focus:ring-accent"
                 aria-label="Custom tempo"
               />
             )}
@@ -177,7 +179,7 @@ export default function SetLogRow({
                   type="button"
                   title={SET_TYPE_INFO[st.value]}
                   onClick={() => setSetType(st.value)}
-                  className={`h-9 flex-1 rounded-full text-caption font-semibold transition-colors ${
+                  className={`h-11 flex-1 rounded-full text-caption font-semibold transition-colors ${
                     active ? activeClass : 'text-text-muted'
                   }`}
                 >
@@ -192,7 +194,8 @@ export default function SetLogRow({
       <button
         type="button"
         onClick={handleLog}
-        className="flex h-14 w-full items-center justify-center rounded-md bg-accent text-label text-on-accent transition-all duration-150 ease-out active:scale-[0.97] active:bg-accent-press"
+        disabled={!canLog}
+        className="flex h-14 w-full items-center justify-center rounded-md bg-accent text-label text-on-accent transition-all duration-150 ease-out active:scale-[0.97] active:bg-accent-press disabled:opacity-40 disabled:active:scale-100"
       >
         LOG SET{perSide ? ` · ${side === 'L' ? 'LEFT' : 'RIGHT'}` : ''}
       </button>

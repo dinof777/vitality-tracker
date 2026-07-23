@@ -70,7 +70,7 @@ export const GOAL_CHOICES: { value: Goal; label: string; emoji: string; hint: st
   { value: 'general_health', label: 'General Fitness & Mobility', emoji: '🌱', hint: 'Even 4-pillar balance' },
   { value: 'build_muscle', label: 'Build Muscle', emoji: '💪', hint: 'More strength days' },
   { value: 'weight_loss', label: 'Lose Weight / Conditioning', emoji: '🔥', hint: 'More cardio days' },
-  { value: 'recover_rehab', label: 'Recover / Rehab an Area', emoji: '🩹', hint: 'Guided by body area & stage' },
+  { value: 'recover_rehab', label: 'Recover / Rehab an Area', emoji: '🩹', hint: 'Called “Physical Therapy” next' },
 ];
 
 export const DEFAULT_GOAL: Goal = 'general_health';

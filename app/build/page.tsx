@@ -106,11 +106,11 @@ export default function BuildYourOwn() {
                     <span className="block truncate text-body font-semibold text-text-primary">{e.name}</span>
                     <span className="block truncate text-caption text-text-muted">{e.muscle_group}</span>
                   </span>
-                  <span className="flex shrink-0 flex-col">
-                    <button type="button" onClick={() => move(i, -1)} disabled={i === 0} className="px-1 text-text-faint active:text-accent disabled:opacity-30" aria-label="Move up">▲</button>
-                    <button type="button" onClick={() => move(i, 1)} disabled={i === picked.length - 1} className="px-1 text-text-faint active:text-accent disabled:opacity-30" aria-label="Move down">▼</button>
+                  <span className="flex shrink-0 flex-col gap-1">
+                    <button type="button" onClick={() => move(i, -1)} disabled={i === 0} className="flex h-11 w-11 items-center justify-center text-text-faint active:text-accent disabled:opacity-30" aria-label="Move up">▲</button>
+                    <button type="button" onClick={() => move(i, 1)} disabled={i === picked.length - 1} className="flex h-11 w-11 items-center justify-center text-text-faint active:text-accent disabled:opacity-30" aria-label="Move down">▼</button>
                   </span>
-                  <button type="button" onClick={() => toggle(id)} className="shrink-0 px-1 text-caption text-destructive" aria-label={`Remove ${e.name}`}>✕</button>
+                  <button type="button" onClick={() => toggle(id)} className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-caption text-destructive active:bg-surface-raised" aria-label={`Remove ${e.name}`}>✕</button>
                 </li>
               );
             })}
