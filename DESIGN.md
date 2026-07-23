@@ -242,8 +242,11 @@ Rules both encode:
 ## 7. Layout & navigation
 
 - **Mobile-first**, max content width `max-w-md` centered on larger screens.
-- **Bottom tab bar** (thumb zone): Log · Routines · Progress · Daily 5. Fixed,
-  `h-16`, `bg-surface border-t border-border`, active tab `text-accent`.
+- **Bottom tab bar** (thumb zone): Home · Exercises · Routines · Daily 5 ·
+  Profile (`components/layout/BottomNav.tsx`). Fixed, `h-16`,
+  `bg-surface/95 border-t border-border` with backdrop blur, active tab
+  `text-accent`, inactive `text-text-faint`. Hidden on focus screens (active
+  workout, gym/pro/share routes) so logging stays distraction-free.
 - Safe-area aware: `pb-[env(safe-area-inset-bottom)]` so the tab bar clears the
   iPhone home indicator in standalone PWA mode.
 

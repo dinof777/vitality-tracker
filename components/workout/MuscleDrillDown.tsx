@@ -64,7 +64,7 @@ export default function MuscleDrillDown({ nodes, value, onSelect, columns = 3 }:
                 {n.label}
               </span>
               {hasChildren && (
-                <span className="mt-0.5 block text-[0.6rem] font-medium tracking-wide text-text-faint">
+                <span className="mt-0.5 block text-caption font-medium tracking-wide text-text-faint">
                   {childSelected
                     ? n.children!.find((c) => c.value === value)?.label
                     : expanded === n.value
@@ -79,7 +79,7 @@ export default function MuscleDrillDown({ nodes, value, onSelect, columns = 3 }:
 
       {expandedNode?.children?.length ? (
         <div className="rounded-lg border border-border bg-surface-raised/50 p-2.5">
-          <p className="mb-2 text-[0.65rem] font-semibold tracking-wide text-text-faint">
+          <p className="mb-2 text-caption font-semibold tracking-wide text-text-faint">
             {expandedNode.label.toUpperCase()} — NARROW TO
           </p>
           <div className="grid grid-cols-3 gap-2">

@@ -42,6 +42,17 @@ interface GenerateOpts {
    *  lookup, so a region focus value resolves to its actual muscle groups
    *  instead of silently defaulting to the first static focus. */
   focusChoices?: FocusChoice[];
+  /**
+   * Fired (synchronously, before generateWorkout returns) with the focus
+   * VALUE actually used to fill the pool — the requested focus, or a coarser
+   * rung of it if the relaxation ladder in varietyOrdered had to broaden past
+   * an empty narrow tier. A caller that labels the workout by its requested
+   * focus (e.g. StartSheet's `name`) should read this instead, or the label
+   * can claim a narrower focus than what was actually generated. Doesn't
+   * change generateWorkout's Exercise[] return or fire when there's nothing
+   * to relax (colon-free legacy focus, or the ladder wasn't needed).
+   */
+  onResolvedFocus?: (focusValue: string) => void;
 }
 
 // Apply one focus's tag/area/mode/pillar/group filters to an already
@@ -99,6 +110,7 @@ function varietyOrdered(
   source: Exercise[] = SAMPLE_EXERCISES,
   rng: () => number = Math.random,
   extraFocuses: FocusChoice[] = [],
+  onResolvedFocus?: (focusValue: string) => void,
 ): Exercise[] {
   const resolve = (v: string) => extraFocuses.find((f) => f.value === v) ?? focusChoice(v);
   let focus = resolve(focusValue);
@@ -124,6 +136,12 @@ function varietyOrdered(
   // pre-existing edge case. Fall through to the full equipment-filtered pool,
   // matching today's worst case rather than regressing to [].
   if (pool.length === 0) pool = equipmentPool;
+
+  // Report the rung actually used — the original focusValue unless the ladder
+  // above had to relax to a coarser one. A caller that labels the workout by
+  // the requested focus (StartSheet) needs this or the label can claim a
+  // narrower focus than what was actually generated.
+  onResolvedFocus?.(focus.value);
 
   // Lower key = earlier. Distance from the preferred tier dominates; a random
   // term keeps each generation varied within a tier.
@@ -156,6 +174,7 @@ export function generateWorkout(profile: Profile, opts: GenerateOpts = {}): Exer
     opts.pool,
     opts.rng,
     opts.focusChoices,
+    opts.onResolvedFocus,
   );
   if (ordered.length === 0) return [];
 

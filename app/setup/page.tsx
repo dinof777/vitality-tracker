@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Equipment } from '@/lib/database.types';
-import type { Goal } from '@/lib/pillars';
-import { DEFAULT_GOAL, GOAL_CHOICES, GOAL_PILLAR_SEED } from '@/lib/pillars';
+import type { Goal, Pillar } from '@/lib/pillars';
+import { DEFAULT_GOAL, GOAL_CHOICES, GOAL_PILLAR_SEED, PILLAR_LABEL } from '@/lib/pillars';
 import { EQUIPMENT_CHOICES, INTENSITY_CHOICES, loadProfile, saveProfile, type Intensity } from '@/lib/profile';
 import FocusPicker from '@/components/workout/FocusPicker';
 
@@ -56,6 +56,12 @@ export default function SetupPage() {
 
   const canNext = step === 2 ? equipment.length > 0 : true;
   const isRehab = goal === 'recover_rehab';
+  // build_muscle/weight_loss seed step 2 straight past its own step 1 (via
+  // GOAL_PILLAR_SEED → FocusPicker's initialPillar below) — so the user never
+  // sees the Full Body tile this screen's default copy promises. general_health
+  // has no seed and genuinely starts at step 1, so it keeps that copy.
+  const seededPillar = !isRehab ? (GOAL_PILLAR_SEED[goal] as Pillar | undefined) : undefined;
+  const seededPillarLabel = seededPillar ? PILLAR_LABEL[seededPillar] : undefined;
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col px-4 pb-28 pt-10">
@@ -106,7 +112,9 @@ export default function SetupPage() {
             <p className="text-body text-text-muted">
               {isRehab
                 ? 'Pick a joint to narrow, or leave it on Physical Therapy for every area.'
-                : 'Pick a muscle group to narrow, or leave it on Full Body. You can refine any single workout later.'}
+                : seededPillarLabel
+                  ? `Pick a muscle to narrow further, or use every ${seededPillarLabel} exercise.`
+                  : 'Pick a muscle group to narrow, or leave it on Full Body. You can refine any single workout later.'}
             </p>
           </div>
           <FocusPicker value={focus} onSelect={setFocus} initialPillar={GOAL_PILLAR_SEED[goal] ?? null} />

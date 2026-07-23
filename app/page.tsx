@@ -50,6 +50,12 @@ export default function Home() {
   // "Set as my default" in the sheet to update the saved profile on purpose.
   const [refineFocus, setRefineFocus] = useState<string | null>(null);
   const [pending, setPending] = useState<Exercise[] | null>(null);
+  // Which focus rung generateWorkout actually filled the pool with — may be
+  // coarser than refineFocus/profile.focus if the relaxation ladder had to
+  // broaden past an empty narrow tier. Drives the StartSheet label so it
+  // never claims a narrower focus than what was actually generated.
+  const [resolvedFocusValue, setResolvedFocusValue] = useState<string | null>(null);
+  const [buildError, setBuildError] = useState<string | null>(null);
   const [today, setToday] = useState<RoutineWithExercises[]>([]);
   const [building, setBuilding] = useState(false);
   // Admin-managed regions, merged alongside the static FOCUS_CHOICES wherever a
@@ -64,6 +70,8 @@ export default function Home() {
     setProfile(p);
     setReady(true);
     setRefineFocus(null);
+    setResolvedFocusValue(null);
+    setBuildError(null);
     if (p) {
       setIntensity(p.intensity);
       setLength(p.length ?? DEFAULT_LENGTH);
@@ -89,8 +97,28 @@ export default function Home() {
       return;
     }
     const activeFocus = refineFocus ?? profile.focus;
-    const ex = generateWorkout(profile, { focus: activeFocus, intensity, targetSeconds: length * 60, focusChoices: regions });
-    if (ex.length) setPending(ex);
+    let resolved = activeFocus;
+    const ex = generateWorkout(profile, {
+      focus: activeFocus,
+      intensity,
+      targetSeconds: length * 60,
+      focusChoices: regions,
+      onResolvedFocus: (v) => {
+        resolved = v;
+      },
+    });
+    if (ex.length) {
+      setPending(ex);
+      setResolvedFocusValue(resolved);
+      setBuildError(null);
+    } else {
+      // Equipment is guarded to always keep ≥1 (BuilderControls), and the
+      // generator's own relaxation ladder never yields [] once a pillar has
+      // ANY match — so this is a genuinely narrow combo (e.g. one equipment
+      // type ANDed with a focus nothing in the library satisfies). Say so
+      // instead of leaving the primary CTA a silent no-op.
+      setBuildError('No exercises match — add equipment or widen your focus.');
+    }
   };
 
   const logInApp = () => {
@@ -98,6 +126,11 @@ export default function Home() {
   };
 
   const fc = resolveFocus(refineFocus ?? profile?.focus ?? 'full', regions);
+  // The StartSheet's label reads the rung the generator actually filled the
+  // pool with (see onResolvedFocus above) rather than the requested focus —
+  // relaxationLadder can broaden past an empty narrow tier, and the sheet
+  // shouldn't claim "Quads" over a workout that's really general Strength.
+  const startFc = resolveFocus(resolvedFocusValue ?? fc.value, regions);
   const params = profile ? workoutParams({ ...profile, intensity }) : null;
 
 
@@ -174,6 +207,7 @@ export default function Home() {
                 }}
                 onRegions={setRegions}
                 onChange={(patch) => {
+                  setBuildError(null); // stale "no exercises match" shouldn't outlive the change that might fix it
                   if (patch.minutes !== undefined) { setLength(patch.minutes); persist({ length: patch.minutes }); }
                   // Focus is a ONE-workout refine here — never persisted on its
                   // own. See refineFocus above and onSetDefaultFocus below.
@@ -199,6 +233,12 @@ export default function Home() {
                 className="flex h-14 w-full items-center justify-center rounded-md bg-accent text-label text-on-accent transition-all duration-150 active:scale-[0.97] active:bg-accent-press">
                 BUILD MY WORKOUT
               </button>
+
+              {buildError && (
+                <p className="mt-2 rounded-md border border-destructive/40 bg-surface p-3 text-caption text-destructive">
+                  {buildError}
+                </p>
+              )}
             </>
           )}
 
@@ -227,11 +267,12 @@ export default function Home() {
         <StartSheet
           exercises={pending}
           params={params}
-          name={`${fc.label} · ${length} min`}
+          name={`${startFc.label} · ${length} min`}
           onLogInApp={logInApp}
           onClose={() => {
             setPending(null);
             setRefineFocus(null);
+            setResolvedFocusValue(null);
           }}
         />
       )}

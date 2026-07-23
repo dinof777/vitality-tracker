@@ -542,7 +542,40 @@ export function focusPillarToken(value: string, regions: FocusChoice[]): string 
   const parts = parseFocusValue(value);
   if (parts && isPillarToken(parts.pillarToken)) return parts.pillarToken;
   if (FOCUS_PILLAR_STEP1_VALUES.includes(value)) return value;
-  return 'full'; // legacy bare muscle-group slug / region / bare rehab-area / 'mobility'
+  // A bare rehab-area value predates the composite grammar (REHAB_AREA_FOCUSES
+  // values — knee/shoulder/ankle/hip/low-back/upper-back) — it lives under the
+  // Rehab lane, not "nowhere", so land the sheet there instead of step 1.
+  if (AREA_TO_GROUP[value]) return 'physical-therapy';
+  // Same for a bare muscle-group slug (Quads/Chest/…) — Strength is a
+  // sensible default training pillar for it, so the sheet opens on step 2
+  // with the muscle groups already visible instead of a blank step 1.
+  if (MUSCLE_GROUP_FOCUSES.some((f) => f.value === value)) return 'strength';
+  return 'full'; // legacy region / 'mobility' / anything else with no natural pillar home
+}
+
+/**
+ * Translate a bare legacy focus value (a rehab-area id or a muscle-group
+ * slug — anything predating the pillar-first composite grammar) into its
+ * composite `pillar:group[:deep]` equivalent, so MuscleDrillDown's own
+ * value-matching (auto-expand the parent, highlight the child) works when
+ * BuilderControls reopens the focus sheet on a value saved before that
+ * grammar existed. Purely a display/matching helper for FocusPicker's
+ * `value` prop — never written back to Profile.focus (selecting a tile still
+ * writes whatever composite value FocusPicker's onSelect produces). Already-
+ * composite values, and anything with no muscle-group/rehab-area home
+ * (full/balanced/an admin-managed region value/mobility/the bare pillar
+ * tokens), pass through unchanged.
+ */
+export function focusCompositeEquivalent(value: string): string {
+  if (parseFocusValue(value)) return value; // already composite
+  const rehabGroup = AREA_TO_GROUP[value];
+  if (rehabGroup) return `physical-therapy:${slugifyGroup(rehabGroup)}:${value}`;
+  for (const g of FOCUS_MUSCLE_GROUPS) {
+    if (slugifyGroup(g.group) === value) return `strength:${slugifyGroup(g.group)}`;
+    const muscle = g.muscles.find((m) => slugifyGroup(m) === value);
+    if (muscle) return `strength:${slugifyGroup(g.group)}:${slugifyGroup(muscle)}`;
+  }
+  return value;
 }
 
 export interface IntensityChoice {

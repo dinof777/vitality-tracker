@@ -71,7 +71,7 @@ export default function ExercisesPage() {
 
       {circuits.length > 0 && (
         <div className="mb-3">
-          <p className="mb-1 text-[0.65rem] font-semibold tracking-wide text-text-faint">MY WORKOUTS</p>
+          <p className="mb-1 text-caption font-semibold tracking-wide text-text-faint">MY WORKOUTS</p>
           <div className="flex gap-2 overflow-x-auto pb-1">
             {circuits.map((c) => {
               const on = circuitId === c.id;

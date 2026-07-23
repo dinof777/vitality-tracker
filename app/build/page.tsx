@@ -148,7 +148,7 @@ export default function BuildYourOwn() {
             <button
               type="button"
               onClick={start}
-              className="flex h-13 flex-1 items-center justify-center rounded-md bg-accent text-label text-on-accent active:scale-[0.98]"
+              className="flex h-14 flex-1 items-center justify-center rounded-md bg-accent text-label text-on-accent active:scale-[0.98]"
             >
               START — {picked.length} EXERCISE{picked.length === 1 ? '' : 'S'}
             </button>

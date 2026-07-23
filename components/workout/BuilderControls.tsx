@@ -10,6 +10,7 @@ import {
   regionFocus,
   resolveFocus,
   focusPillarToken,
+  focusCompositeEquivalent,
   isPillarToken,
   type FocusChoice,
   type Intensity,
@@ -98,6 +99,11 @@ export default function BuilderControls({
   // 'full'/'balanced' (whole-session, select-and-close) stay at step 1.
   const focusPillarTok = focusPillarToken(value.focus, regions);
   const focusInitialPillar = isPillarToken(focusPillarTok) ? focusPillarTok : null;
+  // A bare legacy value (a rehab-area id or muscle-group slug) has no
+  // composite twin in step 2's tree by default — translate it so
+  // MuscleDrillDown's own value-matching can auto-expand + highlight the
+  // right tile instead of landing on the pillar with nothing selected.
+  const focusDrillValue = focusCompositeEquivalent(value.focus);
   const ip = intensityParams(value.intensity);
   const estCount = lengthToCount(value.minutes);
   const sets = value.sets ?? ip.sets;
@@ -176,7 +182,7 @@ export default function BuilderControls({
             {sheet === 'focus' && (
               <div className="space-y-4">
                 <FocusPicker
-                  value={value.focus}
+                  value={focusDrillValue}
                   initialPillar={focusInitialPillar}
                   onSelect={(v) => {
                     onChange({ focus: v });
@@ -280,10 +286,17 @@ export default function BuilderControls({
                 <div className="space-y-2">
                   {EQUIPMENT_CHOICES.map((c) => {
                     const on = value.equipment.includes(c.value);
+                    // Deselecting your only remaining equipment would leave
+                    // generation with nothing to draw from — mirror the
+                    // onboarding wizard's `canNext = equipment.length > 0`
+                    // guard instead of allowing a silent dead end.
+                    const isLast = on && value.equipment.length === 1;
                     return (
                       <button
                         key={c.value}
                         type="button"
+                        disabled={isLast}
+                        title={isLast ? 'Keep at least one piece of equipment selected' : undefined}
                         onClick={() =>
                           onChange({
                             equipment: on
@@ -291,7 +304,7 @@ export default function BuilderControls({
                               : [...value.equipment, c.value],
                           })
                         }
-                        className={`flex w-full items-center justify-between rounded-md border p-3 text-left transition-colors ${on ? 'border-accent bg-accent/10' : 'border-border bg-surface'}`}
+                        className={`flex w-full items-center justify-between rounded-md border p-3 text-left transition-colors ${on ? 'border-accent bg-accent/10' : 'border-border bg-surface'} ${isLast ? 'opacity-60' : ''}`}
                       >
                         <span className="flex items-center gap-3">
                           <span className="text-h3">{c.emoji}</span>

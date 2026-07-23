@@ -8,6 +8,7 @@ import {
   focusPillarNodes,
   focusGroupNodes,
   focusPillarToken,
+  focusCompositeEquivalent,
   FOCUS_CHOICES,
   FOCUS_MUSCLE_GROUPS,
   REHAB_AREA_FOCUSES,
@@ -230,11 +231,49 @@ describe('focusPillarToken — reopen-state', () => {
     expect(focusPillarToken('balanced', [])).toBe('balanced');
   });
 
-  it('a legacy bare muscle-group slug, region, bare rehab-area, or mobility falls back to full', () => {
-    for (const v of ['quads', 'chest', 'knee', 'mobility', 'not-a-real-focus']) {
+  it('a bare rehab-area value (predates the composite grammar) opens the Rehab lane, not step 1', () => {
+    for (const area of ['knee', 'shoulder', 'ankle', 'hip', 'low-back', 'upper-back']) {
+      expect(focusPillarToken(area, [])).toBe('physical-therapy');
+    }
+  });
+
+  it('a bare muscle-group slug (predates the composite grammar) opens the Strength lane, not step 1', () => {
+    for (const v of ['quads', 'chest', 'legs', 'traps', 'grip']) {
+      expect(focusPillarToken(v, [])).toBe('strength');
+    }
+  });
+
+  it('a region, mobility, or an unrecognized value still falls back to full — no muscle-group/rehab-area home', () => {
+    for (const v of ['mobility', 'not-a-real-focus']) {
       expect(focusPillarToken(v, [])).toBe('full');
     }
     const region = regionFocus({ region: 'Legs', groups: ['Legs', 'Quads'] });
     expect(focusPillarToken(region.value, [region])).toBe('full');
+  });
+});
+
+describe('focusCompositeEquivalent — legacy value → composite display match', () => {
+  it('leaves an already-composite value untouched', () => {
+    expect(focusCompositeEquivalent('strength:legs:quads')).toBe('strength:legs:quads');
+  });
+
+  it('translates a bare rehab-area value to its physical-therapy:group:area composite', () => {
+    expect(focusCompositeEquivalent('knee')).toBe('physical-therapy:legs:knee');
+    expect(focusCompositeEquivalent('shoulder')).toBe('physical-therapy:shoulders:shoulder');
+  });
+
+  it('translates a bare deep muscle-group slug to its strength:group:deep composite', () => {
+    expect(focusCompositeEquivalent('quads')).toBe('strength:legs:quads');
+    expect(focusCompositeEquivalent('traps')).toBe('strength:back:traps');
+  });
+
+  it('translates a bare top-level group slug to its strength:group composite (no deep)', () => {
+    expect(focusCompositeEquivalent('chest')).toBe('strength:chest');
+  });
+
+  it('leaves values with no muscle-group/rehab-area home unchanged', () => {
+    expect(focusCompositeEquivalent('full')).toBe('full');
+    expect(focusCompositeEquivalent('mobility')).toBe('mobility');
+    expect(focusCompositeEquivalent('region-legs')).toBe('region-legs');
   });
 });
