@@ -20,6 +20,7 @@ export type Equipment =
   | 'rowing_machine'
   | 'elliptical'
   | 'barbell'
+  | 'bench'
   | 'cable_machine'
   | 'leg_press_machine'
   | 'lat_pulldown_machine';

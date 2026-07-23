@@ -46,10 +46,10 @@ create table if not exists equipment_catalog (
 
 -- exercises: the master library of movements you can log.
 -- default_cue holds Brian Pruett's form reminder (e.g. "3s negative, squeeze top").
--- equipment covers both the original home-gym kit (dumbbells, bands, isometric
--- holds, stretches) and the gym-equipment tier added in 0008 (bikes, treadmill,
+-- equipment covers the original home-gym kit (dumbbells, bands, isometric
+-- holds, stretches), the gym-equipment tier added in 0008 (bikes, treadmill,
 -- stair climber, rower, elliptical, barbell, cable machine, leg press, lat
--- pulldown).
+-- pulldown), and bench, added in 0009.
 -- is_global rows are the shared library (tenant_id null); a gym's own
 -- custom moves carry their tenant_id and is_global=false.
 -- muscle_group and tags hold the DISPLAY values, validated on write against the
@@ -61,7 +61,8 @@ create table if not exists exercises (
   default_cue  text,
   equipment    text check (equipment in (
     'dumbbell', 'kettlebell', 'calisthenics', 'tube_band', 'loop_band', 'pullup_bar', 'medicine_ball', 'jump_rope', 'stretch',
-    'stationary_bike', 'treadmill', 'stair_climber', 'rowing_machine', 'elliptical', 'barbell', 'cable_machine', 'leg_press_machine', 'lat_pulldown_machine'
+    'stationary_bike', 'treadmill', 'stair_climber', 'rowing_machine', 'elliptical', 'barbell', 'cable_machine', 'leg_press_machine', 'lat_pulldown_machine',
+    'bench'
   )),
   image_url    text,
   tenant_id    uuid references tenants(id) on delete cascade,

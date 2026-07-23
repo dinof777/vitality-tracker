@@ -71,6 +71,7 @@ export const EQUIPMENT_CHOICES: { value: Equipment; label: string; hint: string;
   { value: 'rowing_machine', label: 'Rowing Machine', hint: 'Ergometer — full-body pulling cardio', emoji: '🚣' },
   { value: 'elliptical', label: 'Elliptical', hint: 'Low-impact cross-trainer intervals', emoji: '🌀' },
   { value: 'barbell', label: 'Barbell', hint: 'Bar + plates — squat, hinge, press, row', emoji: '🔩' },
+  { value: 'bench', label: 'Bench', hint: 'Flat/incline — press, row & hip thrust support', emoji: '🛋️' },
   { value: 'cable_machine', label: 'Cable Machine', hint: 'Adjustable pulley — presses, pulls, rotation', emoji: '🪝' },
   { value: 'leg_press_machine', label: 'Leg Press', hint: 'Seated sled — quad/glute/hamstring drive', emoji: '🛝' },
   { value: 'lat_pulldown_machine', label: 'Lat Pulldown', hint: 'Seated vertical pull for the back', emoji: '⬇️' },

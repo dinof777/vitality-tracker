@@ -1,6 +1,6 @@
 import type { Equipment, Exercise } from './database.types';
 
-// Move library (270) — seeded into the Neon `exercises` table (same UUIDs).
+// Move library (291) — seeded into the Neon `exercises` table (same UUIDs).
 // EQUIPMENT CONSTRAINT (home-gym tier): dumbbells, a kettlebell, a tube band
 // (long/handled), a loop band (mini/booty band), a pull-up bar, a medicine
 // ball, a jump rope, or bodyweight (floor/wall) — no benches, boxes, racks, or
@@ -393,6 +393,41 @@ export const SAMPLE_EXERCISES: Exercise[] = [
   E('c0000541-0000-4000-8000-000000000000', 'Lat Pulldown (Wide Grip)', 'Back', 'lat_pulldown_machine', 'Wide overhand grip · pull the bar to the upper chest · control up', '/exercises/lat-pulldown-wide-grip.jpg', ['strength']),
   E('c0000542-0000-4000-8000-000000000000', 'Close-Grip Lat Pulldown', 'Back', 'lat_pulldown_machine', 'Close neutral or underhand grip · drive the elbows down · squeeze the lats', '/exercises/close-grip-lat-pulldown.jpg', ['strength']),
   E('c0000543-0000-4000-8000-000000000000', 'Single-Arm Lat Pulldown', 'Back', 'lat_pulldown_machine', 'One handle · pull straight down to the hip · resist the twist', '/exercises/single-arm-lat-pulldown.jpg', ['strength']),
+
+  // ===== Heavy lifts (21) — trainer's spec. Adds `bench` as its own equipment
+  // (any lift where back/chest/hips are SUPPORTED by the bench, regardless of
+  // barbell vs dumbbell load) plus a barbell/cable/leg-press/pull-up-bar
+  // roster of heavier compound lifts. Rack pulls stay `barbell` — no
+  // squat_rack value (rack access is already bundled into `barbell`, per
+  // 0008's documented decision). image_url null → equipment-icon fallback
+  // until illustrations are generated.
+
+  // ----- Tier 1 — Bench family (10) -----
+  E('c0000544-0000-4000-8000-000000000000', 'Barbell Bench Press', 'Chest', 'bench', 'Bar over the chest · lower to the sternum · press to lockout', null, ['strength']),
+  E('c0000545-0000-4000-8000-000000000000', 'Barbell Incline Bench Press', 'Chest', 'bench', 'Bench at 30-45° · lower to the upper chest · press to lockout', null, ['strength']),
+  E('c0000546-0000-4000-8000-000000000000', 'Barbell Close-Grip Bench Press', 'Triceps', 'bench', 'Hands just inside shoulder-width · elbows tucked · press to lockout', null, ['strength']),
+  E('c0000547-0000-4000-8000-000000000000', 'DB Bench Press', 'Chest', 'bench', 'Dumbbells over the chest · lower to a stretch · press up and slightly in', null, ['strength']),
+  E('c0000548-0000-4000-8000-000000000000', 'DB Incline Press', 'Chest', 'bench', 'Bench at 30-45° · press the dumbbells up and together · control down', null, ['strength']),
+  E('c0000549-0000-4000-8000-000000000000', 'DB Incline Fly', 'Chest', 'bench', 'Bench at 30-45° · soft elbows · wide arc down to a stretch · squeeze up', null, ['strength']),
+  E('c0000550-0000-4000-8000-000000000000', 'DB Seated Shoulder Press', 'Shoulders', 'bench', 'Back flat on the bench · press to full lockout overhead · control down', null, ['strength']),
+  E('c0000551-0000-4000-8000-000000000000', 'Barbell Hip Thrust', 'Glutes', 'bench', 'Upper back on the bench · bar across the hips · drive through the heels to full lockout', null, ['strength']),
+  E('c0000552-0000-4000-8000-000000000000', 'DB Single-Arm Bench Row', 'Back', 'bench', 'Chest on an inclined bench · row one dumbbell to the hip · flat back throughout', null, ['strength']),
+  E('c0000553-0000-4000-8000-000000000000', 'Barbell Box Squat', 'Glutes', 'bench', 'Sit back onto the bench · pause · drive up through mid-foot', null, ['strength']),
+
+  // ----- Tier 2 — Barbell roster (8) -----
+  E('c0000554-0000-4000-8000-000000000000', 'Barbell Sumo Deadlift', 'Glutes', 'barbell', 'Wide stance, toes out · grip inside the knees · drive the floor away, hips through', null, ['strength']),
+  E('c0000555-0000-4000-8000-000000000000', 'Barbell Deficit Deadlift', 'Hamstrings', 'barbell', 'Stand on a plate or two · same flat-back setup · pull through the extra range', null, ['strength']),
+  E('c0000556-0000-4000-8000-000000000000', 'Barbell Rack Pull', 'Back', 'barbell', 'Bar set at knee height on the pins · flat back · lock out tall', null, ['strength']),
+  E('c0000557-0000-4000-8000-000000000000', 'Barbell Pause Squat', 'Legs', 'barbell', 'Sit back and down · pause 2-3 count at the bottom · drive up with no bounce', null, ['strength']),
+  E('c0000558-0000-4000-8000-000000000000', 'Barbell Push Press', 'Shoulders', 'barbell', 'Dip the knees · drive the bar off the shoulders to lockout', null, ['strength']),
+  E('c0000559-0000-4000-8000-000000000000', 'Barbell Pendlay Row', 'Back', 'barbell', 'Bar starts on the floor each rep · flat back, parallel to the floor · row explosively to the belly', null, ['strength']),
+  E('c0000560-0000-4000-8000-000000000000', 'Barbell Good Morning', 'Hamstrings', 'barbell', 'Bar on the back · hinge with a flat back · feel the hamstrings load', null, ['strength']),
+  E('c0000561-0000-4000-8000-000000000000', 'Barbell Walking Lunge', 'Legs', 'barbell', 'Bar on the back · step long · drive through the front heel each rep', null, ['strength']),
+
+  // ----- Tier 3 — cable / leg press / pull-up bar (3) -----
+  E('c0000562-0000-4000-8000-000000000000', 'Cable Seated Row', 'Back', 'cable_machine', 'Sit tall, knees soft · row the handle to the belly · squeeze the shoulder blades', null, ['strength']),
+  E('c0000563-0000-4000-8000-000000000000', 'Leg Press Calf Raise', 'Calves', 'leg_press_machine', 'Legs near lockout on the platform · press through the balls of the feet · full stretch down', null, ['strength']),
+  E('c0000564-0000-4000-8000-000000000000', 'Weighted Pull-Up', 'Back', 'pullup_bar', 'Add load at the hips or between the feet · pull the chest to the bar · full hang at the bottom', null, ['strength']),
 ];
 
 // Library moves that already serve knee rehab — tagged, not duplicated. Kneeling
@@ -451,6 +486,7 @@ export const EQUIPMENT_ORDER: Equipment[] = [
   'rowing_machine',
   'elliptical',
   'barbell',
+  'bench',
   'cable_machine',
   'leg_press_machine',
   'lat_pulldown_machine',
@@ -471,6 +507,7 @@ export const EQUIPMENT_LABEL: Record<Equipment, string> = {
   rowing_machine: 'Rowing Machine',
   elliptical: 'Elliptical',
   barbell: 'Barbell',
+  bench: 'Bench',
   cable_machine: 'Cable Machine',
   leg_press_machine: 'Leg Press',
   lat_pulldown_machine: 'Lat Pulldown',

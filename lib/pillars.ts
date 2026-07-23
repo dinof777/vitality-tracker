@@ -27,6 +27,7 @@ const STRENGTH_EQUIP: Equipment[] = [
   'pullup_bar',
   'medicine_ball',
   'barbell',
+  'bench',
   'cable_machine',
   'leg_press_machine',
   'lat_pulldown_machine',

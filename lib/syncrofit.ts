@@ -137,6 +137,7 @@ export const SF_EQUIPMENT: Record<string, string | null> = {
   rowing_machine: 'Rowing machine',
   elliptical: null, // no SyncroFit taxonomy equivalent
   barbell: 'Barbell',
+  bench: 'Bench',
   cable_machine: null, // no SyncroFit taxonomy equivalent
   leg_press_machine: null, // no SyncroFit taxonomy equivalent
   lat_pulldown_machine: null, // no SyncroFit taxonomy equivalent
