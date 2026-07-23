@@ -252,39 +252,39 @@ export const SAMPLE_EXERCISES: Exercise[] = [
   // image_url null → equipment-icon fallback until illustrations are generated.
 
   // Carry — the library had exactly one loaded carry before these.
-  E('d0000150-0000-4000-8000-000000000000', 'KB Suitcase Carry', 'Grip', 'kettlebell', 'One kettlebell at your side · stand tall · walk without leaning', null, ['strength']),
-  E('d0000151-0000-4000-8000-000000000000', 'KB Farmer Hold', 'Grip', 'kettlebell', 'Kettlebells at your sides · shoulders packed · stand tall and hold · log seconds', null, ['strength', 'isometric']),
-  E('d0000152-0000-4000-8000-000000000000', 'DB Overhead Carry', 'Full Body', 'dumbbell', 'Dumbbell locked overhead · ribs down · walk tall without leaning', null, ['strength', 'stability']),
+  E('d0000150-0000-4000-8000-000000000000', 'KB Suitcase Carry', 'Grip', 'kettlebell', 'One kettlebell at your side · stand tall · walk without leaning', '/exercises/kb-suitcase-carry.jpg', ['strength']),
+  E('d0000151-0000-4000-8000-000000000000', 'KB Farmer Hold', 'Grip', 'kettlebell', 'Kettlebells at your sides · shoulders packed · stand tall and hold · log seconds', '/exercises/kb-farmer-hold.jpg', ['strength', 'isometric']),
+  E('d0000152-0000-4000-8000-000000000000', 'DB Overhead Carry', 'Full Body', 'dumbbell', 'Dumbbell locked overhead · ribs down · walk tall without leaning', '/exercises/db-overhead-carry.jpg', ['strength', 'stability']),
   // Calves — unilateral was missing at both bodyweight and load. The bodyweight
   // one doubles as ankle-rehab stage 2.
-  E('d0000153-0000-4000-8000-000000000000', 'Single-Leg Calf Raise', 'Calves', 'calisthenics', 'Balance on one foot near support · rise onto the toes · lower slow · switch sides', null, ['strength', 'balance', 'physical-therapy', 'ankle', 'stage-2', 'weight-bearing']),
-  E('d0000154-0000-4000-8000-000000000000', 'DB Single-Leg Calf Raise', 'Calves', 'dumbbell', 'One dumbbell in hand · balance on one foot · full stretch and drive tall', null, ['strength', 'balance']),
+  E('d0000153-0000-4000-8000-000000000000', 'Single-Leg Calf Raise', 'Calves', 'calisthenics', 'Balance on one foot near support · rise onto the toes · lower slow · switch sides', '/exercises/single-leg-calf-raise.jpg', ['strength', 'balance', 'physical-therapy', 'ankle', 'stage-2', 'weight-bearing']),
+  E('d0000154-0000-4000-8000-000000000000', 'DB Single-Leg Calf Raise', 'Calves', 'dumbbell', 'One dumbbell in hand · balance on one foot · full stretch and drive tall', '/exercises/db-single-leg-calf-raise.jpg', ['strength', 'balance']),
   // Split squat had only an isometric hold — this is the loadable rep version.
-  E('d0000155-0000-4000-8000-000000000000', 'DB Split Squat', 'Legs', 'dumbbell', 'Stagger your stance · drop the back knee straight down · drive up through the front heel', null, ['strength']),
+  E('d0000155-0000-4000-8000-000000000000', 'DB Split Squat', 'Legs', 'dumbbell', 'Stagger your stance · drop the back knee straight down · drive up through the front heel', '/exercises/db-split-squat.jpg', ['strength']),
   // Hip flexors + hips had no general-population strength/stability work.
-  E('d0000156-0000-4000-8000-000000000000', 'Standing Banded Hip Flexion', 'Hip Flexors', 'loop_band', 'Band around the ankle · drive the knee up against the tension · lower with control', null, ['strength', 'physical-therapy', 'hip', 'stage-2', 'weight-bearing']),
-  E('d0000157-0000-4000-8000-000000000000', 'Standing Hip Circles', 'Hips', 'calisthenics', 'Hold support if needed · circle the knee out, up, and around · slow and controlled', null, ['mobility', 'physical-therapy', 'hip', 'stage-2', 'weight-bearing']),
-  E('d0000158-0000-4000-8000-000000000000', 'Standing Banded Hip External Rotation', 'Hips', 'loop_band', 'Band above the knees · half-squat stance · rotate the knee out and back against the band', null, ['strength', 'stability', 'physical-therapy', 'hip', 'stage-3', 'weight-bearing']),
+  E('d0000156-0000-4000-8000-000000000000', 'Standing Banded Hip Flexion', 'Hip Flexors', 'loop_band', 'Band around the ankle · drive the knee up against the tension · lower with control', '/exercises/standing-banded-hip-flexion.jpg', ['strength', 'physical-therapy', 'hip', 'stage-2', 'weight-bearing']),
+  E('d0000157-0000-4000-8000-000000000000', 'Standing Hip Circles', 'Hips', 'calisthenics', 'Hold support if needed · circle the knee out, up, and around · slow and controlled', '/exercises/standing-hip-circles.jpg', ['mobility', 'physical-therapy', 'hip', 'stage-2', 'weight-bearing']),
+  E('d0000158-0000-4000-8000-000000000000', 'Standing Banded Hip External Rotation', 'Hips', 'loop_band', 'Band above the knees · half-squat stance · rotate the knee out and back against the band', '/exercises/standing-banded-hip-external-rotation.jpg', ['strength', 'stability', 'physical-therapy', 'hip', 'stage-3', 'weight-bearing']),
   // Traps had one entry; give it a second, lighter equipment option.
-  E('d0000159-0000-4000-8000-000000000000', 'Band Shrug', 'Traps', 'tube_band', 'Stand on the band · shrug straight up against the tension · pause · control down', null, ['strength', 'physical-therapy', 'upper-back', 'stage-2', 'weight-bearing']),
+  E('d0000159-0000-4000-8000-000000000000', 'Band Shrug', 'Traps', 'tube_band', 'Stand on the band · shrug straight up against the tension · pause · control down', '/exercises/band-shrug.jpg', ['strength', 'physical-therapy', 'upper-back', 'stage-2', 'weight-bearing']),
   // Spine + T-Spine had one static entry each — add the dynamic counterparts.
-  E('d0000160-0000-4000-8000-000000000000', 'Cat-Cow', 'Spine', 'calisthenics', 'On all fours · round the spine up · then arch and look up · flow slow', null, ['mobility', 'physical-therapy', 'low-back', 'stage-1']),
-  E('d0000161-0000-4000-8000-000000000000', 'Quadruped Thoracic Rotation', 'T-Spine', 'calisthenics', 'Hand behind the head · rotate the elbow up and open · follow with the eyes', null, ['mobility', 'physical-therapy', 'upper-back', 'stage-1']),
-  E('d0000162-0000-4000-8000-000000000000', 'DB Single-Arm Rear-Delt Fly', 'Rear Delts', 'dumbbell', 'One dumbbell · hinge over · raise the arm out to the side · squeeze the back', null, ['strength', 'physical-therapy', 'upper-back', 'stage-3']),
+  E('d0000160-0000-4000-8000-000000000000', 'Cat-Cow', 'Spine', 'calisthenics', 'On all fours · round the spine up · then arch and look up · flow slow', '/exercises/cat-cow.jpg', ['mobility', 'physical-therapy', 'low-back', 'stage-1']),
+  E('d0000161-0000-4000-8000-000000000000', 'Quadruped Thoracic Rotation', 'T-Spine', 'calisthenics', 'Hand behind the head · rotate the elbow up and open · follow with the eyes', '/exercises/quadruped-thoracic-rotation.jpg', ['mobility', 'physical-therapy', 'upper-back', 'stage-1']),
+  E('d0000162-0000-4000-8000-000000000000', 'DB Single-Arm Rear-Delt Fly', 'Rear Delts', 'dumbbell', 'One dumbbell · hinge over · raise the arm out to the side · squeeze the back', '/exercises/db-single-arm-rear-delt-fly.jpg', ['strength', 'physical-therapy', 'upper-back', 'stage-3']),
   // Prehab / safer patterning — teach the movement before loading it.
-  E('d0000163-0000-4000-8000-000000000000', 'Standing Hip Flexor Stretch', 'Hip Flexors', 'stretch', 'Split stance, back heel lifted · tuck the pelvis · lean forward gently, no kneeling', null, ['mobility', 'stretch', 'physical-therapy', 'knee', 'hip', 'stage-2', 'weight-bearing']),
-  E('d0000164-0000-4000-8000-000000000000', 'Bodyweight Hip Hinge', 'Hamstrings', 'calisthenics', 'Hands on the hips · push the hips back, flat back · stop at the stretch · stand tall', null, ['mobility', 'stability', 'physical-therapy', 'low-back', 'stage-2', 'weight-bearing']),
-  E('d0000165-0000-4000-8000-000000000000', 'Dead Bug', 'Core', 'calisthenics', 'On your back, arms and knees up · lower one arm and the opposite leg · press the low back down · alternate', null, ['stability', 'physical-therapy', 'low-back', 'stage-1', 'seated-lying']),
+  E('d0000163-0000-4000-8000-000000000000', 'Standing Hip Flexor Stretch', 'Hip Flexors', 'stretch', 'Split stance, back heel lifted · tuck the pelvis · lean forward gently, no kneeling', '/exercises/standing-hip-flexor-stretch.jpg', ['mobility', 'stretch', 'physical-therapy', 'knee', 'hip', 'stage-2', 'weight-bearing']),
+  E('d0000164-0000-4000-8000-000000000000', 'Bodyweight Hip Hinge', 'Hamstrings', 'calisthenics', 'Hands on the hips · push the hips back, flat back · stop at the stretch · stand tall', '/exercises/bodyweight-hip-hinge.jpg', ['mobility', 'stability', 'physical-therapy', 'low-back', 'stage-2', 'weight-bearing']),
+  E('d0000165-0000-4000-8000-000000000000', 'Dead Bug', 'Core', 'calisthenics', 'On your back, arms and knees up · lower one arm and the opposite leg · press the low back down · alternate', '/exercises/dead-bug.jpg', ['stability', 'physical-therapy', 'low-back', 'stage-1', 'seated-lying']),
   // Low-impact conditioning — the first non-jump-rope cardio in the library.
-  E('d0000166-0000-4000-8000-000000000000', 'Standing March in Place', 'Conditioning', 'calisthenics', 'Stand tall · march the knees up at an easy pace · swing the arms · stay light', null, ['low-impact']),
-  E('d0000167-0000-4000-8000-000000000000', 'Step Touch', 'Conditioning', 'calisthenics', 'Step side to side, tap the trailing foot · add an arm swing · stay light on the feet', null, ['low-impact']),
+  E('d0000166-0000-4000-8000-000000000000', 'Standing March in Place', 'Conditioning', 'calisthenics', 'Stand tall · march the knees up at an easy pace · swing the arms · stay light', '/exercises/standing-march-in-place.jpg', ['low-impact']),
+  E('d0000167-0000-4000-8000-000000000000', 'Step Touch', 'Conditioning', 'calisthenics', 'Step side to side, tap the trailing foot · add an arm swing · stay light on the feet', '/exercises/step-touch.jpg', ['low-impact']),
   // Loaded stage-3 hamstring curl — from Heath Mann DPT's knee HEP. The existing
   // Standing Hamstring Curl is bodyweight/stage-2; this adds the resisted version.
-  E('d0000168-0000-4000-8000-000000000000', 'Band Standing Hamstring Curl', 'Hamstrings', 'tube_band', 'Loop the band at one ankle, stand on the other end · hold support · curl the heel to the glute · lower slow', null, ['physical-therapy', 'knee', 'stage-3', 'knee-flexion', 'strength', 'weight-bearing']),
+  E('d0000168-0000-4000-8000-000000000000', 'Band Standing Hamstring Curl', 'Hamstrings', 'tube_band', 'Loop the band at one ankle, stand on the other end · hold support · curl the heel to the glute · lower slow', '/exercises/band-standing-hamstring-curl.jpg', ['physical-therapy', 'knee', 'stage-3', 'knee-flexion', 'strength', 'weight-bearing']),
   // From the HEP's "Lunges – Pad". Dino signed off with Heath's context: a light
   // towel graze for depth cueing, NOT resting weight on the knee (distinct from
   // the section's excluded sustained-kneeling movements).
-  E('d0000169-0000-4000-8000-000000000000', 'Reverse Lunge to Towel Tap', 'Quads', 'calisthenics', 'Fold a towel behind you · step back, lower until the back knee lightly grazes it · don’t rest weight on it · drive through the front heel', null, ['physical-therapy', 'knee', 'stage-3', 'knee-flexion', 'strength', 'weight-bearing']),
+  E('d0000169-0000-4000-8000-000000000000', 'Reverse Lunge to Towel Tap', 'Quads', 'calisthenics', 'Fold a towel behind you · step back, lower until the back knee lightly grazes it · don’t rest weight on it · drive through the front heel', '/exercises/reverse-lunge-to-towel-tap.jpg', ['physical-therapy', 'knee', 'stage-3', 'knee-flexion', 'strength', 'weight-bearing']),
 
   // ===== Shoulder rehab — rotator-cuff / impingement / scapular (12) =====
   // The library had 14 shoulder moves, all presses/raises and zero cuff work.
@@ -292,22 +292,22 @@ export const SAMPLE_EXERCISES: Exercise[] = [
   // for information only — see REHAB_DISCLAIMER; not a prescription.
 
   // Stage 1 — pain-free, passive/isometric, little to no range
-  E('f0000301-0000-4000-8000-000000000000', 'Pendulum Swing', 'Shoulders', 'calisthenics', 'Lean on a chair for support · let the arm hang loose · swing small gentle circles', null, ['physical-therapy', 'shoulder', 'stage-1', 'mobility']),
-  E('f0000302-0000-4000-8000-000000000000', 'Isometric Shoulder Flexion', 'Shoulders', 'calisthenics', 'Fist against the wall at waist height · press forward gently · hold, no arm movement', null, ['physical-therapy', 'shoulder', 'stage-1', 'isometric', 'stability']),
-  E('f0000303-0000-4000-8000-000000000000', 'Isometric External Rotation', 'Shoulders', 'calisthenics', 'Elbow tucked at your side, back of the hand on the wall · press outward gently · hold', null, ['physical-therapy', 'shoulder', 'stage-1', 'isometric', 'stability']),
-  E('f0000304-0000-4000-8000-000000000000', 'Supine Assisted Shoulder Flexion', 'Shoulders', 'calisthenics', 'On your back · use the good arm to lift the sore arm overhead, pain-free range · lower slow', null, ['physical-therapy', 'shoulder', 'stage-1', 'mobility', 'stretch', 'seated-lying']),
+  E('f0000301-0000-4000-8000-000000000000', 'Pendulum Swing', 'Shoulders', 'calisthenics', 'Lean on a chair for support · let the arm hang loose · swing small gentle circles', '/exercises/pendulum-swing.jpg', ['physical-therapy', 'shoulder', 'stage-1', 'mobility']),
+  E('f0000302-0000-4000-8000-000000000000', 'Isometric Shoulder Flexion', 'Shoulders', 'calisthenics', 'Fist against the wall at waist height · press forward gently · hold, no arm movement', '/exercises/isometric-shoulder-flexion.jpg', ['physical-therapy', 'shoulder', 'stage-1', 'isometric', 'stability']),
+  E('f0000303-0000-4000-8000-000000000000', 'Isometric External Rotation', 'Shoulders', 'calisthenics', 'Elbow tucked at your side, back of the hand on the wall · press outward gently · hold', '/exercises/isometric-external-rotation.jpg', ['physical-therapy', 'shoulder', 'stage-1', 'isometric', 'stability']),
+  E('f0000304-0000-4000-8000-000000000000', 'Supine Assisted Shoulder Flexion', 'Shoulders', 'calisthenics', 'On your back · use the good arm to lift the sore arm overhead, pain-free range · lower slow', '/exercises/supine-assisted-shoulder-flexion.jpg', ['physical-therapy', 'shoulder', 'stage-1', 'mobility', 'stretch', 'seated-lying']),
 
   // Stage 2 — standing, active range, light band resistance
-  E('f0000305-0000-4000-8000-000000000000', 'Scapular Retraction Squeeze', 'Rear Delts', 'calisthenics', 'Stand tall · pull the shoulder blades together and down · hold 5s · relax', null, ['physical-therapy', 'shoulder', 'upper-back', 'stage-2', 'isometric', 'stability']),
-  E('f0000306-0000-4000-8000-000000000000', 'Band External Rotation', 'Rear Delts', 'tube_band', 'Anchor at elbow height · elbow pinned to the side · rotate the forearm out slowly', null, ['physical-therapy', 'shoulder', 'stage-2', 'strength', 'stability']),
-  E('f0000307-0000-4000-8000-000000000000', 'Band Internal Rotation', 'Shoulders', 'tube_band', 'Anchor at elbow height · elbow pinned to the side · rotate the forearm in slowly', null, ['physical-therapy', 'shoulder', 'stage-2', 'strength', 'stability']),
-  E('f0000308-0000-4000-8000-000000000000', 'Wall Walk', 'Shoulders', 'calisthenics', 'Fingers on the wall · walk them up as high as pain-free · walk back down', null, ['physical-therapy', 'shoulder', 'stage-2', 'mobility']),
-  E('f0000309-0000-4000-8000-000000000000', 'Wall Push-Up Plus', 'Shoulders', 'calisthenics', 'Hands on the wall, arms straight · push through the blades to round the upper back · relax', null, ['physical-therapy', 'shoulder', 'upper-back', 'stage-2', 'strength', 'stability']),
+  E('f0000305-0000-4000-8000-000000000000', 'Scapular Retraction Squeeze', 'Rear Delts', 'calisthenics', 'Stand tall · pull the shoulder blades together and down · hold 5s · relax', '/exercises/scapular-retraction-squeeze.jpg', ['physical-therapy', 'shoulder', 'upper-back', 'stage-2', 'isometric', 'stability']),
+  E('f0000306-0000-4000-8000-000000000000', 'Band External Rotation', 'Rear Delts', 'tube_band', 'Anchor at elbow height · elbow pinned to the side · rotate the forearm out slowly', '/exercises/band-external-rotation.jpg', ['physical-therapy', 'shoulder', 'stage-2', 'strength', 'stability']),
+  E('f0000307-0000-4000-8000-000000000000', 'Band Internal Rotation', 'Shoulders', 'tube_band', 'Anchor at elbow height · elbow pinned to the side · rotate the forearm in slowly', '/exercises/band-internal-rotation.jpg', ['physical-therapy', 'shoulder', 'stage-2', 'strength', 'stability']),
+  E('f0000308-0000-4000-8000-000000000000', 'Wall Walk', 'Shoulders', 'calisthenics', 'Fingers on the wall · walk them up as high as pain-free · walk back down', '/exercises/wall-walk.jpg', ['physical-therapy', 'shoulder', 'stage-2', 'mobility']),
+  E('f0000309-0000-4000-8000-000000000000', 'Wall Push-Up Plus', 'Shoulders', 'calisthenics', 'Hands on the wall, arms straight · push through the blades to round the upper back · relax', '/exercises/wall-push-up-plus.jpg', ['physical-therapy', 'shoulder', 'upper-back', 'stage-2', 'strength', 'stability']),
 
   // Stage 3 — loaded, functional strengthening
-  E('f0000310-0000-4000-8000-000000000000', 'Band Scaption Raise', 'Shoulders', 'tube_band', 'Stand on the band · raise the arms to a Y at 30°, thumbs up · control down', null, ['physical-therapy', 'shoulder', 'stage-3', 'strength']),
-  E('f0000311-0000-4000-8000-000000000000', 'Prone I-Y-T Raise', 'Rear Delts', 'calisthenics', 'Face down · arms overhead · lift in an I, then Y, then T · squeeze the blades · lower slow', null, ['physical-therapy', 'shoulder', 'upper-back', 'stage-3', 'strength', 'stability']),
-  E('f0000312-0000-4000-8000-000000000000', 'Side-Lying External Rotation', 'Shoulders', 'dumbbell', 'On your side, elbow tucked to the ribs · rotate the dumbbell up · slow control down', null, ['physical-therapy', 'shoulder', 'stage-3', 'strength']),
+  E('f0000310-0000-4000-8000-000000000000', 'Band Scaption Raise', 'Shoulders', 'tube_band', 'Stand on the band · raise the arms to a Y at 30°, thumbs up · control down', '/exercises/band-scaption-raise.jpg', ['physical-therapy', 'shoulder', 'stage-3', 'strength']),
+  E('f0000311-0000-4000-8000-000000000000', 'Prone I-Y-T Raise', 'Rear Delts', 'calisthenics', 'Face down · arms overhead · lift in an I, then Y, then T · squeeze the blades · lower slow', '/exercises/prone-i-y-t-raise.jpg', ['physical-therapy', 'shoulder', 'upper-back', 'stage-3', 'strength', 'stability']),
+  E('f0000312-0000-4000-8000-000000000000', 'Side-Lying External Rotation', 'Shoulders', 'dumbbell', 'On your side, elbow tucked to the ribs · rotate the dumbbell up · slow control down', '/exercises/side-lying-external-rotation.jpg', ['physical-therapy', 'shoulder', 'stage-3', 'strength']),
 
   // ===== Ankle rehab — post-sprain strength / balance / range (7) =====
   // Ankle sprain is one of the most common general-population injuries and the
@@ -315,17 +315,17 @@ export const SAMPLE_EXERCISES: Exercise[] = [
   // the ankle area, stage 2.) Staged, same as knee/shoulder. Information only.
 
   // Stage 1 — off the foot, range + isometric
-  E('f0000401-0000-4000-8000-000000000000', 'Seated Ankle Circles', 'Calves', 'calisthenics', 'Seated, lift the foot · draw slow circles each direction · both ways', null, ['physical-therapy', 'ankle', 'stage-1', 'mobility', 'seated-lying']),
-  E('f0000402-0000-4000-8000-000000000000', 'Seated Resisted Ankle Eversion', 'Calves', 'loop_band', 'Seated, band around the forefoot · roll the foot outward against the band · control back', null, ['physical-therapy', 'ankle', 'stage-1', 'strength', 'seated-lying']),
-  E('f0000403-0000-4000-8000-000000000000', 'Seated Resisted Ankle Inversion', 'Calves', 'loop_band', 'Seated, band around the forefoot · roll the foot inward against the band · control back', null, ['physical-therapy', 'ankle', 'stage-1', 'strength', 'seated-lying']),
+  E('f0000401-0000-4000-8000-000000000000', 'Seated Ankle Circles', 'Calves', 'calisthenics', 'Seated, lift the foot · draw slow circles each direction · both ways', '/exercises/seated-ankle-circles.jpg', ['physical-therapy', 'ankle', 'stage-1', 'mobility', 'seated-lying']),
+  E('f0000402-0000-4000-8000-000000000000', 'Seated Resisted Ankle Eversion', 'Calves', 'loop_band', 'Seated, band around the forefoot · roll the foot outward against the band · control back', '/exercises/seated-resisted-ankle-eversion.jpg', ['physical-therapy', 'ankle', 'stage-1', 'strength', 'seated-lying']),
+  E('f0000403-0000-4000-8000-000000000000', 'Seated Resisted Ankle Inversion', 'Calves', 'loop_band', 'Seated, band around the forefoot · roll the foot inward against the band · control back', '/exercises/seated-resisted-ankle-inversion.jpg', ['physical-therapy', 'ankle', 'stage-1', 'strength', 'seated-lying']),
 
   // Stage 2 — standing, weight-bearing balance
-  E('f0000404-0000-4000-8000-000000000000', 'Heel-to-Toe Walk', 'Calves', 'calisthenics', 'Walk a straight line, heel touching toe each step · arms out for balance', null, ['physical-therapy', 'ankle', 'stage-2', 'balance', 'weight-bearing']),
+  E('f0000404-0000-4000-8000-000000000000', 'Heel-to-Toe Walk', 'Calves', 'calisthenics', 'Walk a straight line, heel touching toe each step · arms out for balance', '/exercises/heel-to-toe-walk.jpg', ['physical-therapy', 'ankle', 'stage-2', 'balance', 'weight-bearing']),
 
   // Stage 3 — loaded / dynamic, return to activity
-  E('f0000405-0000-4000-8000-000000000000', 'Single-Leg Eccentric Heel Drop', 'Calves', 'calisthenics', 'Low step, heel off the edge · rise on one foot · lower the heel below the step slowly', null, ['physical-therapy', 'ankle', 'stage-3', 'strength', 'weight-bearing']),
-  E('f0000406-0000-4000-8000-000000000000', 'Lateral Hop-and-Stick', 'Calves', 'calisthenics', 'Small hop sideways · land soft and hold · stick the landing before the next hop', null, ['physical-therapy', 'ankle', 'stage-3', 'balance', 'weight-bearing']),
-  E('f0000407-0000-4000-8000-000000000000', 'Single-Leg Balance with Reach', 'Full Body', 'calisthenics', 'Stand on one leg · reach the free foot forward, side, and back, tapping lightly · stay balanced', null, ['physical-therapy', 'ankle', 'stage-3', 'balance', 'stability', 'weight-bearing']),
+  E('f0000405-0000-4000-8000-000000000000', 'Single-Leg Eccentric Heel Drop', 'Calves', 'calisthenics', 'Low step, heel off the edge · rise on one foot · lower the heel below the step slowly', '/exercises/single-leg-eccentric-heel-drop.jpg', ['physical-therapy', 'ankle', 'stage-3', 'strength', 'weight-bearing']),
+  E('f0000406-0000-4000-8000-000000000000', 'Lateral Hop-and-Stick', 'Calves', 'calisthenics', 'Small hop sideways · land soft and hold · stick the landing before the next hop', '/exercises/lateral-hop-and-stick.jpg', ['physical-therapy', 'ankle', 'stage-3', 'balance', 'weight-bearing']),
+  E('f0000407-0000-4000-8000-000000000000', 'Single-Leg Balance with Reach', 'Full Body', 'calisthenics', 'Stand on one leg · reach the free foot forward, side, and back, tapping lightly · stay balanced', '/exercises/single-leg-balance-with-reach.jpg', ['physical-therapy', 'ankle', 'stage-3', 'balance', 'stability', 'weight-bearing']),
 
   // ===== Gym equipment (43) — stationary bike, treadmill, stair climber, rowing
   // machine, elliptical, barbell, cable machine, leg press, lat pulldown. From
@@ -333,66 +333,66 @@ export const SAMPLE_EXERCISES: Exercise[] = [
   // yet. image_url null → equipment-icon fallback until illustrations exist.
 
   // ----- Stationary Bike (3) -----
-  E('c0000501-0000-4000-8000-000000000000', 'Bike Steady-State Ride', 'Conditioning', 'stationary_bike', 'Set a moderate resistance · hold a pace you can sustain the whole time · steady breathing', null, ['low-impact']),
-  E('c0000502-0000-4000-8000-000000000000', 'Bike Sprint Intervals', 'Conditioning', 'stationary_bike', 'Alternate 20-30s all-out effort with 60-90s easy spin · repeat for the set', null, ['low-impact']),
-  E('c0000503-0000-4000-8000-000000000000', 'Bike Hill Climb', 'Conditioning', 'stationary_bike', 'Increase resistance every minute · stay seated or rise out of the saddle · grind through', null, ['low-impact', 'strength']),
+  E('c0000501-0000-4000-8000-000000000000', 'Bike Steady-State Ride', 'Conditioning', 'stationary_bike', 'Set a moderate resistance · hold a pace you can sustain the whole time · steady breathing', '/exercises/bike-steady-state-ride.jpg', ['low-impact']),
+  E('c0000502-0000-4000-8000-000000000000', 'Bike Sprint Intervals', 'Conditioning', 'stationary_bike', 'Alternate 20-30s all-out effort with 60-90s easy spin · repeat for the set', '/exercises/bike-sprint-intervals.jpg', ['low-impact']),
+  E('c0000503-0000-4000-8000-000000000000', 'Bike Hill Climb', 'Conditioning', 'stationary_bike', 'Increase resistance every minute · stay seated or rise out of the saddle · grind through', '/exercises/bike-hill-climb.jpg', ['low-impact', 'strength']),
 
   // ----- Treadmill (3) -----
-  E('c0000504-0000-4000-8000-000000000000', 'Treadmill Brisk Walk', 'Conditioning', 'treadmill', 'Flat or slight incline · quick walking pace · arms swinging · log minutes', null, ['low-impact', 'weight-bearing']),
-  E('c0000505-0000-4000-8000-000000000000', 'Treadmill Jog/Run Intervals', 'Conditioning', 'treadmill', 'Alternate a hard running pace with an easy jog/walk recovery · repeat for the set', null, ['weight-bearing']),
-  E('c0000506-0000-4000-8000-000000000000', 'Treadmill Incline Walk', 'Conditioning', 'treadmill', "Raise the incline · steady brisk pace · lean into the hill, don't hold the rails", null, ['weight-bearing']),
+  E('c0000504-0000-4000-8000-000000000000', 'Treadmill Brisk Walk', 'Conditioning', 'treadmill', 'Flat or slight incline · quick walking pace · arms swinging · log minutes', '/exercises/treadmill-brisk-walk.jpg', ['low-impact', 'weight-bearing']),
+  E('c0000505-0000-4000-8000-000000000000', 'Treadmill Jog/Run Intervals', 'Conditioning', 'treadmill', 'Alternate a hard running pace with an easy jog/walk recovery · repeat for the set', '/exercises/treadmill-jog-run-intervals.jpg', ['weight-bearing']),
+  E('c0000506-0000-4000-8000-000000000000', 'Treadmill Incline Walk', 'Conditioning', 'treadmill', "Raise the incline · steady brisk pace · lean into the hill, don't hold the rails", '/exercises/treadmill-incline-walk.jpg', ['weight-bearing']),
 
   // ----- Stair Climber (2) -----
-  E('c0000507-0000-4000-8000-000000000000', 'Stair Climber Steady Climb', 'Conditioning', 'stair_climber', "Set a sustainable step rate · stand tall, don't lean on the rails · log minutes", null, ['weight-bearing']),
-  E('c0000508-0000-4000-8000-000000000000', 'Stair Climber Intervals', 'Conditioning', 'stair_climber', 'Alternate a fast climb with an easy-pace recovery · repeat for the set', null, ['weight-bearing']),
+  E('c0000507-0000-4000-8000-000000000000', 'Stair Climber Steady Climb', 'Conditioning', 'stair_climber', "Set a sustainable step rate · stand tall, don't lean on the rails · log minutes", '/exercises/stair-climber-steady-climb.jpg', ['weight-bearing']),
+  E('c0000508-0000-4000-8000-000000000000', 'Stair Climber Intervals', 'Conditioning', 'stair_climber', 'Alternate a fast climb with an easy-pace recovery · repeat for the set', '/exercises/stair-climber-intervals.jpg', ['weight-bearing']),
 
   // ----- Rowing Machine (3) -----
-  E('c0000509-0000-4000-8000-000000000000', 'Row Steady-State', 'Conditioning', 'rowing_machine', 'Legs-hips-arms drive, arms-hips-legs return · smooth steady pace · log minutes/meters', null, ['low-impact']),
-  E('c0000510-0000-4000-8000-000000000000', 'Row Sprint Intervals', 'Conditioning', 'rowing_machine', '500m or 60s hard pulls · rest to recover · repeat for the set', null, ['low-impact']),
-  E('c0000511-0000-4000-8000-000000000000', 'Rowing Machine Pull (Strength Pace)', 'Back', 'rowing_machine', 'Slow controlled pulls · drive with the legs first · squeeze the shoulder blades at the finish', null, ['strength']),
+  E('c0000509-0000-4000-8000-000000000000', 'Row Steady-State', 'Conditioning', 'rowing_machine', 'Legs-hips-arms drive, arms-hips-legs return · smooth steady pace · log minutes/meters', '/exercises/row-steady-state.jpg', ['low-impact']),
+  E('c0000510-0000-4000-8000-000000000000', 'Row Sprint Intervals', 'Conditioning', 'rowing_machine', '500m or 60s hard pulls · rest to recover · repeat for the set', '/exercises/row-sprint-intervals.jpg', ['low-impact']),
+  E('c0000511-0000-4000-8000-000000000000', 'Rowing Machine Pull (Strength Pace)', 'Back', 'rowing_machine', 'Slow controlled pulls · drive with the legs first · squeeze the shoulder blades at the finish', '/exercises/rowing-machine-pull-strength-pace.jpg', ['strength']),
 
   // ----- Elliptical (2) -----
-  E('c0000512-0000-4000-8000-000000000000', 'Elliptical Steady-State', 'Conditioning', 'elliptical', 'Smooth continuous stride · even resistance · log minutes', null, ['low-impact']),
-  E('c0000513-0000-4000-8000-000000000000', 'Elliptical Intervals', 'Conditioning', 'elliptical', 'Push the pace/resistance for 30-60s · ease off to recover · repeat', null, ['low-impact']),
+  E('c0000512-0000-4000-8000-000000000000', 'Elliptical Steady-State', 'Conditioning', 'elliptical', 'Smooth continuous stride · even resistance · log minutes', '/exercises/elliptical-steady-state.jpg', ['low-impact']),
+  E('c0000513-0000-4000-8000-000000000000', 'Elliptical Intervals', 'Conditioning', 'elliptical', 'Push the pace/resistance for 30-60s · ease off to recover · repeat', '/exercises/elliptical-intervals.jpg', ['low-impact']),
 
   // ----- Barbell (11) — Smith machine folded in; rack access bundled with the
   // equipment value; all avoid a bench.
-  E('c0000514-0000-4000-8000-000000000000', 'Barbell Back Squat', 'Legs', 'barbell', 'Bar on the upper back · sit back and down · drive through mid-foot', null, ['strength']),
-  E('c0000515-0000-4000-8000-000000000000', 'Barbell Front Squat', 'Quads', 'barbell', 'Bar in the front rack, elbows up · sit tall · drive up', null, ['strength']),
-  E('c0000516-0000-4000-8000-000000000000', 'Barbell Romanian Deadlift', 'Hamstrings', 'barbell', 'Hinge at the hips · bar close to the legs · flat back', null, ['strength']),
-  E('c0000517-0000-4000-8000-000000000000', 'Barbell Deadlift', 'Back', 'barbell', 'Hips back, flat back · drive the floor away · lock out tall', null, ['strength']),
-  E('c0000518-0000-4000-8000-000000000000', 'Barbell Bent-Over Row', 'Back', 'barbell', 'Hinge to 45° · flat back · drive elbows past the ribs', null, ['strength']),
-  E('c0000519-0000-4000-8000-000000000000', 'Barbell Overhead Press', 'Shoulders', 'barbell', 'Brace the core · press to full lockout overhead', null, ['strength']),
-  E('c0000520-0000-4000-8000-000000000000', 'Barbell Floor Press', 'Chest', 'barbell', 'Lying on the floor · elbows to the floor · press up', null, ['strength']),
-  E('c0000521-0000-4000-8000-000000000000', 'Barbell Glute Bridge', 'Glutes', 'barbell', 'Bar across the hips · drive through the heels · squeeze at the top', null, ['strength']),
-  E('c0000522-0000-4000-8000-000000000000', 'Barbell Reverse Lunge', 'Legs', 'barbell', 'Bar on the back · step back · drop the back knee · drive through the front heel', null, ['strength']),
-  E('c0000523-0000-4000-8000-000000000000', 'Barbell Bicep Curl', 'Biceps', 'barbell', 'No swing · full stretch at the bottom · curl to the top', null, ['strength']),
-  E('c0000524-0000-4000-8000-000000000000', 'Barbell Shrug', 'Traps', 'barbell', 'Shrug straight up against real load · pause · no rolling', null, ['strength']),
+  E('c0000514-0000-4000-8000-000000000000', 'Barbell Back Squat', 'Legs', 'barbell', 'Bar on the upper back · sit back and down · drive through mid-foot', '/exercises/barbell-back-squat.jpg', ['strength']),
+  E('c0000515-0000-4000-8000-000000000000', 'Barbell Front Squat', 'Quads', 'barbell', 'Bar in the front rack, elbows up · sit tall · drive up', '/exercises/barbell-front-squat.jpg', ['strength']),
+  E('c0000516-0000-4000-8000-000000000000', 'Barbell Romanian Deadlift', 'Hamstrings', 'barbell', 'Hinge at the hips · bar close to the legs · flat back', '/exercises/barbell-romanian-deadlift.jpg', ['strength']),
+  E('c0000517-0000-4000-8000-000000000000', 'Barbell Deadlift', 'Back', 'barbell', 'Hips back, flat back · drive the floor away · lock out tall', '/exercises/barbell-deadlift.jpg', ['strength']),
+  E('c0000518-0000-4000-8000-000000000000', 'Barbell Bent-Over Row', 'Back', 'barbell', 'Hinge to 45° · flat back · drive elbows past the ribs', '/exercises/barbell-bent-over-row.jpg', ['strength']),
+  E('c0000519-0000-4000-8000-000000000000', 'Barbell Overhead Press', 'Shoulders', 'barbell', 'Brace the core · press to full lockout overhead', '/exercises/barbell-overhead-press.jpg', ['strength']),
+  E('c0000520-0000-4000-8000-000000000000', 'Barbell Floor Press', 'Chest', 'barbell', 'Lying on the floor · elbows to the floor · press up', '/exercises/barbell-floor-press.jpg', ['strength']),
+  E('c0000521-0000-4000-8000-000000000000', 'Barbell Glute Bridge', 'Glutes', 'barbell', 'Bar across the hips · drive through the heels · squeeze at the top', '/exercises/barbell-glute-bridge.jpg', ['strength']),
+  E('c0000522-0000-4000-8000-000000000000', 'Barbell Reverse Lunge', 'Legs', 'barbell', 'Bar on the back · step back · drop the back knee · drive through the front heel', '/exercises/barbell-reverse-lunge.jpg', ['strength']),
+  E('c0000523-0000-4000-8000-000000000000', 'Barbell Bicep Curl', 'Biceps', 'barbell', 'No swing · full stretch at the bottom · curl to the top', '/exercises/barbell-bicep-curl.jpg', ['strength']),
+  E('c0000524-0000-4000-8000-000000000000', 'Barbell Shrug', 'Traps', 'barbell', 'Shrug straight up against real load · pause · no rolling', '/exercises/barbell-shrug.jpg', ['strength']),
 
   // ----- Cable Machine (13) -----
-  E('c0000525-0000-4000-8000-000000000000', 'Cable Standing Row', 'Back', 'cable_machine', 'Chest up · drive the elbows back · squeeze the shoulder blades', null, ['strength']),
-  E('c0000526-0000-4000-8000-000000000000', 'Cable Lat Pulldown', 'Back', 'cable_machine', 'Wide overhand grip · pull the bar to the upper chest · control up', null, ['strength']),
-  E('c0000527-0000-4000-8000-000000000000', 'Cable Straight-Arm Pulldown', 'Back', 'cable_machine', 'Arms straight · pull the bar down to the thighs · feel the lats', null, ['strength']),
-  E('c0000528-0000-4000-8000-000000000000', 'Cable Chest Press', 'Chest', 'cable_machine', 'Split stance · press straight out · control the return', null, ['strength']),
-  E('c0000529-0000-4000-8000-000000000000', 'Cable Standing Fly', 'Chest', 'cable_machine', 'Soft elbows · wide arc · squeeze at the finish', null, ['strength']),
-  E('c0000530-0000-4000-8000-000000000000', 'Cable Face Pull', 'Rear Delts', 'cable_machine', 'Rope at eye height · pull to the face · elbows high', null, ['strength']),
-  E('c0000531-0000-4000-8000-000000000000', 'Cable Rear-Delt Fly', 'Rear Delts', 'cable_machine', 'Cross-cable handles · pull out and back · squeeze the upper back', null, ['strength']),
-  E('c0000532-0000-4000-8000-000000000000', 'Cable Upright Row', 'Traps', 'cable_machine', 'Pull straight up to chest height · elbows lead · no shrug at the top', null, ['strength']),
-  E('c0000533-0000-4000-8000-000000000000', 'Cable Lateral Raise', 'Shoulders', 'cable_machine', 'Low pulley · raise out to shoulder height · no swing', null, ['strength']),
-  E('c0000534-0000-4000-8000-000000000000', 'Cable Triceps Pushdown', 'Triceps', 'cable_machine', 'Elbows pinned to the sides · press down to full lockout', null, ['strength']),
-  E('c0000535-0000-4000-8000-000000000000', 'Cable Bicep Curl', 'Biceps', 'cable_machine', 'Elbows still · curl to the top · slow negative', null, ['strength']),
-  E('c0000536-0000-4000-8000-000000000000', 'Cable Woodchop', 'Obliques', 'cable_machine', 'High anchor · rotate and chop diagonally across the body', null, ['stability']),
-  E('c0000537-0000-4000-8000-000000000000', 'Cable Pallof Press', 'Core', 'cable_machine', 'Resist the pull toward the machine · press straight out · brace', null, ['stability']),
+  E('c0000525-0000-4000-8000-000000000000', 'Cable Standing Row', 'Back', 'cable_machine', 'Chest up · drive the elbows back · squeeze the shoulder blades', '/exercises/cable-standing-row.jpg', ['strength']),
+  E('c0000526-0000-4000-8000-000000000000', 'Cable Lat Pulldown', 'Back', 'cable_machine', 'Wide overhand grip · pull the bar to the upper chest · control up', '/exercises/cable-lat-pulldown.jpg', ['strength']),
+  E('c0000527-0000-4000-8000-000000000000', 'Cable Straight-Arm Pulldown', 'Back', 'cable_machine', 'Arms straight · pull the bar down to the thighs · feel the lats', '/exercises/cable-straight-arm-pulldown.jpg', ['strength']),
+  E('c0000528-0000-4000-8000-000000000000', 'Cable Chest Press', 'Chest', 'cable_machine', 'Split stance · press straight out · control the return', '/exercises/cable-chest-press.jpg', ['strength']),
+  E('c0000529-0000-4000-8000-000000000000', 'Cable Standing Fly', 'Chest', 'cable_machine', 'Soft elbows · wide arc · squeeze at the finish', '/exercises/cable-standing-fly.jpg', ['strength']),
+  E('c0000530-0000-4000-8000-000000000000', 'Cable Face Pull', 'Rear Delts', 'cable_machine', 'Rope at eye height · pull to the face · elbows high', '/exercises/cable-face-pull.jpg', ['strength']),
+  E('c0000531-0000-4000-8000-000000000000', 'Cable Rear-Delt Fly', 'Rear Delts', 'cable_machine', 'Cross-cable handles · pull out and back · squeeze the upper back', '/exercises/cable-rear-delt-fly.jpg', ['strength']),
+  E('c0000532-0000-4000-8000-000000000000', 'Cable Upright Row', 'Traps', 'cable_machine', 'Pull straight up to chest height · elbows lead · no shrug at the top', '/exercises/cable-upright-row.jpg', ['strength']),
+  E('c0000533-0000-4000-8000-000000000000', 'Cable Lateral Raise', 'Shoulders', 'cable_machine', 'Low pulley · raise out to shoulder height · no swing', '/exercises/cable-lateral-raise.jpg', ['strength']),
+  E('c0000534-0000-4000-8000-000000000000', 'Cable Triceps Pushdown', 'Triceps', 'cable_machine', 'Elbows pinned to the sides · press down to full lockout', '/exercises/cable-triceps-pushdown.jpg', ['strength']),
+  E('c0000535-0000-4000-8000-000000000000', 'Cable Bicep Curl', 'Biceps', 'cable_machine', 'Elbows still · curl to the top · slow negative', '/exercises/cable-bicep-curl.jpg', ['strength']),
+  E('c0000536-0000-4000-8000-000000000000', 'Cable Woodchop', 'Obliques', 'cable_machine', 'High anchor · rotate and chop diagonally across the body', '/exercises/cable-woodchop.jpg', ['stability']),
+  E('c0000537-0000-4000-8000-000000000000', 'Cable Pallof Press', 'Core', 'cable_machine', 'Resist the pull toward the machine · press straight out · brace', '/exercises/cable-pallof-press.jpg', ['stability']),
 
   // ----- Leg Press (3) -----
-  E('c0000538-0000-4000-8000-000000000000', 'Leg Press', 'Legs', 'leg_press_machine', 'Feet shoulder-width mid-platform · lower to 90° · drive through the heels', null, ['strength']),
-  E('c0000539-0000-4000-8000-000000000000', 'Single-Leg Leg Press', 'Legs', 'leg_press_machine', 'One foot centered on the platform · press through the heel · control the negative', null, ['strength', 'balance']),
-  E('c0000540-0000-4000-8000-000000000000', 'High Foot-Placement Leg Press', 'Glutes', 'leg_press_machine', 'Feet high on the platform, wider stance · drive through the heels to bias the glutes', null, ['strength']),
+  E('c0000538-0000-4000-8000-000000000000', 'Leg Press', 'Legs', 'leg_press_machine', 'Feet shoulder-width mid-platform · lower to 90° · drive through the heels', '/exercises/leg-press.jpg', ['strength']),
+  E('c0000539-0000-4000-8000-000000000000', 'Single-Leg Leg Press', 'Legs', 'leg_press_machine', 'One foot centered on the platform · press through the heel · control the negative', '/exercises/single-leg-leg-press.jpg', ['strength', 'balance']),
+  E('c0000540-0000-4000-8000-000000000000', 'High Foot-Placement Leg Press', 'Glutes', 'leg_press_machine', 'Feet high on the platform, wider stance · drive through the heels to bias the glutes', '/exercises/high-foot-placement-leg-press.jpg', ['strength']),
 
   // ----- Lat Pulldown (3) -----
-  E('c0000541-0000-4000-8000-000000000000', 'Lat Pulldown (Wide Grip)', 'Back', 'lat_pulldown_machine', 'Wide overhand grip · pull the bar to the upper chest · control up', null, ['strength']),
-  E('c0000542-0000-4000-8000-000000000000', 'Close-Grip Lat Pulldown', 'Back', 'lat_pulldown_machine', 'Close neutral or underhand grip · drive the elbows down · squeeze the lats', null, ['strength']),
-  E('c0000543-0000-4000-8000-000000000000', 'Single-Arm Lat Pulldown', 'Back', 'lat_pulldown_machine', 'One handle · pull straight down to the hip · resist the twist', null, ['strength']),
+  E('c0000541-0000-4000-8000-000000000000', 'Lat Pulldown (Wide Grip)', 'Back', 'lat_pulldown_machine', 'Wide overhand grip · pull the bar to the upper chest · control up', '/exercises/lat-pulldown-wide-grip.jpg', ['strength']),
+  E('c0000542-0000-4000-8000-000000000000', 'Close-Grip Lat Pulldown', 'Back', 'lat_pulldown_machine', 'Close neutral or underhand grip · drive the elbows down · squeeze the lats', '/exercises/close-grip-lat-pulldown.jpg', ['strength']),
+  E('c0000543-0000-4000-8000-000000000000', 'Single-Arm Lat Pulldown', 'Back', 'lat_pulldown_machine', 'One handle · pull straight down to the hip · resist the twist', '/exercises/single-arm-lat-pulldown.jpg', ['strength']),
 ];
 
 // Library moves that already serve knee rehab — tagged, not duplicated. Kneeling
