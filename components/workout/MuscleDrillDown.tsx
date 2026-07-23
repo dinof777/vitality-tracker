@@ -91,7 +91,8 @@ export default function MuscleDrillDown({ nodes, value, onSelect, columns = 3 }:
       {expandedNode?.children?.length ? (
         <div className="rounded-lg border border-border bg-surface-raised/50 p-2.5">
           <p className="mb-2 text-caption font-semibold tracking-wide text-text-faint">
-            {expandedNode.label.toUpperCase()} — NARROW TO
+            {expandedNode.label.toUpperCase()} — NARROW TO{' '}
+            <span className="font-normal text-text-faint/70">(OPTIONAL)</span>
           </p>
           <div className="grid grid-cols-3 gap-2">
             {expandedNode.children.map((c) => {
