@@ -295,7 +295,7 @@ export default function SettingsPage() {
       {/* Vitality Pro — the trainer tools, right here rather than a hop away */}
       {account.role === 'trainer' ? (
         <>
-          <p className="mb-2 text-caption text-text-muted">VITALITY PRO</p>
+          <p className="mb-2 text-caption text-text-muted">LIVE ELEVATED PRO</p>
           <div className="mb-5 grid grid-cols-2 gap-2">
             {[
               { href: '/dashboard/workouts', label: 'Workouts', hint: 'Saved & shareable' },
@@ -320,7 +320,7 @@ export default function SettingsPage() {
         <div className="mb-5 rounded-lg border border-accent/40 bg-accent/10 p-4">
           <p className="text-body font-semibold text-text-primary">Train other people?</p>
           <p className="mb-3 text-caption text-text-muted">
-            Switch your role to <span className="text-text-primary">trainer</span> above to unlock Vitality Pro — your
+            Switch your role to <span className="text-text-primary">trainer</span> above to unlock Live Elevated Pro — your
             own branded app, clients and shareable workouts.
           </p>
           <Link href="/pro" className="text-caption text-accent">
@@ -363,7 +363,7 @@ export default function SettingsPage() {
       </p>
       <p className="mt-2 text-center text-caption text-text-faint">
         <Link href="/pro" className="text-accent">
-          For gyms &amp; trainers · Vitality Pro ›
+          For gyms &amp; trainers · Live Elevated Pro ›
         </Link>
       </p>
     </main>

@@ -139,7 +139,7 @@ export default function WorkoutStyleControl({ mode, amrapMinutes, emomMinutes, o
       <p className="mt-2 text-caption text-text-faint">
         {mode === 'intervals'
           ? 'SyncroFit runs the timer when you send this workout.'
-          : `SyncroFit runs the ${workoutStyleLabel(mode)} clock — Vitality doesn't have a built-in timer for this style yet.`}
+          : `SyncroFit runs the ${workoutStyleLabel(mode)} clock — Live Elevated doesn't have a built-in timer for this style yet.`}
       </p>
     </div>
   );

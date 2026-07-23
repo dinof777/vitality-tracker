@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next';
+import { SITE_URL } from '@/lib/site';
 
-const ORIGIN = 'https://vitality-tracker-mauve.vercel.app';
+const ORIGIN = SITE_URL;
 
 // Canonical public routes. Per-tenant /g/<slug> pages are dynamic and not
 // enumerated here; trainer admin + auth are intentionally excluded.

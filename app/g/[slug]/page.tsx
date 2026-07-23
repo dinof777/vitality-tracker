@@ -168,7 +168,7 @@ export default async function TenantHome({
           </>
         )}
 
-        <p className="mt-12 text-center text-caption text-text-faint">Powered by Vitality</p>
+        <p className="mt-12 text-center text-caption text-text-faint">Powered by Live Elevated</p>
       </main>
     </div>
   );

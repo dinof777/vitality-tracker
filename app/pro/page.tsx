@@ -48,13 +48,13 @@ const FEATURES = [
   { icon: '📲', title: 'Build & share', body: 'Generate a workout, print it with a QR code, and your client scans to load and run it.' },
   { icon: '⏱️', title: 'SyncroFit built in', body: 'Push workouts straight to the SyncroFit interval timer — no copying, no fuss.' },
   { icon: '📊', title: 'Real engagement', body: 'See which routines your clients import and finish — with durations — not just guesses.' },
-  { icon: '🌐', title: 'Your own address', body: 'vitalitypro.app/g/yourgym — or bring your own custom domain.' },
+  { icon: '🌐', title: 'Your own address', body: 'liveelevatedpro.app/g/yourgym — or bring your own custom domain.' },
   { icon: '🪧', title: 'Front-desk poster', body: 'A branded, print-ready QR poster — logo, colors, one tap to print. Tape it up and let the wall do the selling.' },
   { icon: '🧳', title: 'Train from anywhere', body: 'Coaching a client on the road? Text them a link or QR — they open it on their phone, no app, no login.' },
 ];
 
 const STEPS = [
-  { n: '1', title: 'Create your gym', body: 'Sign up and claim your URL — vitalitypro.app/g/yourgym. Free to start.' },
+  { n: '1', title: 'Create your gym', body: 'Sign up and claim your URL — liveelevatedpro.app/g/yourgym. Free to start.' },
   { n: '2', title: 'Brand it', body: 'Paste your website — logo, colors and name land on your app instantly. Tweak anything.' },
   { n: '3', title: 'Build & share', body: 'Generate a workout from your library, send it by link, QR, or straight to SyncroFit.' },
   { n: '4', title: 'Embed & print', body: 'Drop a button or QR on your website, and print a poster for the front desk.' },
@@ -72,7 +72,7 @@ const FAQ = [
   { q: 'Do I need to be technical?', a: "Not at all. Paste your website, we grab your branding, and you're sharing workouts within minutes." },
   { q: 'Can I add my own exercises and equipment?', a: "Yes — add custom exercises, rename library exercises to your gym's language, and register your own equipment (we dedupe so the list stays clean)." },
   { q: 'What is the SyncroFit part?', a: 'SyncroFit is the interval timer your workouts run on. Send a workout in one tap; it reports back when a client imports or finishes it, so you see real engagement.' },
-  { q: 'Can I use my own domain?', a: 'You start at vitalitypro.app/g/yourgym for free. Custom domains come with Pro.' },
+  { q: 'Can I use my own domain?', a: 'You start at liveelevatedpro.app/g/yourgym for free. Custom domains come with Pro.' },
   { q: 'Is it really free?', a: 'Yes — the core platform is free to start. Pro adds custom domains, client analytics, and more coaches.' },
 ];
 
@@ -83,8 +83,8 @@ export default function ProLanding() {
       <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
           <span className="flex items-center gap-2 text-h3 font-extrabold">
-            <span className="flex h-7 w-7 items-center justify-center rounded-md bg-accent text-on-accent">V</span>
-            Vitality<span className="text-accent">Pro</span>
+            <span className="flex h-7 w-7 items-center justify-center rounded-md bg-accent text-on-accent">L</span>
+            Live Elevated<span className="text-accent">Pro</span>
           </span>
           <nav className="flex items-center gap-4 text-caption">
             <Link href="/sign-in" className="text-text-muted hover:text-text-primary">Sign in</Link>
@@ -333,13 +333,13 @@ export default function ProLanding() {
       {/* Footer */}
       <footer className="border-t border-border px-5 py-8">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 text-caption text-text-faint sm:flex-row">
-          <span>Vitality Pro</span>
+          <span>Live Elevated Pro</span>
           <nav className="flex gap-4">
             <Link href="/g/vitality" className="hover:text-text-muted">Demo</Link>
             <Link href="/sign-in" className="hover:text-text-muted">Sign in</Link>
             <Link href="/sign-up" className="hover:text-text-muted">Start free</Link>
           </nav>
-          <span>Powered by Vitality</span>
+          <span>Powered by Live Elevated</span>
         </div>
       </footer>
     </div>

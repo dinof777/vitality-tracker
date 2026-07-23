@@ -132,7 +132,7 @@ function PosterPaper({ name, accent, onAccent, logoUrl, initial, qrSvg, host, sl
           {host}/g/{slug}
         </p>
         <p className="mt-1 text-xs" style={{ color: INK_FAINT }}>
-          Powered by Vitality
+          Powered by Live Elevated
         </p>
       </div>
     </div>

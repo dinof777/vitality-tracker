@@ -47,7 +47,7 @@ export default function Onboarding() {
   return (
     <div className="min-h-dvh bg-background text-text-primary">
       <main className="shell px-5 pb-20 pt-12">
-        <p className="text-label text-accent">VITALITY PRO</p>
+        <p className="text-label text-accent">LIVE ELEVATED PRO</p>
         <h1 className="mb-1 text-h1 text-text-primary">Create your gym</h1>
         <p className="mb-8 text-body text-text-muted">
           Name it and pick its web address. You’ll brand it next.
@@ -64,7 +64,7 @@ export default function Onboarding() {
 
         <label className="mb-1 block text-caption text-text-muted">YOUR APP URL</label>
         <div className="flex items-center rounded-md border border-border bg-surface px-3">
-          <span className="text-body text-text-faint">vitalitypro.app/g/</span>
+          <span className="text-body text-text-faint">liveelevatedpro.app/g/</span>
           <input
             value={slug}
             onChange={(e) => {

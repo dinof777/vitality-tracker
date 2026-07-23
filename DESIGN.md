@@ -1,10 +1,10 @@
-# Vitality Tracker — Design System
+# Live Elevated — Design System
 
-> Canonical visual spec for the Vitality Workout Tracker PWA. Every screen and
-> component references this file. Dark-mode first, gym-floor optimized: high
-> contrast, fat-thumb tap targets, big number readouts.
+> Canonical visual spec for the Live Elevated workout tracker PWA. Every screen
+> and component references this file. Dark-mode first, gym-floor optimized:
+> high contrast, fat-thumb tap targets, big number readouts.
 >
-> **Brand direction:** Brian Pruett's _Live Elevated / Vitality_ philosophy —
+> **Brand direction:** Brian Pruett's _Live Elevated_ philosophy —
 > strong, clean, athletic. Premium native fitness feel, not a SaaS dashboard.
 > Accent is **vitality-lime** (energy + health). Tunable — swap the `accent`
 > token to rebrand the whole app in one place.
@@ -290,7 +290,7 @@ clock:
 ```
 text-caption text-text-faint
   intervals: "SyncroFit runs the timer when you send this workout."
-  other:     "SyncroFit runs the {Style} clock — Vitality doesn't have a
+  other:     "SyncroFit runs the {Style} clock — Live Elevated doesn't have a
               built-in timer for this style yet."
 ```
 Two hosting shapes for the same `WorkoutStyleControl`:
@@ -496,7 +496,7 @@ hand-typed number.
 ## 8. PWA / native feel
 
 - `display: standalone`, `theme_color: #121316`, `background_color: #121316`.
-- App name **Vitality Tracker**, short name **Vitality**.
+- App name **Live Elevated**, short name **Live Elevated**.
 - No light-mode flash: `<html>` is dark by default (`color-scheme: dark`).
 - Disable text-size-adjust and tap-highlight for native feel.
 

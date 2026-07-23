@@ -457,7 +457,7 @@ export default async function TenantBuild({
         </>
         )}
 
-        <p className="mt-8 text-center text-caption text-text-faint">Powered by Vitality</p>
+        <p className="mt-8 text-center text-caption text-text-faint">Powered by Live Elevated</p>
       </main>
     </div>
   );

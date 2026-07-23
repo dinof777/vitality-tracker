@@ -170,10 +170,10 @@ describe('SyncroFit contract conformance', () => {
   });
 
   // Bonus fix — tenant-aware `from` (gym sends must carry the gym's own
-  // attribution, not Vitality's).
-  it('defaults `from` to Vitality, but honors an explicit tenant `from`', () => {
+  // attribution, not Live Elevated's).
+  it('defaults `from` to Live Elevated, but honors an explicit tenant `from`', () => {
     const personal = decodeCircuit(syncrofitRunUrl('Test', [ex('Push-Up', 'calisthenics')], params, '', 'x'));
-    expect(personal.from).toEqual({ name: 'Vitality', organization: 'Live Elevated' });
+    expect(personal.from).toEqual({ name: 'Live Elevated', organization: 'Live Elevated' });
 
     const gym = decodeCircuit(
       syncrofitRunUrl('Test', [ex('Push-Up', 'calisthenics')], params, '', 'x', {

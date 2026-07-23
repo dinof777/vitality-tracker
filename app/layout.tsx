@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 import BottomNav from "@/components/layout/BottomNav";
+import { SITE_URL } from "@/lib/site";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -11,14 +12,28 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Vitality Tracker",
+  metadataBase: new URL(SITE_URL),
+  title: "Live Elevated",
   description:
-    "Mobile-first workout tracker for the Live Elevated / Vitality training philosophy.",
-  applicationName: "Vitality Tracker",
+    "Mobile-first workout tracker for the Live Elevated training philosophy.",
+  applicationName: "Live Elevated",
+  openGraph: {
+    title: "Live Elevated",
+    siteName: "Live Elevated",
+    description:
+      "Mobile-first workout tracker for the Live Elevated training philosophy.",
+    url: SITE_URL,
+  },
+  twitter: {
+    card: "summary",
+    title: "Live Elevated",
+    description:
+      "Mobile-first workout tracker for the Live Elevated training philosophy.",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Vitality",
+    title: "Live Elevated",
   },
   other: {
     // Modern standard replacing the deprecated apple-mobile-web-app-capable.

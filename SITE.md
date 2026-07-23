@@ -1,11 +1,11 @@
-# SITE.md — Vitality
+# SITE.md — Live Elevated
 
 The architecture map for the app: what every surface is, the data model behind
 it, and how the pieces connect. Pairs with `DESIGN.md` (the visual system) and
 the generated `/llms.txt` (the AI-crawler manifest). Keep this current when
 routes, tables, or integrations change.
 
-- **Live:** https://vitality-tracker-mauve.vercel.app
+- **Live:** https://vitality-tracker-mauve.vercel.app (canonical domain: https://liveelevated.fit, pending DNS)
 - **Stack:** Next.js 14 (App Router, TypeScript) · Tailwind v3 · Neon serverless
   Postgres · Clerk (auth) · Vercel (hosting) · mobile-first PWA (`max-w-md`)
 - **Repo:** dinof777/vitality-tracker
@@ -13,7 +13,7 @@ routes, tables, or integrations change.
 ## Two products, one codebase
 
 1. **The training app** — the original single-user workout PWA (public, no login).
-2. **Vitality Pro** — a multi-tenant, white-label layer where each gym/trainer
+2. **Live Elevated Pro** — a multi-tenant, white-label layer where each gym/trainer
    gets a branded space at `/g/<slug>`, behind Clerk auth for trainers.
 
 ---
@@ -35,7 +35,7 @@ routes, tables, or integrations change.
 | `/setup` | First-run profile wizard — goals-first: Goal (4 tiles) → Focus drill-down (muscle tree, or rehab areas for the Recover/Rehab goal) → Equipment → Intensity |
 | `GET /api/taxonomy/regions` | Public, no auth — the admin-managed muscle-group region hierarchy (`{ region, groups[] }[]`), for the builder's REGION tiles |
 
-### Vitality Pro — trainer admin (Clerk-protected)
+### Live Elevated Pro — trainer admin (Clerk-protected)
 | Route | What it is |
 |---|---|
 | `/pro` | Public marketing/landing page (no auth) — Hero → Who it's for → Features (8 cards, incl. the poster + train-anywhere) → Put it on your website → Train clients anywhere → How it works (4 steps) → SyncroFit callout → FAQ → Pricing → CTA |
@@ -49,7 +49,7 @@ routes, tables, or integrations change.
 | `/admin/taxonomy` | Muscle-group + tag lifecycle at both scopes — rename, merge, archive/delete, promote/demote scope, via the disclosure-row pattern; muscle groups can also be grouped into a parent region ("Upper Body" → Chest/Back/Shoulders…), 2 levels max (admins only) |
 | `/admin/exercises` | Exercise lifecycle at both scopes — edit any exercise, archive/delete, move it between shared and gym-owned, via the same disclosure-row pattern (admins only) |
 
-### Vitality Pro — public tenant surfaces
+### Live Elevated Pro — public tenant surfaces
 | Route | What it is |
 |---|---|
 | `/g/<slug>` | The gym's branded landing |

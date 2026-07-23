@@ -71,7 +71,7 @@ export default async function SharedWorkout({ params }: { params: { token: strin
           <p className="text-caption text-text-faint">Scan to open this workout</p>
         </div>
 
-        <p className="mt-8 text-center text-caption text-text-faint print:hidden">Powered by Vitality</p>
+        <p className="mt-8 text-center text-caption text-text-faint print:hidden">Powered by Live Elevated</p>
       </main>
     </div>
   );

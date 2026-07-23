@@ -258,7 +258,7 @@ export default function Home() {
             href="/welcome"
             className="mt-4 block text-center text-caption text-text-faint underline decoration-dotted underline-offset-2"
           >
-            See everything Vitality can do →
+            See everything Live Elevated can do →
           </Link>
         </>
       )}

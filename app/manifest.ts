@@ -1,11 +1,13 @@
 import type { MetadataRoute } from 'next';
+import { SITE_URL } from '@/lib/site';
 
 // PWA manifest — installs to the iPhone Home Screen as a full-screen app.
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Vitality Tracker',
-    short_name: 'Vitality',
-    description: 'Workout tracker for the Live Elevated / Vitality training philosophy.',
+    id: SITE_URL,
+    name: 'Live Elevated',
+    short_name: 'Live Elevated',
+    description: 'Workout tracker for the Live Elevated training philosophy.',
     start_url: '/',
     display: 'standalone',
     background_color: '#121316',

@@ -87,7 +87,7 @@ export function syncrofitUrlFromWorkout(name: string, exercises: Exercise[], p: 
     group: {
       id: groupId,
       name,
-      workoutDescription: 'Sent from Vitality Tracker',
+      workoutDescription: 'Sent from Live Elevated',
       presetOrder: presets.map((p) => p.id),
       circuitBetweenSetRest: 30,
       announceNextExercise: true,
@@ -155,7 +155,7 @@ export function syncrofitRunUrl(
   p: WorkoutParams,
   origin = '',
   circuitId?: string,
-  from: { name: string; organization: string } = { name: 'Vitality', organization: 'Live Elevated' },
+  from: { name: string; organization: string } = { name: 'Live Elevated', organization: 'Live Elevated' },
 ): string {
   const exs = exercises.map((ex) => {
     const timed = isTimed(ex);
@@ -186,7 +186,7 @@ export function syncrofitRunUrl(
   const payload = {
     id: circuitId ?? newId(),
     name,
-    description: 'Sent from Vitality Tracker',
+    description: 'Sent from Live Elevated',
     from,
     restBetweenExercises: p.setupSec,
     webhook: SYNCROFIT_WEBHOOK,
@@ -204,7 +204,7 @@ export function syncrofitRunUrl(
 // the routine's SyncroFit Activity card. Preferred over the legacy import URL.
 export function syncrofitRunUrlFromRoutine(
   routine: RoutineWithExercises,
-  from: { name: string; organization: string } = { name: 'Vitality', organization: 'Live Elevated' },
+  from: { name: string; organization: string } = { name: 'Live Elevated', organization: 'Live Elevated' },
 ): string {
   const exs = routine.exercises.map((re) => {
     const timed = isTimed(re);
@@ -239,7 +239,7 @@ export function syncrofitRunUrlFromRoutine(
   const payload = {
     id: routine.id,
     name: routine.name,
-    description: 'Sent from Vitality Tracker',
+    description: 'Sent from Live Elevated',
     from,
     restBetweenExercises: 30,
     webhook: SYNCROFIT_WEBHOOK,

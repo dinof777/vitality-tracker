@@ -25,7 +25,7 @@ const FEATURES = [
   {
     icon: '⚡',
     title: 'Build in seconds',
-    body: "Pick a focus, your equipment, and how long you've got. Vitality assembles the workout — you don't have to.",
+    body: "Pick a focus, your equipment, and how long you've got. Live Elevated assembles the workout — you don't have to.",
   },
   {
     icon: '📈',
@@ -68,7 +68,7 @@ const STEPS = [
   {
     n: '3',
     title: 'Tap Build',
-    body: 'Vitality assembles a workout from the library that matches your focus, equipment, and intensity.',
+    body: 'Live Elevated assembles a workout from the library that matches your focus, equipment, and intensity.',
   },
   {
     n: '4',
@@ -93,7 +93,7 @@ export default function ConsumerMarketing() {
             A workout, built around you — in under a minute.
           </motion.h1>
           <motion.p variants={fadeUp} className="mx-auto mt-4 max-w-xl text-body text-text-muted">
-            Tell Vitality your goal, your equipment, and how much time you&apos;ve got. It builds the workout from a{' '}
+            Tell Live Elevated your goal, your equipment, and how much time you&apos;ve got. It builds the workout from a{' '}
             {EXERCISES}-exercise illustrated library — log it here, or send it straight to SyncroFit&apos;s timer.
           </motion.p>
           <motion.div variants={fadeUp} className="mt-6">
@@ -170,7 +170,7 @@ export default function ConsumerMarketing() {
             We build the workout. SyncroFit runs the clock.
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-body text-text-muted">
-            Vitality doesn&apos;t have its own live workout timer — and it doesn&apos;t need one. Every workout you
+            Live Elevated doesn&apos;t have its own live workout timer — and it doesn&apos;t need one. Every workout you
             build sends straight to SyncroFit&apos;s interval, AMRAP, or EMOM timer in one tap, with your cues and
             images along for the ride.
           </p>

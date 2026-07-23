@@ -30,7 +30,7 @@ export default async function Dashboard() {
       <main className="shell px-5 pb-20 pt-10">
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <p className="text-label text-accent">VITALITY PRO</p>
+            <p className="text-label text-accent">LIVE ELEVATED PRO</p>
             <h1 className="text-h1 text-text-primary">{gym ? (gym.branding.brandName ?? gym.name) : 'Dashboard'}</h1>
           </div>
           <UserButton />
