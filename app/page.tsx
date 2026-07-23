@@ -135,7 +135,21 @@ export default function Home() {
 
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col px-4 pb-28 pt-10">
+    <main className="mx-auto flex min-h-dvh max-w-md flex-col px-4 pb-28 pt-4">
+      <div className="mb-2 flex items-center justify-end gap-6">
+        <Link
+          href="/pro"
+          className="flex h-12 items-center text-caption text-text-muted active:text-text-primary"
+        >
+          For gyms &amp; trainers
+        </Link>
+        <Link
+          href="/sign-in"
+          className="flex h-12 items-center text-caption font-semibold text-accent active:text-accent-press"
+        >
+          Trainer log in
+        </Link>
+      </div>
       <header className="mb-4 flex items-start justify-between">
         <div className="space-y-1">
           <p className="text-label text-accent">LIVE ELEVATED</p>

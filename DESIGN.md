@@ -361,6 +361,17 @@ Rules both encode:
   `bg-surface/95 border-t border-border` with backdrop blur, active tab
   `text-accent`, inactive `text-text-faint`. Hidden on focus screens (active
   workout, gym/pro/share routes) so logging stays distraction-free.
+- **Home utility strip** (`app/page.tsx`, above the greeting `<header>`) — the
+  one row where consumer chrome and trainer/Pro chrome coexist, because `/`
+  is the only screen serving both a consumer walking in cold and a returning
+  trainer/gym owner. A single right-aligned pair of plain-text links, no
+  wordmark, no pill/border: `For gyms & trainers` (muted, → `/pro`) and
+  `Trainer log in` (accent, → `/sign-in`). Each is `h-12` (48px, §5's nav-item
+  default) via padding, not visible size, so the row stays visually slim.
+  Scoped to `/` only — every other route stays either pure consumer chrome
+  (Bottom tab bar) or pure trainer chrome (dashboard nav); this pattern
+  doesn't spread past the front door. Full rationale:
+  `.design/home-front-door/DESIGN_BRIEF.md`.
 - Safe-area aware: `pb-[env(safe-area-inset-bottom)]` so the tab bar clears the
   iPhone home indicator in standalone PWA mode.
 
