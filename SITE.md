@@ -23,7 +23,8 @@ routes, tables, or integrations change.
 ### Training app (public)
 | Route | What it is |
 |---|---|
-| `/` | Home — build today's workout (length · focus · intensity · equipment) or run a scheduled plan day |
+| `/` | Home — a first-time visitor (no saved profile) is sold with `ConsumerMarketing` (hero, features, builder walkthrough, SyncroFit callout); a returning visitor gets the unchanged fast quick-build (length · focus · intensity · equipment) or a scheduled plan day, plus a low-key link back to `/welcome` |
+| `/welcome` | Standalone host for `ConsumerMarketing` — the same consumer sales pitch as `/`'s first-time state, shareable/revisitable on its own URL |
 | `/exercises` | The 227-exercise illustrated library; search, tap for detail, + to a routine |
 | `/routines` | Reusable blueprints — build, favorite, delete, send to SyncroFit |
 | `/routines/[routineId]` | Routine detail — reorder, send to SyncroFit, **SyncroFit Activity** card |

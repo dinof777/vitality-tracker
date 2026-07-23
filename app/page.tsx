@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import StreakBadge from '@/components/daily5/StreakBadge';
 import StartSheet from '@/components/workout/StartSheet';
 import BuilderControls from '@/components/workout/BuilderControls';
+import UtilityStrip from '@/components/home/UtilityStrip';
+import ConsumerMarketing from '@/components/home/ConsumerMarketing';
 import type { Exercise } from '@/lib/database.types';
 import { computeStreak } from '@/lib/daily5';
 import {
@@ -136,48 +138,22 @@ export default function Home() {
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col px-4 pb-28 pt-4">
-      <div className="mb-2 flex items-center justify-end gap-6">
-        <Link
-          href="/pro"
-          className="flex h-12 items-center text-caption text-text-muted active:text-text-primary"
-        >
-          For gyms &amp; trainers
-        </Link>
-        <Link
-          href="/sign-in"
-          className="flex h-12 items-center text-caption font-semibold text-accent active:text-accent-press"
-        >
-          Trainer log in
-        </Link>
-      </div>
-      <header className="mb-4 flex items-start justify-between">
-        <div className="space-y-1">
-          <p className="text-label text-accent">LIVE ELEVATED</p>
-          <h1 className="text-h1 text-text-primary">{greet}</h1>
-        </div>
-        <StreakBadge streak={streak} />
-      </header>
+      <UtilityStrip />
 
       {!ready ? (
         <div className="flex-1" />
       ) : !profile ? (
-        <>
-          <Link href="/setup" className="mt-2 block rounded-lg border border-accent/40 bg-accent/10 p-5">
-            <p className="text-h3 text-text-primary">⚡ Set up your profile</p>
-            <p className="mt-1 text-body text-text-muted">
-              Pick your equipment, focus &amp; intensity so the app can build workouts on the fly.
-            </p>
-          </Link>
-          <div className="flex-1" />
-          <Link
-            href="/setup"
-            className="flex h-14 w-full items-center justify-center rounded-md bg-accent text-label text-on-accent active:scale-[0.97]"
-          >
-            GET STARTED
-          </Link>
-        </>
+        <ConsumerMarketing />
       ) : (
         <>
+          <header className="mb-4 flex items-start justify-between">
+            <div className="space-y-1">
+              <p className="text-label text-accent">LIVE ELEVATED</p>
+              <h1 className="text-h1 text-text-primary">{greet}</h1>
+            </div>
+            <StreakBadge streak={streak} />
+          </header>
+
           {/* Today's plan — start the scheduled routine in one tap */}
           {today.length > 0 && (
             <section className="mb-5">
@@ -277,6 +253,13 @@ export default function Home() {
               📅 PLAN MY WEEK
             </Link>
           )}
+
+          <Link
+            href="/welcome"
+            className="mt-4 block text-center text-caption text-text-faint underline decoration-dotted underline-offset-2"
+          >
+            See everything Vitality can do →
+          </Link>
         </>
       )}
 

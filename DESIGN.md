@@ -87,7 +87,11 @@ Screen gutter: `px-4` (16px). Card padding: `p-4`. Section gap: `space-y-6`.
   `shadow-lift` = `0 8px 24px rgba(0,0,0,0.4)` for sheets/modals.
 - **Motion:** fast and physical. `transition-all duration-150 ease-out` for
   taps; `active:scale-[0.97]` on pressables. Rest-timer + streak use a 1s tick.
-  Respect `prefers-reduced-motion`.
+  Respect `prefers-reduced-motion` — the CSS-only rule (`app/globals.css`)
+  covers CSS transitions/animations but **not** Framer Motion's JS-driven
+  transforms; anything built on `components/marketing/Reveal.tsx` (§6) gets
+  that fix via `useReducedMotion()` inside the shared wrapper instead of each
+  caller having to remember it.
 
 ---
 
@@ -407,6 +411,48 @@ Rules both encode:
 <ExerciseDetailSheet exercise onClose manage={{ /* wide Save · ScopeSelect · narrow destructive, below the read content */ }} />
 ```
 
+### Marketing sections (long-scroll sales pages)
+
+Shared scroll-reveal + card recipes for the app's sales surfaces — `/pro`
+(trainers/gyms) and the consumer sales content (`components/home/
+ConsumerMarketing.tsx`, hosted at `/`'s first-time state and standalone at
+`/welcome`) — so a second sales page doesn't reinvent motion or card shape.
+Full consumer copy/IA: `.design/consumer-sales-home/DESIGN_BRIEF.md`.
+
+**Reveal wrapper** — `components/marketing/Reveal.tsx` (extracted from
+`/pro`'s original inline definition). Exports `fadeUp`, `stagger`, and a
+`<Reveal>` wrapper around Framer Motion's `whileInView`. Also the one place
+`prefers-reduced-motion` gets honored for Framer Motion specifically, via
+`useReducedMotion()` — the CSS-only rule in `globals.css` (§4) stops at
+CSS transitions/animations and doesn't reach Framer Motion's JS-driven
+transform interpolation, so this was a real (if minor) latent gap in `/pro`
+before the extraction, now fixed once for every consumer.
+```
+fadeUp:   opacity 0→1, y 24→0, 0.5s easeOut
+stagger:  staggerChildren 0.08s
+<Reveal>: motion.div, whileInView (viewport once, margin -80px)
+```
+
+**Feature card** — `rounded-xl border border-border bg-surface p-5`, emoji
+icon at `text-h2`, `text-h3 font-semibold` title, `text-body text-text-muted`
+body. Grid: `sm:grid-cols-2 lg:grid-cols-3`.
+
+**Numbered step card** — filled accent circle (`h-11 w-11 rounded-full
+bg-accent text-on-accent text-h3 font-extrabold`) holding the step number,
+`text-h3 font-semibold` title, `text-body text-text-muted` body. Grid:
+`sm:grid-cols-2 lg:grid-cols-4`.
+
+**Callout box** — `rounded-2xl border border-border bg-surface p-8
+text-center`, `text-label text-accent` eyebrow, `text-h2 font-bold`
+headline, optional 3-column `sm:grid-cols-3` row of fact tiles
+(`rounded-lg border border-border bg-background p-3`).
+
+**Micro-proof line** — one `text-caption text-text-faint` line under a
+hero's primary CTA, built from live source counts (e.g.
+`SAMPLE_EXERCISES.length`, `EQUIPMENT_ORDER.length` from `lib/exercises.ts`)
+so marketing copy can never drift from the shipped library — never a
+hand-typed number.
+
 ---
 
 ## 7. Layout & navigation
@@ -417,17 +463,31 @@ Rules both encode:
   `bg-surface/95 border-t border-border` with backdrop blur, active tab
   `text-accent`, inactive `text-text-faint`. Hidden on focus screens (active
   workout, gym/pro/share routes) so logging stays distraction-free.
-- **Home utility strip** (`app/page.tsx`, above the greeting `<header>`) — the
-  one row where consumer chrome and trainer/Pro chrome coexist, because `/`
-  is the only screen serving both a consumer walking in cold and a returning
-  trainer/gym owner. A single right-aligned pair of plain-text links, no
-  wordmark, no pill/border: `For gyms & trainers` (muted, → `/pro`) and
-  `Trainer log in` (accent, → `/sign-in`). Each is `h-12` (48px, §5's nav-item
-  default) via padding, not visible size, so the row stays visually slim.
-  Scoped to `/` only — every other route stays either pure consumer chrome
-  (Bottom tab bar) or pure trainer chrome (dashboard nav); this pattern
-  doesn't spread past the front door. Full rationale:
+- **Home utility strip** (`components/home/UtilityStrip.tsx`, mounted above
+  the greeting `<header>` on `/` and above `ConsumerMarketing` on
+  `/welcome`) — the one pairing where consumer chrome and trainer/Pro chrome
+  coexist, because these are the only two screens serving both a consumer
+  and a prospective/returning trainer or gym owner. A single right-aligned
+  pair of plain-text links, no wordmark, no pill/border: `For gyms &
+  trainers` (muted, → `/pro`) and `Trainer log in` (accent, → `/sign-in`).
+  Each is `h-12` (48px, §5's nav-item default) via padding, not visible
+  size, so the row stays visually slim. Full rationale:
   `.design/home-front-door/DESIGN_BRIEF.md`.
+- **Consumer marketing** (`components/home/ConsumerMarketing.tsx`) — hero,
+  features, "how the exercise builder works" walkthrough (paired with a
+  static, non-interactive preview of `BuilderControls`' own row recipe —
+  `components/home/BuilderPreview.tsx`), and a SyncroFit callout, selling
+  the regular (non-trainer) user. Two hosts: `/`'s `!profile` branch
+  (replacing the old thin "Set up your profile" card — a first-time
+  visitor gets sold, not just funneled straight into a form) and the
+  standalone `/welcome` route, reachable any time from returning-Home via a
+  low-key `text-faint` link and shareable on its own. Same component in
+  both hosts; each host controls its own outer width — `app/page.tsx` keeps
+  the phone-width `max-w-md` clamp, `/welcome` goes full-bleed like `/pro` —
+  because `ConsumerMarketing`'s internal `max-w-*` section caps simply
+  never bind past whichever ancestor is tighter, so no duplicate markup or
+  width prop is needed. Full rationale:
+  `.design/consumer-sales-home/DESIGN_BRIEF.md`.
 - Safe-area aware: `pb-[env(safe-area-inset-bottom)]` so the tab bar clears the
   iPhone home indicator in standalone PWA mode.
 

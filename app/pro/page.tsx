@@ -1,36 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { motion, type Variants } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { SAMPLE_EXERCISES, EQUIPMENT_ORDER } from '@/lib/exercises';
+import { Reveal, fadeUp, stagger } from '@/components/marketing/Reveal';
 
 // Counts come from the library module itself — the same source /llms.txt reads,
 // so marketing copy can never drift from what's actually shipped.
 const EXERCISES = SAMPLE_EXERCISES.length;
 const EQUIP = EQUIPMENT_ORDER.length;
-
-const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 24 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
-};
-const stagger: Variants = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.08 } },
-};
-
-function Reveal({ children, className }: { children: React.ReactNode; className?: string }) {
-  return (
-    <motion.div
-      variants={fadeUp}
-      initial="hidden"
-      whileInView="show"
-      viewport={{ once: true, margin: '-80px' }}
-      className={className}
-    >
-      {children}
-    </motion.div>
-  );
-}
 
 // A branded phone mock — a gym's app in THEIR colors (orange here), to show the
 // white-label visually. The screen uses its own accent via CSS vars.
