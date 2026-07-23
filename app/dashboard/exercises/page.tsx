@@ -9,6 +9,8 @@ import { SAMPLE_EXERCISES, EQUIPMENT_LABEL } from '@/lib/exercises';
 import { termSlug } from '@/lib/taxonomy';
 import TermPicker, { type Term } from '@/components/dashboard/TermPicker';
 import type { Equipment } from '@/lib/database.types';
+import { buildExerciseImagePrompt } from '@/lib/exercise-image-prompt';
+import CopyField from '@/components/CopyField';
 
 interface CustomExercise {
   id: string;
@@ -50,6 +52,8 @@ export default function CustomExercises() {
   const [similar, setSimilar] = useState<{ id: string; name: string; message: string } | null>(null);
   /** Non-null when the form is editing an existing move rather than adding one. */
   const [editingId, setEditingId] = useState<string | null>(null);
+  /** Whether the AI image creator prompt panel is expanded on the form. */
+  const [showImagePrompt, setShowImagePrompt] = useState(false);
 
   const load = () =>
     fetch('/api/tenant/exercises')
@@ -78,6 +82,21 @@ export default function CustomExercises() {
 
   const equipLabel = (ex: CustomExercise) =>
     ex.custom_equip_name ?? (ex.equipment ? EQUIPMENT_LABEL[ex.equipment as Equipment] : '');
+
+  // The form's equipment select carries either a built-in Equipment value or
+  // `cat:<id>` for one of the gym's own equipment rows — resolve the latter
+  // to its readable name so the AI image prompt names it correctly.
+  const formEquipmentLabel = equipment.startsWith('cat:')
+    ? (customEquip.find((e) => `cat:${e.id}` === equipment)?.name ?? null)
+    : null;
+
+  const imagePrompt = buildExerciseImagePrompt({
+    name,
+    muscleGroup: muscle,
+    equipment,
+    equipmentLabel: formEquipmentLabel,
+    cue,
+  });
 
   useEffect(() => {
     load();
@@ -114,6 +133,7 @@ export default function CustomExercises() {
     setCue('');
     setTags([]);
     setSimilar(null);
+    setShowImagePrompt(false);
   };
 
   // confirmDistinct = the trainer has seen the near-match and says this really is
@@ -305,6 +325,28 @@ export default function CustomExercises() {
             placeholder="Form cue (optional)"
             className="h-11 w-full rounded-md border border-border bg-background px-3 text-body text-text-primary placeholder:text-text-faint"
           />
+
+          {/* AI image creator prompt — we don't generate art ourselves; this
+              hands the trainer a ready-made prompt for any AI image tool that
+              matches the 291-exercise library's lime-on-carbon house style. */}
+          <button
+            type="button"
+            onClick={() => setShowImagePrompt((v) => !v)}
+            disabled={!name.trim()}
+            aria-expanded={showImagePrompt}
+            aria-controls="ai-image-prompt-panel"
+            className="h-12 w-full rounded-md border border-border bg-transparent text-label text-text-primary active:scale-[0.97] active:bg-surface transition-all duration-150 ease-out disabled:opacity-40 disabled:active:scale-100"
+          >
+            {showImagePrompt ? 'Hide AI image creator prompt' : 'AI image creator prompt'}
+          </button>
+          {showImagePrompt && (
+            <div id="ai-image-prompt-panel" className="rounded-lg border border-border bg-background p-3">
+              <p className="mb-2 text-caption text-text-muted">
+                Paste into any AI image generator (ChatGPT, Gemini…) to get art that matches the library.
+              </p>
+              <CopyField value={imagePrompt} multiline />
+            </div>
+          )}
 
           {/* Tags — so custom moves show up in the same filters as the library */}
           <div>
