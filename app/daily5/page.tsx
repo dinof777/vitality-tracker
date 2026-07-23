@@ -57,7 +57,7 @@ export default function Daily5Page() {
   };
 
   return (
-    <main className="shell min-h-dvh px-4 pb-28 pt-8">
+    <main className="shell-tight min-h-dvh px-4 pb-28 pt-8">
       <header className="mb-6 flex items-start justify-between">
         <div>
           <p className="text-label text-accent">DAILY 5</p>

@@ -104,7 +104,10 @@ export default function CustomWorkoutBuilder({ library, workoutName, params, cir
   return (
     <div>
       {/* ── Your workout so far ─────────────────────────────────────────── */}
-      <section className="mb-5">
+      {/* Sequential, ordered picked-list: capped narrower than the picker
+          grid below, even though this component's own container isn't
+          wrapped — the picker stays free to use the full .shell width. */}
+      <section className="mx-auto mb-5 w-full max-w-2xl">
         <div className="mb-2 flex items-baseline justify-between">
           <p className="text-label text-accent">YOUR WORKOUT</p>
           <span className="text-caption text-text-faint nums">

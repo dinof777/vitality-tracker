@@ -212,7 +212,7 @@ export default function EquipmentAdmin() {
             {filter === 'review' ? 'Nothing waiting for review. 🎉' : 'Nothing here.'}
           </p>
         ) : (
-          <>
+          <div className="mx-auto w-full max-w-2xl">
             <p className="mb-2 text-caption text-text-faint">
               {plural(shown.length, 'piece')}
               {filter === 'all' && reviewCount > 0 && ` · ${reviewCount} awaiting review`}
@@ -254,7 +254,7 @@ export default function EquipmentAdmin() {
                 </LifecycleRow>
               ))}
             </ul>
-          </>
+          </div>
         )}
       </main>
     </div>

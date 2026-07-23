@@ -80,8 +80,9 @@ export default function BuildYourOwn() {
         </p>
       </header>
 
-      {/* Your session so far */}
-      <section className="mb-5">
+      {/* Your session so far — a sequential, ordered list; capped narrower
+          than the ADD EXERCISES grid below so reordering never sprawls. */}
+      <section className="mx-auto mb-5 w-full max-w-2xl">
         <div className="mb-2 flex items-baseline justify-between">
           <p className="text-label text-accent">YOUR SESSION</p>
           <span className="text-caption text-text-faint nums">

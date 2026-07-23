@@ -104,7 +104,7 @@ export default function SettingsPage() {
   const ip = profile ? intensityParams(profile.intensity) : null;
 
   return (
-    <main className="shell min-h-dvh px-4 pb-28 pt-10">
+    <main className="shell-tight min-h-dvh px-4 pb-28 pt-10">
       <header className="mb-6">
         <p className="text-label text-accent">LIVE ELEVATED</p>
         <h1 className="text-h1 text-text-primary">Profile</h1>
@@ -296,7 +296,7 @@ export default function SettingsPage() {
       {account.role === 'trainer' ? (
         <>
           <p className="mb-2 text-caption text-text-muted">LIVE ELEVATED PRO</p>
-          <div className="mb-5 grid grid-cols-2 gap-2">
+          <div className="mb-5 grid grid-cols-2 gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {[
               { href: '/dashboard/workouts', label: 'Workouts', hint: 'Saved & shareable' },
               { href: '/dashboard/clients', label: 'Clients', hint: 'Engagement' },

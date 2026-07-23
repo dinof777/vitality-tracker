@@ -465,15 +465,16 @@ export default function CustomExercises() {
           {error && <p className="text-center text-caption text-destructive">{error}</p>}
         </div>
 
-        {/* List */}
+        {/* List — a management row, not a browsing tile: capped narrower than
+            the page's .shell so rows stay a comfortable reading width. */}
         {loading ? (
-          <div className="h-16 animate-pulse rounded-lg bg-surface" />
+          <div className="mx-auto h-16 w-full max-w-2xl animate-pulse rounded-lg bg-surface" />
         ) : list.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-border p-6 text-center text-body text-text-muted">
+          <p className="mx-auto w-full max-w-2xl rounded-lg border border-dashed border-border p-6 text-center text-body text-text-muted">
             No custom exercises yet.
           </p>
         ) : (
-          <ul className="space-y-2">
+          <ul className="mx-auto w-full max-w-2xl space-y-2">
             {list.map((ex) => (
               <li
                 key={ex.id}

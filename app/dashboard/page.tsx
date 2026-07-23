@@ -139,76 +139,78 @@ export default async function Dashboard() {
 
             <p className="mb-2 text-label text-text-faint">MANAGE</p>
 
-            <Link
-              href="/dashboard/exercises"
-              className="mt-3 flex items-center justify-between rounded-xl border border-border bg-surface p-4 active:bg-surface-raised"
-            >
-              <span>
-                <span className="block text-body font-semibold text-text-primary">Exercises</span>
-                <span className="block text-caption text-text-muted">Custom exercises + renames (shared gym library)</span>
-              </span>
-              <span className="text-text-faint">›</span>
-            </Link>
-
-            <Link
-              href="/dashboard/equipment"
-              className="mt-3 flex items-center justify-between rounded-xl border border-border bg-surface p-4 active:bg-surface-raised"
-            >
-              <span>
-                <span className="block text-body font-semibold text-text-primary">Equipment</span>
-                <span className="block text-caption text-text-muted">Equipment your gym has (shared)</span>
-              </span>
-              <span className="text-text-faint">›</span>
-            </Link>
-
-            <Link
-              href="/dashboard/workouts"
-              className="mt-3 flex items-center justify-between rounded-xl border border-border bg-surface p-4 active:bg-surface-raised"
-            >
-              <span>
-                <span className="block text-body font-semibold text-text-primary">Your workouts</span>
-                <span className="block text-caption text-text-muted">Saved — re-share, print, embed</span>
-              </span>
-              <span className="text-text-faint">›</span>
-            </Link>
-
-            <Link
-              href="/dashboard/clients"
-              className="mt-3 flex items-center justify-between rounded-xl border border-border bg-surface p-4 active:bg-surface-raised"
-            >
-              <span>
-                <span className="block text-body font-semibold text-text-primary">Your clients</span>
-                <span className="block text-caption text-text-muted">
-                  {t?.isOwner ? 'Every trainer’s clients & engagement' : 'Your clients & engagement'}
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <Link
+                href="/dashboard/exercises"
+                className="flex items-center justify-between rounded-xl border border-border bg-surface p-4 active:bg-surface-raised"
+              >
+                <span>
+                  <span className="block text-body font-semibold text-text-primary">Exercises</span>
+                  <span className="block text-caption text-text-muted">Custom exercises + renames (shared gym library)</span>
                 </span>
-              </span>
-              <span className="text-text-faint">›</span>
-            </Link>
+                <span className="text-text-faint">›</span>
+              </Link>
 
-            {t?.isOwner && (
-              <>
-                <Link
-                  href={`/g/${gym.slug}/branding`}
-                  className="mt-3 flex items-center justify-between rounded-xl border border-border bg-surface p-4 active:bg-surface-raised"
-                >
-                  <span>
-                    <span className="block text-body font-semibold text-text-primary">Branding</span>
-                    <span className="block text-caption text-text-muted">Logo, colors &amp; name</span>
+              <Link
+                href="/dashboard/equipment"
+                className="flex items-center justify-between rounded-xl border border-border bg-surface p-4 active:bg-surface-raised"
+              >
+                <span>
+                  <span className="block text-body font-semibold text-text-primary">Equipment</span>
+                  <span className="block text-caption text-text-muted">Equipment your gym has (shared)</span>
+                </span>
+                <span className="text-text-faint">›</span>
+              </Link>
+
+              <Link
+                href="/dashboard/workouts"
+                className="flex items-center justify-between rounded-xl border border-border bg-surface p-4 active:bg-surface-raised"
+              >
+                <span>
+                  <span className="block text-body font-semibold text-text-primary">Your workouts</span>
+                  <span className="block text-caption text-text-muted">Saved — re-share, print, embed</span>
+                </span>
+                <span className="text-text-faint">›</span>
+              </Link>
+
+              <Link
+                href="/dashboard/clients"
+                className="flex items-center justify-between rounded-xl border border-border bg-surface p-4 active:bg-surface-raised"
+              >
+                <span>
+                  <span className="block text-body font-semibold text-text-primary">Your clients</span>
+                  <span className="block text-caption text-text-muted">
+                    {t?.isOwner ? 'Every trainer’s clients & engagement' : 'Your clients & engagement'}
                   </span>
-                  <span className="text-text-faint">›</span>
-                </Link>
-                <Link
-                  href="/dashboard/trainers"
-                  className="mt-3 flex items-center justify-between rounded-xl border border-border bg-surface p-4 active:bg-surface-raised"
-                >
-                  <span>
-                    <span className="block text-body font-semibold text-text-primary">Trainers</span>
-                    <span className="block text-caption text-text-muted">Invite &amp; manage your gym’s trainers</span>
-                  </span>
-                  <span className="text-text-faint">›</span>
-                </Link>
-              </>
-            )}
+                </span>
+                <span className="text-text-faint">›</span>
+              </Link>
+
+              {t?.isOwner && (
+                <>
+                  <Link
+                    href={`/g/${gym.slug}/branding`}
+                    className="flex items-center justify-between rounded-xl border border-border bg-surface p-4 active:bg-surface-raised"
+                  >
+                    <span>
+                      <span className="block text-body font-semibold text-text-primary">Branding</span>
+                      <span className="block text-caption text-text-muted">Logo, colors &amp; name</span>
+                    </span>
+                    <span className="text-text-faint">›</span>
+                  </Link>
+                  <Link
+                    href="/dashboard/trainers"
+                    className="flex items-center justify-between rounded-xl border border-border bg-surface p-4 active:bg-surface-raised"
+                  >
+                    <span>
+                      <span className="block text-body font-semibold text-text-primary">Trainers</span>
+                      <span className="block text-caption text-text-muted">Invite &amp; manage your gym’s trainers</span>
+                    </span>
+                    <span className="text-text-faint">›</span>
+                  </Link>
+                </>
+              )}
+            </div>
           </>
         )}
 

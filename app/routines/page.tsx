@@ -71,7 +71,7 @@ export default function RoutinesPage() {
         </Link>
       </header>
 
-      <div className="space-y-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {routines.map((r) => (
           <div
             key={r.id}
@@ -114,17 +114,14 @@ export default function RoutinesPage() {
         ))}
 
         {!loading && routines.length === 0 && !adding && (
-          <p className="rounded-lg border border-dashed border-border p-6 text-center text-body text-text-muted">
+          <p className="rounded-lg border border-dashed border-border p-6 text-center text-body text-text-muted sm:col-span-2 lg:col-span-3">
             No routines yet. Build one from the Exercises tab, or start fresh below.
           </p>
         )}
-        {loading && (
-          <div className="space-y-3">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="h-20 animate-pulse rounded-lg bg-surface" />
-            ))}
-          </div>
-        )}
+        {loading &&
+          [0, 1, 2].map((i) => (
+            <div key={i} className="h-20 animate-pulse rounded-lg bg-surface" />
+          ))}
       </div>
 
       {adding ? (

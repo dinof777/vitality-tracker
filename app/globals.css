@@ -39,9 +39,18 @@ body {
 
 @layer utilities {
   /* Page container: a phone column that opens up on bigger screens instead of
-     stranding desktop users in a 448px strip. */
+     stranding desktop users in a 448px strip. For list/grid browsing
+     surfaces — always paired with the list's own md:grid md:grid-cols-2
+     lg:grid-cols-3. See DESIGN.md §7. */
   .shell {
     @apply mx-auto w-full max-w-md md:max-w-3xl lg:max-w-5xl;
+  }
+
+  /* Task-focused surfaces: builders, forms, logging, single-column
+     sequential lists. Grows to a comfortable ~576-640px reading column and
+     no further. See DESIGN.md §7. */
+  .shell-tight {
+    @apply mx-auto w-full max-w-md sm:max-w-lg lg:max-w-xl;
   }
 
   .text-balance {

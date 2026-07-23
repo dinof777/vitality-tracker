@@ -365,6 +365,9 @@ For muscle groups specifically, a term can also carry a parent (a "region" —
 nests a child directly beneath its parent row (`ml-5 border-l-4`, no separate
 list component) and `components/admin/ParentSelect.tsx` — a sibling of
 `ScopeSelect`, same single-`<select>` shape — sits in the panel to set it.
+**Responsive:** stays single column at every width (§7) — a per-row
+disclosure panel expanding inline breaks a grid's row heights, so these lists
+trade width for a comfortable, capped reading column instead.
 
 **Illustrated browse + sheet** — `components/workout/ExerciseBrowseList.tsx`
 (search + equipment-grouped rows, shared with the trainee-facing `/exercises`)
@@ -375,7 +378,9 @@ illustration (`ExerciseThumb`), where a flat text row would throw that away.
 Used by `/admin/exercises`. This replaced an earlier `/admin/exercises` build
 on `LifecycleRow` that hand-rolled its own plain list instead of reusing the
 illustrated one — the layout choice matters, not just picking whichever admin
-list you saw last.
+list you saw last. **Responsive:** the shared `md:grid md:grid-cols-2
+lg:grid-cols-3` convention (§7) — nothing here expands inline, so multi-column
+is safe and desktop screen real estate should be used.
 
 Don't reach for a third pattern (a generic `<EntityAdminList>`, a
 schema-driven form) to unify these two — they're deliberately different
@@ -455,11 +460,55 @@ hand-typed number.
 
 ---
 
-## 7. Layout & navigation
+## 7. Layout & navigation — responsive system
 
-- **Mobile-first**, max content width `max-w-md` centered on larger screens.
+The app runs from a phone on a gym floor to a widescreen monitor at a front
+desk. **Every surface reacts fluidly to viewport width via Tailwind
+breakpoints — nothing sits inside a single unconditional `max-w-*` that just
+centers a phone-width column on a 1440px screen.** That "mobile view stranded
+in the middle of a desktop tab" look is a bug, not a fallback, wherever it
+shows up. Per-surface implementation table, wireframes, and sequencing for
+Kevin: `.design/responsive-system/DESIGN_BRIEF.md`.
+
+**Three container tiers.** Pick the one that matches what the surface *is* —
+never copy whichever class was on the last file you touched:
+
+1. **`.shell`** (`app/globals.css`) — `mx-auto w-full max-w-md md:max-w-3xl
+   lg:max-w-5xl`. For **list/grid browsing surfaces**: the exercise library,
+   gym Today/Library/Build pool, and illustrated admin lists — anywhere a
+   desktop user should see real multi-column use of the width. Always paired
+   with the list's own `md:grid md:grid-cols-2 lg:grid-cols-3` (the existing
+   `ExerciseBrowseList` / `ExerciseFilterPicker` / bare `<ul>` convention) so
+   the container and the grid open up together — a wide `.shell` around a
+   list that never breaks into columns is the same bug in a different shape.
+2. **`.shell-tight`** (`app/globals.css`) — `mx-auto w-full max-w-md
+   sm:max-w-lg lg:max-w-xl`. For **task-focused surfaces**: the returning-user
+   home builder, workout logging, onboarding/setup wizards, Settings/Profile,
+   Daily 5, and any single-column *sequential* list (a picked/ordered workout,
+   a disclosure-row admin list). Grows enough to breathe on desktop without
+   ever letting a set-log row, a form field, or a numbered step list stretch
+   past a comfortable line length.
+3. **Marketing** — no shared class; each section hand-picks `max-w-6xl`
+   (page/nav wrapper) or `max-w-5xl` + `sm:grid-cols-2 lg:grid-cols-3` (feature
+   grids), the existing `/pro` / `ConsumerMarketing` convention. Full width,
+   real multi-column — these are sales pages, not app chrome.
+
+A **fourth pattern that is deliberately NOT part of this system**: modals and
+bottom sheets (`BuilderControls`' change sheets, `ExerciseDetailSheet`,
+`AddToRoutineSheet`) stay `max-w-md`, centered, at every viewport width. A
+sheet is a focused overlay, not the page's reading column — matching its
+width to the page underneath would make it feel like it's trying to fill the
+screen instead of sitting on top of it.
+
 - **Bottom tab bar** (thumb zone): Home · Exercises · Routines · Daily 5 ·
-  Profile (`components/layout/BottomNav.tsx`). Fixed, `h-16`,
+  Profile (`components/layout/BottomNav.tsx`). Fixed at **every** viewport —
+  deliberate: this is a PWA, and a persistent bottom dock is the right
+  native-feel affordance on a gym-floor phone *and* a reasonable persistent
+  nav on a front-desk monitor, so it doesn't need a desktop-only sidebar
+  variant. What changes with viewport is only the bar's own width: `max-w-xl`
+  centered (a fixed, comfortable dock width, not tied to whichever content
+  surface happens to be underneath it) so the 5 tabs get roomy spacing without
+  ever spreading edge-to-edge on an ultrawide screen. `h-16`,
   `bg-surface/95 border-t border-border` with backdrop blur, active tab
   `text-accent`, inactive `text-text-faint`. Hidden on focus screens (active
   workout, gym/pro/share routes) so logging stays distraction-free.
@@ -481,12 +530,15 @@ hand-typed number.
   (replacing the old thin "Set up your profile" card — a first-time
   visitor gets sold, not just funneled straight into a form) and the
   standalone `/welcome` route, reachable any time from returning-Home via a
-  low-key `text-faint` link and shareable on its own. Same component in
-  both hosts; each host controls its own outer width — `app/page.tsx` keeps
-  the phone-width `max-w-md` clamp, `/welcome` goes full-bleed like `/pro` —
-  because `ConsumerMarketing`'s internal `max-w-*` section caps simply
-  never bind past whichever ancestor is tighter, so no duplicate markup or
-  width prop is needed. Full rationale:
+  low-key `text-faint` link and shareable on its own. **Both hosts render it
+  full-bleed, full-width** (marketing tier above) — `app/page.tsx`'s
+  `!profile` branch renders `ConsumerMarketing` *outside* the returning-user
+  `.shell-tight` app column, exactly like `/welcome` does, so a first-time
+  visitor on desktop gets the real sales layout instead of the app's narrow
+  task column squeezing the pitch into a stranded ~448px strip. The
+  returning-user app branch (header, today's plan, `BuilderControls`) is the
+  only part of `app/page.tsx` that uses `.shell-tight` — it's a task surface,
+  the marketing branch isn't. Full rationale:
   `.design/consumer-sales-home/DESIGN_BRIEF.md`.
 - Safe-area aware: `pb-[env(safe-area-inset-bottom)]` so the tab bar clears the
   iPhone home indicator in standalone PWA mode.

@@ -250,7 +250,7 @@ export default function VocabularyAdmin() {
             {filter === 'review' ? 'Nothing waiting for review. 🎉' : 'Nothing here.'}
           </p>
         ) : (
-          <>
+          <div className="mx-auto w-full max-w-2xl">
             <p className="mb-2 text-caption text-text-faint">
               {plural(shown.length, 'term')}
               {filter === 'all' && reviewCount > 0 && ` · ${reviewCount} awaiting review`}
@@ -395,7 +395,7 @@ export default function VocabularyAdmin() {
                 library. That bar scales as more gyms join.
               </p>
             )}
-          </>
+          </div>
         )}
       </main>
     </div>

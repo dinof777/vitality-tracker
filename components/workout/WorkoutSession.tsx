@@ -149,7 +149,7 @@ export default function WorkoutSession({
   };
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-md flex-col px-4 pb-24 pt-6">
+    <div className="shell-tight flex min-h-dvh flex-col px-4 pb-24 pt-6">
       <header className="mb-4 flex items-center justify-between">
         <div>
           <p className="text-label text-accent">TODAY&apos;S WORKOUT</p>
@@ -216,7 +216,7 @@ export default function WorkoutSession({
       )}
 
       {/* Sticky Finish Workout */}
-      <div className="fixed inset-x-0 bottom-0 mx-auto max-w-md px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-2">
+      <div className="shell-tight fixed inset-x-0 bottom-0 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-2">
         <button
           type="button"
           onClick={finishWorkout}

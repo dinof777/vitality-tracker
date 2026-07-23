@@ -33,7 +33,7 @@ export default function BottomNav() {
   if (HIDE_ON.some((p) => pathname.startsWith(p))) return null;
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-md border-t border-border bg-surface/95 backdrop-blur">
+    <nav className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-xl border-t border-border bg-surface/95 backdrop-blur">
       <ul className="flex h-16 items-stretch pb-[env(safe-area-inset-bottom)]">
         {TABS.map((tab) => {
           const active = tab.href === '/' ? pathname === '/' : pathname.startsWith(tab.href);

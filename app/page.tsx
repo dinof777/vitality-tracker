@@ -136,132 +136,154 @@ export default function Home() {
   const params = profile ? workoutParams({ ...profile, intensity }) : null;
 
 
+  if (!ready) {
+    return <div className="min-h-dvh" />;
+  }
+
+  if (!profile) {
+    // Marketing tier — full-bleed, exactly like /welcome. A first-time
+    // visitor gets the real sales layout, not the app's narrow task column.
+    return (
+      <div className="min-h-dvh bg-background pb-28 text-text-primary">
+        <div className="mx-auto max-w-6xl px-5 pt-4">
+          <UtilityStrip />
+        </div>
+        <ConsumerMarketing />
+        {pending && params && (
+          <StartSheet
+            exercises={pending}
+            params={params}
+            name={`${startFc.label} · ${length} min`}
+            onLogInApp={logInApp}
+            onClose={() => {
+              setPending(null);
+              setRefineFocus(null);
+              setResolvedFocusValue(null);
+            }}
+          />
+        )}
+      </div>
+    );
+  }
+
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col px-4 pb-28 pt-4">
+    <main className="shell-tight flex min-h-dvh flex-col px-4 pb-28 pt-4">
       <UtilityStrip />
 
-      {!ready ? (
-        <div className="flex-1" />
-      ) : !profile ? (
-        <ConsumerMarketing />
-      ) : (
-        <>
-          <header className="mb-4 flex items-start justify-between">
-            <div className="space-y-1">
-              <p className="text-label text-accent">LIVE ELEVATED</p>
-              <h1 className="text-h1 text-text-primary">{greet}</h1>
-            </div>
-            <StreakBadge streak={streak} />
-          </header>
+      <header className="mb-4 flex items-start justify-between">
+        <div className="space-y-1">
+          <p className="text-label text-accent">LIVE ELEVATED</p>
+          <h1 className="text-h1 text-text-primary">{greet}</h1>
+        </div>
+        <StreakBadge streak={streak} />
+      </header>
 
-          {/* Today's plan — start the scheduled routine in one tap */}
-          {today.length > 0 && (
-            <section className="mb-5">
-              <p className="mb-2 text-caption text-text-muted">TODAY · {DAY_LABELS[todayDow()]}</p>
-              {today.map((r) => (
-                <div key={r.id} className="mb-2 rounded-lg border border-accent/40 bg-accent/10 p-4">
-                  <p className="text-h3 text-text-primary">{r.name}</p>
-                  <p className="mb-3 text-caption text-text-muted">
-                    {r.exercises.length} {r.exercises.length === 1 ? EXERCISE.one : EXERCISE.many} · from your weekly plan
-                  </p>
-                  <Link
-                    href={`/workout/active?routine=${r.id}`}
-                    className="flex h-12 w-full items-center justify-center rounded-md bg-accent text-label text-on-accent active:scale-[0.97]"
-                  >
-                    ▶ START TODAY&apos;S WORKOUT
-                  </Link>
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={() => setBuilding((b) => !b)}
-                className="mt-1 w-full text-center text-caption text-text-muted underline"
+      {/* Today's plan — start the scheduled routine in one tap */}
+      {today.length > 0 && (
+        <section className="mb-5">
+          <p className="mb-2 text-caption text-text-muted">TODAY · {DAY_LABELS[todayDow()]}</p>
+          {today.map((r) => (
+            <div key={r.id} className="mb-2 rounded-lg border border-accent/40 bg-accent/10 p-4">
+              <p className="text-h3 text-text-primary">{r.name}</p>
+              <p className="mb-3 text-caption text-text-muted">
+                {r.exercises.length} {r.exercises.length === 1 ? EXERCISE.one : EXERCISE.many} · from your weekly plan
+              </p>
+              <Link
+                href={`/workout/active?routine=${r.id}`}
+                className="flex h-12 w-full items-center justify-center rounded-md bg-accent text-label text-on-accent active:scale-[0.97]"
               >
-                {building ? 'Hide builder' : 'or build a different workout'}
-              </button>
-            </section>
-          )}
+                ▶ START TODAY&apos;S WORKOUT
+              </Link>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => setBuilding((b) => !b)}
+            className="mt-1 w-full text-center text-caption text-text-muted underline"
+          >
+            {building ? 'Hide builder' : 'or build a different workout'}
+          </button>
+        </section>
+      )}
 
-          {/* Quick builder — always shown when no plan today, else toggled */}
-          {(today.length === 0 || building) && (
-            <>
-              <BuilderControls
-                value={{
-                  focus: refineFocus ?? profile.focus,
-                  intensity,
-                  minutes: length,
-                  equipment: profile?.equipment ?? [],
-                  sets: params?.sets,
-                  reps: params?.reps,
-                  restSec: params?.restSec,
-                  mode: profile.mode,
-                  amrapMinutes: profile.amrapMinutes,
-                  emomMinutes: profile.emomMinutes,
-                }}
-                onRegions={setRegions}
-                onChange={(patch) => {
-                  setBuildError(null); // stale "no exercises match" shouldn't outlive the change that might fix it
-                  if (patch.minutes !== undefined) { setLength(patch.minutes); persist({ length: patch.minutes }); }
-                  // Focus is a ONE-workout refine here — never persisted on its
-                  // own. See refineFocus above and onSetDefaultFocus below.
-                  if (patch.focus !== undefined) setRefineFocus(patch.focus);
-                  if (patch.intensity !== undefined) setIntensity(patch.intensity);
-                  const rest: Partial<Profile> = {};
-                  for (const k of ['intensity', 'equipment', 'sets', 'reps', 'restSec', 'mode', 'amrapMinutes', 'emomMinutes'] as const) {
-                    if (patch[k] !== undefined) (rest as Record<string, unknown>)[k] = patch[k];
+      {/* Quick builder — always shown when no plan today, else toggled */}
+      {(today.length === 0 || building) && (
+        <>
+          <BuilderControls
+            value={{
+              focus: refineFocus ?? profile.focus,
+              intensity,
+              minutes: length,
+              equipment: profile?.equipment ?? [],
+              sets: params?.sets,
+              reps: params?.reps,
+              restSec: params?.restSec,
+              mode: profile.mode,
+              amrapMinutes: profile.amrapMinutes,
+              emomMinutes: profile.emomMinutes,
+            }}
+            onRegions={setRegions}
+            onChange={(patch) => {
+              setBuildError(null); // stale "no exercises match" shouldn't outlive the change that might fix it
+              if (patch.minutes !== undefined) { setLength(patch.minutes); persist({ length: patch.minutes }); }
+              // Focus is a ONE-workout refine here — never persisted on its
+              // own. See refineFocus above and onSetDefaultFocus below.
+              if (patch.focus !== undefined) setRefineFocus(patch.focus);
+              if (patch.intensity !== undefined) setIntensity(patch.intensity);
+              const rest: Partial<Profile> = {};
+              for (const k of ['intensity', 'equipment', 'sets', 'reps', 'restSec', 'mode', 'amrapMinutes', 'emomMinutes'] as const) {
+                if (patch[k] !== undefined) (rest as Record<string, unknown>)[k] = patch[k];
+              }
+              if (Object.keys(rest).length) persist(rest);
+            }}
+            onSetDefaultFocus={
+              refineFocus
+                ? () => {
+                    persist({ focus: refineFocus });
+                    setRefineFocus(null);
                   }
-                  if (Object.keys(rest).length) persist(rest);
-                }}
-                onSetDefaultFocus={
-                  refineFocus
-                    ? () => {
-                        persist({ focus: refineFocus });
-                        setRefineFocus(null);
-                      }
-                    : undefined
-                }
-              />
+                : undefined
+            }
+          />
 
-              <button type="button" onClick={start}
-                className="flex h-14 w-full items-center justify-center rounded-md bg-accent text-label text-on-accent transition-all duration-150 active:scale-[0.97] active:bg-accent-press">
-                BUILD MY WORKOUT
-              </button>
+          <button type="button" onClick={start}
+            className="flex h-14 w-full items-center justify-center rounded-md bg-accent text-label text-on-accent transition-all duration-150 active:scale-[0.97] active:bg-accent-press">
+            BUILD MY WORKOUT
+          </button>
 
-              {buildError && (
-                <p className="mt-2 rounded-md border border-destructive/40 bg-surface p-3 text-caption text-destructive">
-                  {buildError}
-                </p>
-              )}
-            </>
+          {buildError && (
+            <p className="mt-2 rounded-md border border-destructive/40 bg-surface p-3 text-caption text-destructive">
+              {buildError}
+            </p>
           )}
-
-          {/* Always available — the manual alternative to letting it generate. */}
-          <Link
-            href="/build"
-            className="mt-3 flex h-12 w-full items-center justify-center rounded-md border border-border text-label text-text-primary active:bg-surface"
-          >
-            ✚ PICK MY OWN EXERCISES
-          </Link>
-
-          {/* Weekly pillar planning doesn't model rehab-stage progression —
-              out of scope for v1, see lib/pillars.ts#GOAL_SEQUENCE. */}
-          {profile.goal !== 'recover_rehab' && (
-            <Link
-              href="/plan"
-              className="mt-3 flex h-12 w-full items-center justify-center rounded-md border border-border text-label text-text-primary active:bg-surface"
-            >
-              📅 PLAN MY WEEK
-            </Link>
-          )}
-
-          <Link
-            href="/welcome"
-            className="mt-4 block text-center text-caption text-text-faint underline decoration-dotted underline-offset-2"
-          >
-            See everything Live Elevated can do →
-          </Link>
         </>
       )}
+
+      {/* Always available — the manual alternative to letting it generate. */}
+      <Link
+        href="/build"
+        className="mt-3 flex h-12 w-full items-center justify-center rounded-md border border-border text-label text-text-primary active:bg-surface"
+      >
+        ✚ PICK MY OWN EXERCISES
+      </Link>
+
+      {/* Weekly pillar planning doesn't model rehab-stage progression —
+          out of scope for v1, see lib/pillars.ts#GOAL_SEQUENCE. */}
+      {profile.goal !== 'recover_rehab' && (
+        <Link
+          href="/plan"
+          className="mt-3 flex h-12 w-full items-center justify-center rounded-md border border-border text-label text-text-primary active:bg-surface"
+        >
+          📅 PLAN MY WEEK
+        </Link>
+      )}
+
+      <Link
+        href="/welcome"
+        className="mt-4 block text-center text-caption text-text-faint underline decoration-dotted underline-offset-2"
+      >
+        See everything Live Elevated can do →
+      </Link>
 
       {pending && params && (
         <StartSheet

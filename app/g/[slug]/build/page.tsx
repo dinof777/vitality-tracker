@@ -305,7 +305,9 @@ export default async function TenantBuild({
             from={{ name, organization: 'Live Elevated' }}
           />
         ) : (
-        <>
+        // Sequential content — controls + numbered list — capped narrower than
+        // the .shell page around it so a generated workout never sprawls.
+        <div className="mx-auto w-full max-w-2xl">
         <TenantBuilderControls
           slug={tenant.slug}
           focus={focusVal}
@@ -454,7 +456,7 @@ export default async function TenantBuild({
             </div>
           </div>
         )}
-        </>
+        </div>
         )}
 
         <p className="mt-8 text-center text-caption text-text-faint">Powered by Live Elevated</p>

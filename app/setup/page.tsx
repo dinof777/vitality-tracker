@@ -64,7 +64,7 @@ export default function SetupPage() {
   const seededPillarLabel = seededPillar ? PILLAR_LABEL[seededPillar] : undefined;
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col px-4 pb-28 pt-10">
+    <main className="shell-tight flex min-h-dvh flex-col px-4 pb-28 pt-10">
       {/* progress dots */}
       <div className="mb-6 flex items-center gap-2">
         {Array.from({ length: STEPS }, (_, i) => (
