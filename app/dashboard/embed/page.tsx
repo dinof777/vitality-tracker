@@ -97,6 +97,12 @@ export default async function Embed() {
             <p className="text-caption font-semibold text-text-primary">{brandName}</p>
             <PrintButton className="h-10 rounded-md border border-border px-4 text-caption font-semibold text-text-primary active:bg-surface-raised print:hidden" />
           </div>
+          <p className="mt-2 text-caption text-text-muted">
+            Need something bigger for the wall?{' '}
+            <Link href={`/g/${gym.slug}/poster`} className="text-accent">
+              Get the poster
+            </Link>
+          </p>
         </section>
 
         <p className="text-caption text-text-faint print:hidden">

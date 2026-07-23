@@ -71,12 +71,15 @@ const FEATURES = [
   { icon: '⏱️', title: 'SyncroFit built in', body: 'Push workouts straight to the SyncroFit interval timer — no copying, no fuss.' },
   { icon: '📊', title: 'Real engagement', body: 'See which routines your clients import and finish — with durations — not just guesses.' },
   { icon: '🌐', title: 'Your own address', body: 'vitalitypro.app/g/yourgym — or bring your own custom domain.' },
+  { icon: '🪧', title: 'Front-desk poster', body: 'A branded, print-ready QR poster — logo, colors, one tap to print. Tape it up and let the wall do the selling.' },
+  { icon: '🧳', title: 'Train from anywhere', body: 'Coaching a client on the road? Text them a link or QR — they open it on their phone, no app, no login.' },
 ];
 
 const STEPS = [
-  { n: '1', title: 'Create your gym', body: 'Sign up and claim your URL. Free to start.' },
-  { n: '2', title: 'Brand it', body: 'Paste your site — logo, colors, and name applied instantly. Tweak anything.' },
-  { n: '3', title: 'Share workouts', body: 'Build from your library, send to clients by link or QR, push to SyncroFit.' },
+  { n: '1', title: 'Create your gym', body: 'Sign up and claim your URL — vitalitypro.app/g/yourgym. Free to start.' },
+  { n: '2', title: 'Brand it', body: 'Paste your website — logo, colors and name land on your app instantly. Tweak anything.' },
+  { n: '3', title: 'Build & share', body: 'Generate a workout from your library, send it by link, QR, or straight to SyncroFit.' },
+  { n: '4', title: 'Embed & print', body: 'Drop a button or QR on your website, and print a poster for the front desk.' },
 ];
 
 const SEGMENTS = [
@@ -175,13 +178,83 @@ export default function ProLanding() {
         </motion.div>
       </section>
 
+      {/* Put it on your website */}
+      <section className="px-5 py-16">
+        <Reveal className="mx-auto mb-10 max-w-2xl text-center">
+          <p className="mb-2 text-label text-accent">ALREADY HAVE A WEBSITE?</p>
+          <h2 className="text-h1 font-bold">Your training app goes on your site in one paste.</h2>
+          <p className="mx-auto mt-3 max-w-xl text-body text-text-muted">
+            Squarespace, Wix, WordPress — if you can paste HTML, you can add it. No developer needed.
+          </p>
+        </Reveal>
+        <motion.div
+          variants={stagger}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true }}
+          className="mx-auto grid max-w-4xl gap-4 sm:grid-cols-3"
+        >
+          <motion.div variants={fadeUp} className="rounded-xl border border-border bg-surface p-5 text-center">
+            <div className="mb-4 flex h-10 items-center justify-center rounded-md bg-accent text-caption font-semibold text-on-accent">
+              Start Today&apos;s Workout
+            </div>
+            <h3 className="mb-1 text-h3 font-semibold">A button</h3>
+            <p className="text-caption text-text-muted">Drop it anywhere on your site.</p>
+          </motion.div>
+          <motion.div variants={fadeUp} className="rounded-xl border border-border bg-surface p-5 text-center">
+            <div className="mb-4 h-14 rounded-md border-2 border-dashed border-accent/40" />
+            <h3 className="mb-1 text-h3 font-semibold">An embed</h3>
+            <p className="text-caption text-text-muted">The whole app, inside a page on your site.</p>
+          </motion.div>
+          <motion.div variants={fadeUp} className="rounded-xl border border-border bg-surface p-5 text-center">
+            <div className="mb-4 text-h1">▦</div>
+            <h3 className="mb-1 text-h3 font-semibold">A QR code</h3>
+            <p className="text-caption text-text-muted">Print it for your front desk, or a flyer.</p>
+          </motion.div>
+        </motion.div>
+        <Reveal className="mx-auto mt-8 max-w-2xl text-center">
+          <p className="mb-4 text-caption text-text-faint">Every option carries your branding automatically.</p>
+          <Link href="/sign-up" className="inline-flex h-12 items-center justify-center rounded-md bg-accent px-6 text-label text-on-accent">
+            Create your gym — free
+          </Link>
+        </Reveal>
+      </section>
+
+      {/* Train clients anywhere */}
+      <section className="px-5 py-12">
+        <Reveal className="mx-auto max-w-4xl rounded-2xl border border-border bg-surface p-8 text-center">
+          <p className="mb-2 text-label text-accent">📍 NO GYM REQUIRED</p>
+          <h2 className="mx-auto max-w-2xl text-h2 font-bold">
+            Coach a client on the road exactly like one on the floor.
+          </h2>
+          <p className="mx-auto mt-3 max-w-xl text-body text-text-muted">
+            Traveling, remote, or just not in the building — send a workout, they run it. That&rsquo;s the whole
+            handoff.
+          </p>
+          <div className="mx-auto mt-6 grid max-w-2xl gap-3 text-left sm:grid-cols-3">
+            <div className="rounded-lg border border-border bg-background p-3">
+              <p className="text-body font-semibold text-text-primary">Text a link</p>
+              <p className="text-caption text-text-muted">One tap sends today&rsquo;s workout as a plain link — opens in any browser.</p>
+            </div>
+            <div className="rounded-lg border border-border bg-background p-3">
+              <p className="text-body font-semibold text-text-primary">Or a QR code</p>
+              <p className="text-caption text-text-muted">Print it, screenshot it, drop it in a DM — scanning opens the same workout.</p>
+            </div>
+            <div className="rounded-lg border border-border bg-background p-3">
+              <p className="text-body font-semibold text-text-primary">They just train</p>
+              <p className="text-caption text-text-muted">No login for them. Want the guided timer? One tap pushes it into SyncroFit.</p>
+            </div>
+          </div>
+        </Reveal>
+      </section>
+
       {/* How it works */}
       <section className="px-5 py-16">
         <Reveal className="mx-auto mb-10 max-w-2xl text-center">
           <p className="mb-2 text-label text-accent">LIVE IN MINUTES</p>
-          <h2 className="text-h1 font-bold">Three steps to your branded app.</h2>
+          <h2 className="text-h1 font-bold">Four steps to your branded app.</h2>
         </Reveal>
-        <div className="mx-auto grid max-w-4xl gap-4 sm:grid-cols-3">
+        <div className="mx-auto grid max-w-5xl gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {STEPS.map((s) => (
             <Reveal key={s.n} className="rounded-xl border border-border bg-surface p-6 text-center">
               <span className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-accent text-h3 font-extrabold text-on-accent">{s.n}</span>

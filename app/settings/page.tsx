@@ -361,6 +361,11 @@ export default function SettingsPage() {
       <p className="mt-6 text-center text-caption text-text-faint">
         Your name, email &amp; phone stay on this device.
       </p>
+      <p className="mt-2 text-center text-caption text-text-faint">
+        <Link href="/pro" className="text-accent">
+          For gyms &amp; trainers · Vitality Pro ›
+        </Link>
+      </p>
     </main>
   );
 }

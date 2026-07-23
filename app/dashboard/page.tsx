@@ -127,6 +127,13 @@ export default async function Dashboard() {
                   </span>
                   <span className="text-text-faint">›</span>
                 </Link>
+                <Link href={`/g/${gym.slug}/poster`} className="flex items-center justify-between rounded-lg border border-border bg-background p-3 active:bg-surface-raised">
+                  <span>
+                    <span className="block text-body font-semibold text-text-primary">5. Print a QR poster</span>
+                    <span className="block text-caption text-text-muted">For the front desk or a flyer — scan to open your app</span>
+                  </span>
+                  <span className="text-text-faint">›</span>
+                </Link>
               </div>
             </div>
 

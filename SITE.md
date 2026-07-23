@@ -37,6 +37,7 @@ routes, tables, or integrations change.
 ### Vitality Pro — trainer admin (Clerk-protected)
 | Route | What it is |
 |---|---|
+| `/pro` | Public marketing/landing page (no auth) — Hero → Who it's for → Features (8 cards, incl. the poster + train-anywhere) → Put it on your website → Train clients anywhere → How it works (4 steps) → SyncroFit callout → FAQ → Pricing → CTA |
 | `/sign-in`, `/sign-up` | Clerk auth |
 | `/onboarding` | Create a gym → Clerk Organization + tenant row + slug |
 | `/dashboard` | Trainer home |
@@ -53,6 +54,7 @@ routes, tables, or integrations change.
 | `/g/<slug>` | The gym's branded landing |
 | `/g/<slug>/exercises` | The gym's library (global + custom, aliases applied) |
 | `/g/<slug>/build` | Generate a workout from the gym's library → QR + Send to SyncroFit |
+| `/g/<slug>/poster` | Print-ready QR poster for the front desk/wall. `?layout=poster` (default, portrait, one page) or `?layout=handout` (landscape, 2-up per sheet). Own light "paper" surface (DESIGN.md §9), not the dark app theme — public, no auth gate |
 
 ### Infra
 `/llms.txt` (dynamic), `/robots.txt`, `/sitemap.xml`, `/manifest.webmanifest`.

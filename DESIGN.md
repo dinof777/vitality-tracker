@@ -375,5 +375,55 @@ Rules both encode:
 
 ---
 
+## 9. Print artifacts (posters, handouts)
+
+The app is dark-mode-only, but a few surfaces exist purely **to be printed**:
+`app/g/[slug]/poster` and the QR block on `app/dashboard/embed`. Printing the
+dark theme as-is is unreadable — `text-primary` etc. are literal light-on-dark
+CSS vars, so light text lands on white paper and disappears; this isn't fixed
+by the browser's "print background graphics" toggle, because that only omits
+*backgrounds*, not text color. So print artifacts do **not** inherit the app's
+dark tokens — they render their own light "paper" surface, on screen and on
+paper alike (what you see in the browser preview is what comes out of the
+printer, not a dark-mode screen that mysteriously inverts at print time).
+
+**Paper ink — literal hex, not the app's CSS vars, scoped to print surfaces only:**
+
+| Token | Hex | Use |
+|---|---|---|
+| `paper` | `#FFFFFF` | The page/card background |
+| `ink` | `#0B0B0C` | Headline / primary text on paper |
+| `ink-muted` | `#52525B` | Subhead / body text on paper |
+| `ink-faint` | `#8B8B93` | Fallback URL, footer, captions |
+
+The gym's `accent` (from `tenant.branding`) is still the one brand color that
+carries onto paper — used for the QR's frame/border and for the gym name
+inside the headline, **never as a large fill** (keeps ink cost down and keeps
+accent-on-white contrast readable regardless of how light a gym's brand color
+is). Read it as a literal hex (`tenant.branding.accent ?? DEFAULT_BRANDING.accent`)
+via inline `style`, not the `text-accent`/`border-accent` Tailwind classes —
+those resolve to `var(--accent)`, which only exists where `brandingToCssVars`
+wraps the tree, and a print artifact should stay self-contained. The QR
+modules themselves stay fixed `#0B0B0C` on `#FFFFFF` (the `qrcode` lib's
+`dark`/`light` options, already used this way in `build/page.tsx` and
+`dashboard/embed/page.tsx`) — recoloring the modules risks scan failures, so
+branding lives in the frame around the code, never in the code.
+
+**Print CSS contract** for any full-bleed print artifact — put this on the
+root paper element:
+```
+print:[-webkit-print-color-adjust:exact] print:[print-color-adjust:exact]
+```
+so the accent border/fill survives even when "print background graphics" is
+off. Pair with `print:hidden` on every control that only makes sense on
+screen (layout toggles, Print button, back link) — the same convention
+`app/g/[slug]/build/page.tsx` already uses. Don't force `@page { size: ... }`
+to Letter or A4 — let the OS print dialog's paper selection stand, and lay
+out content with `justify-between`/generous vertical whitespace so it
+absorbs the ~0.7in height difference between the two sizes instead of
+clipping either one.
+
+---
+
 _Change the visual identity by editing the `accent` / `energy` tokens in
 `tailwind.config.ts` + `globals.css`. Everything else cascades._
