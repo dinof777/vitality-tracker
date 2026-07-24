@@ -74,6 +74,50 @@ create table if not exists share_links (
   workout_id    uuid references tenant_workouts(id) on delete set null
 );
 
+-- client_profiles, client_metrics: added in 0013 — trainer-managed trainee
+-- enrichment (goals, home equipment, notes, height, goal weight) and a
+-- biometric time series (weight_kg, hrv_ms), see
+-- 04_Agents_Workspace/Software_Dev/vitality-tracker-trainee-portal/
+-- SCOPE_and_datasource.md §2b for the product reasoning.
+--
+-- client_profiles is 1:1 with clients (client_id is its own primary key).
+-- notes is trainer-private and must never appear in a trainee-facing read
+-- shape. portal_consent_at is stamped only alongside a consented token issue
+-- (POST /api/tenant/clients/[clientId]/portal-link) — the consent tick is
+-- persisted, not just a UI checkbox, so it's auditable.
+create table if not exists client_profiles (
+  client_id        uuid primary key references clients(id) on delete cascade,
+  tenant_id        uuid not null references tenants(id) on delete cascade,
+  goals            text[] not null default '{}',
+  equipment        text[] not null default '{}',
+  notes            text,
+  height_cm        numeric,
+  goal_weight_kg   numeric,
+  portal_token     text unique,
+  portal_token_created_at timestamptz,
+  portal_consent_at timestamptz,
+  syncrofit_user_scoped_id text,
+  created_at       timestamptz not null default now(),
+  updated_at       timestamptz not null default now()
+);
+
+-- client_metrics: a time series, not a snapshot. "Starting" value = the
+-- earliest row for a client_id + metric_type, not a duplicated column that
+-- could drift from the actual first entry. recorded_by defaults 'trainer'
+-- and MVP is trainer-entry-only (§5) — enforced server-side regardless of
+-- what a request body sends.
+create table if not exists client_metrics (
+  id           uuid primary key default gen_random_uuid(),
+  client_id    uuid not null references clients(id) on delete cascade,
+  tenant_id    uuid not null references tenants(id) on delete cascade,
+  metric_type  text not null check (metric_type in ('weight_kg', 'hrv_ms')),
+  value        numeric not null,
+  recorded_at  timestamptz not null default now(),
+  recorded_by  text not null default 'trainer' check (recorded_by in ('trainer', 'trainee')),
+  note         text,
+  created_at   timestamptz not null default now()
+);
+
 -- equipment_catalog: the global, deduped equipment taxonomy. 9 'core' rows are
 -- the canonical set; gyms propose new pieces as 'pending' → admin moderation
 -- approves/rejects/merges (status). normalized is the dedup key.
@@ -290,6 +334,8 @@ create index if not exists idx_share_links_tenant  on share_links (tenant_id, cr
 create index if not exists idx_share_links_owner   on share_links (tenant_id, owner_user_id);
 create index if not exists idx_share_links_client  on share_links (client_id);
 create index if not exists idx_share_links_workout on share_links (workout_id);
+create index if not exists idx_client_profiles_portal_token on client_profiles (portal_token);
+create index if not exists idx_client_metrics_client_type on client_metrics (client_id, metric_type, recorded_at desc);
 create index if not exists idx_routine_exercises_routine_id on routine_exercises (routine_id);
 create index if not exists idx_routine_exercises_exercise_id on routine_exercises (exercise_id);
 create index if not exists idx_workouts_routine_id          on workouts (routine_id);

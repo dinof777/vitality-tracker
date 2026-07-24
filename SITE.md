@@ -88,6 +88,20 @@ database that already exists; every change lands in both so they can't drift.
   feedback correlates back via `circuit.id = token`. Optionally attached to a
   `client_id` and/or a `tenant_workouts.workout_id`; `opens` counts views.
   Also reconciled in `0012`.
+- **client_profiles** — trainer-managed trainee enrichment, 1:1 with
+  `clients` (`client_id` is its own PK): `goals`/`equipment` (freeform
+  `text[]`), `notes` (**trainer-private, never in a trainee-facing read
+  shape**), `height_cm`, `goal_weight_kg`, `portal_token` +
+  `portal_token_created_at` (the trainee-portal link, reuses
+  `newShareToken()`), `portal_consent_at` (persisted proof of the consent
+  tick — a link can't be issued without it), `syncrofit_user_scoped_id`
+  (column ships now; the activity-fallback join that uses it is a later
+  fast-follow). Added in `0013`.
+- **client_metrics** — a trainee's biometric time series (`weight_kg`,
+  `hrv_ms`, check-constrained, extensible). "Starting" value is the earliest
+  row per `client_id` + `metric_type`, not a separate column. `recorded_by`
+  defaults `'trainer'` and is forced server-side — MVP has no trainee write
+  path. Added in `0013`.
 - **exercise_aliases** — per-tenant local renames of an *exercise's* display
   name. This is the mechanism that's genuinely "local, never leaves the gym" —
   see the taxonomy note below, which doesn't have an equivalent.

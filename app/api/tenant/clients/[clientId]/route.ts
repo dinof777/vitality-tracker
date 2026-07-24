@@ -1,13 +1,21 @@
 import { NextResponse } from 'next/server';
 import { getSql } from '@/lib/db';
 import { currentTrainer } from '@/lib/current-tenant';
+import { fetchProfile, fetchMetricsSummary } from '@/lib/client-portal-db';
+import { toProfileJson } from './shared';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 // One client + the workouts shared with them, each with its status (from the
-// SyncroFit events that reference the share token). Per-trainer: only the
+// SyncroFit events that reference the share token), plus their trainer-
+// entered profile and weight/HRV metrics summary. Per-trainer: only the
 // client's owner (or the gym owner) can view it.
+//
+// `profile` is trainer-facing only (this whole route is Clerk-gated) — its
+// `notes` field is intentionally trainer-private per Elena's scoping doc §2b
+// and must never be echoed into any future trainee-facing (/portal/[token])
+// read shape.
 export async function GET(_req: Request, { params }: { params: { clientId: string } }) {
   const t = await currentTrainer();
   if (!t) return NextResponse.json({ error: 'No gym for this account.' }, { status: 403 });
@@ -30,5 +38,12 @@ export async function GET(_req: Request, { params }: { params: { clientId: strin
     order by sl.created_at desc
   `;
 
-  return NextResponse.json({ client: c[0], shares });
+  const [profile, metrics] = await Promise.all([fetchProfile(params.clientId), fetchMetricsSummary(params.clientId)]);
+
+  return NextResponse.json({
+    client: c[0],
+    shares,
+    profile: toProfileJson(profile),
+    metrics,
+  });
 }
