@@ -12,12 +12,29 @@ import ExerciseThumb from './ExerciseThumb';
 
 // GET /api/tenant/me contract (Priya, app/api/tenant/me/route.ts) —
 // 200-with-nulls for a consumer visitor, never 403, so this is safe to call
-// unconditionally. brandName/logoUrl are nullable — a gym that hasn't set
-// custom branding yet falls back to its plain `name`.
+// unconditionally. brandName/logoUrl/accent/accentPress are all nullable —
+// a gym that hasn't set custom branding yet falls back to its plain `name`
+// and the default Live Elevated accent.
 interface TenantMe {
-  tenant: { name: string; brandName: string | null; logoUrl: string | null; slug: string } | null;
+  tenant: {
+    name: string;
+    brandName: string | null;
+    logoUrl: string | null;
+    slug: string;
+    accent: string | null;
+    accentPress: string | null;
+  } | null;
   trainer: { name: string } | null;
 }
+
+// Print-safe fallback accent — the poster page's QrFrame precedent
+// (app/g/[slug]/poster/page.tsx) just uses `tenant.branding.accent` as-is,
+// but that page never puts the accent behind small text on white — here it
+// also colors the "ELEVATED" accent mark, where the lighter default lime
+// (`DEFAULT_BRANDING.accent`, #a3e635) reads faint on paper/a photocopy, so
+// this uses the darker accent-press step (#84cc16) instead, matching
+// DESIGN.md §9's "readable regardless of how light a gym's brand color is."
+const DEFAULT_PRINT_ACCENT = '#84cc16';
 
 interface PdfHandoutData {
   tenant: TenantMe['tenant'];
@@ -443,6 +460,12 @@ export default function StartSheet({ exercises, params, name, onLogInApp, onClos
     }
   };
 
+  // The gym's own accent when present (accentPress preferred — more
+  // print-legible than the lighter default lime), else the print-safe
+  // Live Elevated fallback. Same value drives both the QR frame and the
+  // "ELEVATED" accent mark below.
+  const printAccent = pdfData?.tenant?.accentPress || pdfData?.tenant?.accent || DEFAULT_PRINT_ACCENT;
+
   return (
     <>
       <div className="fixed inset-0 z-[70] flex items-end justify-center" role="dialog" aria-modal="true">
@@ -660,92 +683,110 @@ export default function StartSheet({ exercises, params, name, onLogInApp, onClos
           createPdf has resolved, so by the time anything actually prints,
           the header + QR are always populated. */}
       {pdfData && (
-        <div className="print-only-workout hidden bg-white p-8 text-left print:block print:[-webkit-print-color-adjust:exact] print:[print-color-adjust:exact]">
-          {/* Co-branded header — the gym/trainer is the primary personalization
-              when present; Live Elevated is always the header for a plain
-              consumer (tenant null) and drops to a small footer credit
-              otherwise, never competing with the gym's own brand. */}
-          <header className="mb-6 border-b pb-4" style={{ borderColor: '#e5e5e5' }}>
-            {pdfData.tenant ? (
-              <div className="flex min-w-0 items-center gap-3">
-                {pdfData.tenant.logoUrl && logoOk && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={pdfData.tenant.logoUrl}
-                    onError={() => setLogoOk(false)}
-                    alt=""
-                    className="h-12 w-12 shrink-0 rounded object-contain"
-                  />
-                )}
-                <div className="min-w-0">
-                  <p className="truncate text-xl font-extrabold" style={{ color: '#0b0b0c' }}>
-                    {pdfData.tenant.brandName || pdfData.tenant.name}
-                  </p>
-                  {pdfData.trainer?.name && (
-                    <p className="text-sm" style={{ color: '#52525b' }}>
-                      Coached by {pdfData.trainer.name}
-                    </p>
+        <div className="print-only-workout hidden min-h-[100vh] flex-col bg-white p-8 text-left print:flex print:[-webkit-print-color-adjust:exact] print:[print-color-adjust:exact]">
+          <div>
+            {/* Co-branded header — the gym/trainer is the primary personalization
+                when present; Live Elevated is always the header for a plain
+                consumer (tenant null) and drops to a small footer credit
+                otherwise, never competing with the gym's own brand. */}
+            <header className="mb-6 border-b pb-4" style={{ borderColor: '#e5e5e5' }}>
+              {pdfData.tenant ? (
+                <div className="flex min-w-0 items-center gap-3">
+                  {pdfData.tenant.logoUrl && logoOk && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={pdfData.tenant.logoUrl}
+                      onError={() => setLogoOk(false)}
+                      alt=""
+                      className="h-12 w-12 shrink-0 rounded object-contain"
+                    />
                   )}
+                  <div className="min-w-0">
+                    <p className="truncate text-xl font-extrabold" style={{ color: '#0b0b0c' }}>
+                      {pdfData.tenant.brandName || pdfData.tenant.name}
+                    </p>
+                    {pdfData.trainer?.name && (
+                      <p className="text-sm" style={{ color: '#52525b' }}>
+                        Coached by {pdfData.trainer.name}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                // Ink-black wordmark — the lime fill read faint on a B&W
+                // photocopy; the accent survives instead as a small mark (an
+                // underline under ELEVATED), never a large colored fill, per
+                // DESIGN.md §9.
+                <p className="text-xl font-extrabold tracking-tight" style={{ color: '#0b0b0c' }}>
+                  LIVE{' '}
+                  <span style={{ borderBottom: `3px solid ${printAccent}` }}>ELEVATED</span>
+                </p>
+              )}
+            </header>
+
+            <p className="text-2xl font-extrabold" style={{ color: '#0b0b0c' }}>
+              {name}
+            </p>
+            <p className="mt-1 text-sm" style={{ color: '#52525b' }}>
+              {exercises.length} exercises · ~{formatMinutes(est)} · {params.sets} × {params.reps}
+              {mode !== 'intervals' ? ` · ${workoutStyleLabel(mode)}` : ''}
+            </p>
+
+            <ol className="mt-6 space-y-3">
+              {exercises.map((ex, i) => (
+                <li key={ex.id} className="border-b pb-2" style={{ borderColor: '#e5e5e5' }}>
+                  <span className="text-base font-semibold" style={{ color: '#0b0b0c' }}>
+                    {i + 1}. {ex.name}
+                  </span>
+                  <span className="block text-sm" style={{ color: '#52525b' }}>
+                    {prescriptionFor(ex)}
+                  </span>
+                </li>
+              ))}
+            </ol>
+
+            {pdfData.qrSvg ? (
+              <div className="mt-8 flex items-center gap-5">
+                {/* Thin accent frame around the QR — the same personalization
+                    precedent as QrFrame in app/g/[slug]/poster/page.tsx
+                    (`borderColor: accent`), scaled down for this smaller code. */}
+                <div
+                  className="shrink-0 rounded-xl p-2"
+                  style={{ borderColor: printAccent, borderStyle: 'solid', borderWidth: 3 }}
+                >
+                  <div
+                    data-testid="pdf-qr"
+                    className="h-28 w-28 [&>svg]:h-full [&>svg]:w-full"
+                    // eslint-disable-next-line react/no-danger
+                    dangerouslySetInnerHTML={{ __html: pdfData.qrSvg }}
+                  />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold" style={{ color: '#0b0b0c' }}>
+                    Scan the QR code with your phone camera to open this workout.
+                  </p>
+                  <p className="mt-1 text-xs" style={{ color: '#52525b' }}>
+                    {pdfData.tenant
+                      ? 'It opens a web page with this exact workout to follow along — no app or login needed.'
+                      : 'It opens SyncroFit, the free timer that runs this workout for you — no login needed.'}
+                  </p>
                 </div>
               </div>
             ) : (
-              <p className="text-xl font-extrabold tracking-tight" style={{ color: '#0b0b0c' }}>
-                LIVE <span style={{ color: '#84cc16' }}>ELEVATED</span>
+              // This workout has too many/dense exercises to fit in a scannable
+              // QR code (only possible on the consumer, self-contained-link
+              // path) — say so plainly rather than render one that can't scan.
+              <p className="mt-8 text-xs" style={{ color: '#52525b' }}>
+                This workout has too many exercises for a scannable code — open Live Elevated and tap Send to
+                SyncroFit instead.
               </p>
             )}
-          </header>
+          </div>
 
-          <p className="text-2xl font-extrabold" style={{ color: '#0b0b0c' }}>
-            {name}
-          </p>
-          <p className="mt-1 text-sm" style={{ color: '#52525b' }}>
-            {exercises.length} exercises · ~{formatMinutes(est)} · {params.sets} × {params.reps}
-            {mode !== 'intervals' ? ` · ${workoutStyleLabel(mode)}` : ''}
-          </p>
-
-          <ol className="mt-6 space-y-3">
-            {exercises.map((ex, i) => (
-              <li key={ex.id} className="border-b pb-2" style={{ borderColor: '#e5e5e5' }}>
-                <span className="text-base font-semibold" style={{ color: '#0b0b0c' }}>
-                  {i + 1}. {ex.name}
-                </span>
-                <span className="block text-sm" style={{ color: '#52525b' }}>
-                  {prescriptionFor(ex)}
-                </span>
-              </li>
-            ))}
-          </ol>
-
-          {pdfData.qrSvg ? (
-            <div className="mt-8 flex items-center gap-5">
-              <div
-                data-testid="pdf-qr"
-                className="h-28 w-28 shrink-0 [&>svg]:h-full [&>svg]:w-full"
-                // eslint-disable-next-line react/no-danger
-                dangerouslySetInnerHTML={{ __html: pdfData.qrSvg }}
-              />
-              <div>
-                <p className="text-sm font-semibold" style={{ color: '#0b0b0c' }}>
-                  Scan the QR code with your phone camera to open this workout.
-                </p>
-                <p className="mt-1 text-xs" style={{ color: '#8b8b93' }}>
-                  {pdfData.tenant
-                    ? 'It opens a web page with this exact workout to follow along — no app or login needed.'
-                    : 'It opens the SyncroFit timer with this workout ready to go.'}
-                </p>
-              </div>
-            </div>
-          ) : (
-            // This workout has too many/dense exercises to fit in a scannable
-            // QR code (only possible on the consumer, self-contained-link
-            // path) — say so plainly rather than render one that can't scan.
-            <p className="mt-8 text-xs" style={{ color: '#8b8b93' }}>
-              This workout has too many exercises for a scannable code — open Live Elevated and tap Send to
-              SyncroFit instead.
-            </p>
-          )}
-
-          <p className="mt-8 text-center text-xs" style={{ color: '#8b8b93' }}>
+          {/* Pinned to the bottom of the page (mt-auto, on the flex-col root
+              above) rather than trailing right after the QR block — fills the
+              page instead of leaving the bottom ~40% dead, per DESIGN.md §9. */}
+          <p className="mt-auto pt-8 text-center text-xs" style={{ color: '#8b8b93' }}>
             {pdfData.tenant ? 'Powered by Live Elevated · liveelevated.fit' : 'liveelevated.fit'}
           </p>
         </div>
