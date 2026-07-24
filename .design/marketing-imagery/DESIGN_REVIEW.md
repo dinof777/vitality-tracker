@@ -209,3 +209,205 @@ against the brief.
   have introduced.
 - Desktop-only captures (mobile viewport can't be forced by the available
   browser tooling). Mobile reasoning above is code-based, flagged as such.
+
+---
+
+## Round 2 — corrected imagery (2026-07-23)
+
+Reviewed against: this file's Must-Fix #1/#2 above, `DESIGN_BRIEF.md` §6
+(HANDOFF band, remote-delivery correction), `DESIGN.md` §6.
+Built by: Kevin, commit `caf7c50`. Live: `/pro`, `/welcome`.
+
+### Screenshots reviewed
+
+| Screenshot | Placement |
+|---|---|
+| `screenshots/review2-pro-handoff-desktop-1280.jpg` | §6 HANDOFF 3-up (F replacement) |
+| `screenshots/review2-pro-hero-desktop-1280.jpg` | E — Pro hero backdrop, post-fix |
+| `screenshots/review2-welcome-finalcta-desktop-1280.jpg` | D — Final-CTA bookend, post-fix |
+
+Also opened raw sources directly: `public/marketing/gallery-strength.jpg`,
+`public/marketing/final-cta-bookend.jpg`, `public/marketing/pro-build-send.jpg`.
+Read the built code at `app/pro/page.tsx:74-96,107,109,184-208` and
+`components/home/ConsumerMarketing.tsx:238-272,290-303`.
+
+### §6 HANDOFF band — verified against spec, no findings
+
+`screenshots/review2-pro-handoff-desktop-1280.jpg` matches §6 exactly:
+eyebrow "THE HANDOFF" in accent lime, heading "You build it. They train
+wherever they are.", three `aspect-[4/5]` tiles in `sm:grid-cols-3` with
+numbered lime badges (`1`/`2`/`3`) chip-overlaid top-left, title + caption
+below each image (not overlaid — correctly "no scrim" per the gallery-tile
+rule), `gap-6` breathing room. Copy matches §6.3 verbatim (checked against
+`HOW_IT_WORKS` at `app/pro/page.tsx:74-96`). Alt text matches §6.4 verbatim,
+character for character.
+
+**Remote-delivery story check (the whole reason this band exists):** all
+three images correctly show a person alone with a phone/laptop — no coach
+in frame, no second person in any of the three tiles. `pro-build-send.jpg`
+is a woman alone at a laptop+phone; `pro-qr-scan.jpg` is a man alone
+scanning a QR poster at a glass entrance; `pro-train-remote.jpg` is a woman
+alone in a home gym with a phone propped on a stand. Nowhere in this band,
+or elsewhere in the round-2 diff, does anything imply in-person coaching —
+the correction holds.
+
+**Social-proof section:** re-checked `ConsumerMarketing.tsx:238-272` —
+`TESTIMONIALS` is still a hardcoded empty array (`const TESTIMONIALS: {...}[] = []`,
+line 62), so the section always renders the photo-free "reviews are still
+being written" empty state. Untouched by this round, still clean.
+
+**QC note carried forward, confirmed not a blocker:** opened
+`pro-build-send.jpg` at full raw resolution — the phone screen does show a
+send-confirmation string that's legible-ish at 1856×2304 ("Sent to Ch...
+Mala" or similar). At the tile's actual rendered scale (~33vw inside a
+`max-w-5xl` container, i.e. a few hundred px, with the phone itself maybe
+80–100px within that) this is well below the resolution needed to read as
+a name. No re-generation warranted — matches §6.6's own prediction.
+
+### D — Final-CTA bookend: RULING — `object-top` → `object-center`
+
+Confirmed your diagnosis by opening `final-cta-bookend.jpg` directly: it's
+a 3168×1344 (21:9) frame where the subject's lit face sits around 15–20%
+down the image and the lime-glowing "WORKOUT COMPLETE!" phone screen — the
+single most important beat in this photo, the exact "Progressive overload,
+tracked" callback the brief exists to make — sits around 45–55% down,
+i.e. genuinely at vertical center. `object-top` crops to source 0%–~40%,
+which keeps the face's very top edge but crops the phone out entirely. This
+is an `object-position` defect, not a scrim defect, exactly as diagnosed.
+
+**Decision: `object-cover object-top` → `object-cover object-center` at
+`components/home/ConsumerMarketing.tsx:300`.** Centers the crop on the
+photo's actual payoff (the phone). No change to the scrim — the D scrim
+fix from Round 1 (`from-background/90 via-background/40 to-transparent`)
+already matches the canonical `DESIGN.md` §6 recipe and isn't what's wrong
+this round.
+
+**Contrast check, done, not assumed:** with `object-center`, the visible
+crop window runs roughly source-y 19%–81%. Mapping the section's content
+stack onto that window: the headline ("Build your first workout — see for
+yourself.") lands in the *upper-middle* of the window — background/torso
+territory, not the face or the phone glow — because the gradient's
+`to-transparent` end (least protection) sits at the top of the section,
+and the headline isn't quite at the very top of the content block. The
+body copy line lands closer to where the phone glow itself is, but that
+row carries `text-text-muted` (deliberately lower-priority, smaller,
+lighter weight already) and the gradient at that vertical position is
+close to its `via-background/40` stop — 60% of the glow shows through,
+which reads as color/mood behind secondary copy, not an illegibility risk.
+The button is unaffected regardless (opaque `bg-accent`, never depends on
+the scrim). Net: I expect this to hold, but the row most worth a literal
+eyeball is the **body copy line**, not just the headline as originally
+flagged — flagging that specifically for the follow-up screenshot.
+
+**Fallback, pre-decided so this doesn't bounce back a third time:** if the
+follow-up screenshot shows the body copy fighting the lime glow, don't
+revert to `object-top` (that re-hides the phone, the whole point of this
+fix) — go to `object-[center_70%]` instead. That biases the crop window
+lower, sliding the phone-glow region down toward the button's solid-opaque
+zone (immune to any of this) and out from behind the body copy.
+
+**Documentation follow-up (flagging, not fixing myself):** `DESIGN.md` §6
+line ~577 currently documents `object-cover object-top` as the shared
+canonical crop for *both* the Final-CTA bookend and the Pro hero backdrop.
+After this ruling, that line is only accurate for a photo that needs a
+mobile-taller top-anchored crop — D no longer uses `object-top`. Needs a
+one-line correction once Kevin ships this (specify D uses `object-center`,
+distinct from any future top-anchored full-bleed band) — Kevin's edit, not
+mine.
+
+### E — Pro hero backdrop: RULING — needs another nudge; restructure, don't just re-tune
+
+**Screenshot reliability flag first, because it changes how much weight I
+put on the image:** `review2-pro-hero-desktop-1280.jpg` reads as uniformly
+washed/grey across the *entire* capture — not just the backdrop image, but
+the headline text, the `PhoneMock`, and the "Personal trainers" card below
+the fold all look desaturated and low-contrast compared to
+`review2-pro-handoff-desktop-1280.jpg`'s crisp, fully-saturated lime badges
+captured in the same pass. That pattern matches the background-tab
+animation-freeze artifact the brief explicitly called out for the
+final-CTA screenshot — it just wasn't flagged for this one. I'm treating
+this screenshot as **not reliable evidence on its own** for judging E;
+using it only as a rough "does anything register at all" check (answer:
+no), not as a precise contrast read.
+
+Falling back to code math + the raw source, which I did open
+(`public/marketing/gallery-strength.jpg`) — and it's a well-exposed,
+fairly bright image (lit face, visible weight plates and rack, real
+midtones — not crushed near-black the way `final-cta-bookend.jpg` is). At
+the currently-shipped values (`opacity-45` on the image, then
+`bg-gradient-to-b from-background/55 via-background/80 to-background` on
+top), the compounding math works out to roughly **20% of source brightness
+at the very top edge of the section, collapsing to near-zero by the `via`
+stop** — a real, if smaller, version of the exact "two darkening
+operations stacking" defect Round 1's Must-Fix #2 diagnosed in the first
+place. Round 1 lightened both numbers in tandem but didn't remove the
+structural double-operation, so the same failure mode survives at reduced
+severity. Given a well-lit source image still reads as flat/invisible at
+that math, I'm confident this needs another nudge — and confident enough
+in the root cause that I'm fixing the structure this time, not just
+re-tuning two interacting knobs a second time.
+
+**Decision: drop the image-level opacity class entirely; do all the
+darkening in one place — the gradient.** This also brings E in line with
+how D already works (D never had an opacity class on its `<Image>`, only a
+scrim — that's the more legible pattern of the two, and it's the one that
+survived Round 1 review cleanly).
+
+_Fix — at `app/pro/page.tsx`, on the background `<Image>`:_
+```
+className="object-cover opacity-45"  →  className="object-cover"
+```
+_and on the scrim div directly below it:_
+```
+bg-gradient-to-b from-background/55 via-background/80 to-background
+  →
+bg-gradient-to-b from-background/70 via-background/90 to-background
+```
+Bottom stop stays fully opaque `background`, unchanged — correct as the
+clean handoff into the `BUILT FOR` segment grid below. This single-operation
+recipe puts roughly 30% of source brightness at the top edge (up from the
+~20% compounded before, and now easy to re-tune with one knob instead of
+two if it still needs adjustment) and keeps the `via`/bottom zone — where
+`PhoneMock` and the bulk of the headline actually sit — at 90%+ opacity,
+respecting the brief's "texture, not a subject competing with `PhoneMock`"
+constraint (§2.E) more precisely than the old two-operation version did,
+because there's only one dial to reason about.
+
+**Verification requirement — and it needs a clean capture, not this
+review's:** grab one follow-up desktop screenshot of the Pro hero *without*
+the background-tab force-settle artifact (foreground the tab, or capture
+via a method that doesn't need the JS opacity-force workaround) and confirm
+two things: (1) the top-of-hero texture is now visibly present, not flat —
+if it still isn't, the compounding is gone but the absolute values are
+still too conservative, and the next move is raising both gradient stops'
+transparency by ~10 points each, not re-adding an opacity class; (2) the
+headline ("Your gym's training app. Branded as yours.") and `PhoneMock`
+still read at full, undegraded contrast — I expect this to hold given the
+`via`/`to` stops are barely changed from Round 1's already-approved values,
+but it's the one I'm least able to confirm from tooling this round, so
+don't skip it.
+
+### Verdict
+
+**Approved with one required fix pass, same as Round 1 — F/HANDOFF ships
+clean, D and E need the exact changes above before this is closed out.**
+
+- **Must Fix (2, carried/refined from Round 1):**
+  1. D — `object-cover object-top` → `object-cover object-center` at
+     `ConsumerMarketing.tsx:300`; verify the body-copy row specifically;
+     fallback `object-[center_70%]` if it doesn't hold.
+  2. E — remove `opacity-45` from the `<Image>`, change the gradient to
+     `bg-gradient-to-b from-background/70 via-background/90 to-background`
+     at `app/pro/page.tsx:107,109`; verify with a non-frozen screenshot.
+- **Should Fix:** update `DESIGN.md` §6's full-bleed-band line to stop
+  documenting `object-top` as shared between D and E now that D moves to
+  `object-center` — Kevin's edit alongside the code change, not a
+  standalone task.
+- **Could Improve:** none new this round — Round 1's two Could-Improve
+  items (coach-client phone-screen abstraction, now moot since that image
+  is retired; final-cta garbled micro-text) still apply as originally
+  written to the extent they touch surviving images.
+
+Once D/E ship, I need one more look — a real (non-frozen) screenshot of
+each — before I sign off without a caveat. Not re-opening F or the ethics
+check; both are clean.

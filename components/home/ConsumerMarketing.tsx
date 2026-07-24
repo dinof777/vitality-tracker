@@ -297,7 +297,7 @@ export default function ConsumerMarketing() {
             aria-hidden
             loading="lazy"
             sizes="100vw"
-            className="object-cover object-top"
+            className="object-cover object-center"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/40 to-transparent" />
         </div>

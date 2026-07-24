@@ -131,9 +131,9 @@ export default function ProLanding() {
             aria-hidden
             loading="lazy"
             sizes="100vw"
-            className="object-cover opacity-45"
+            className="object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-background/55 via-background/80 to-background" />
+          <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/90 to-background" />
         </div>
         <div aria-hidden className="pointer-events-none absolute left-1/2 top-0 h-96 w-[44rem] -translate-x-1/2 rounded-full bg-accent/10 blur-3xl" />
         <div className="relative mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-2">
