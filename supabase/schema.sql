@@ -29,6 +29,51 @@ create table if not exists tenants (
   created_at    timestamptz not null default now()
 );
 
+-- clients, tenant_workouts, share_links: reconciled from production in 0012
+-- (they shipped and were queried in production without ever landing here —
+-- same drift 0001 repaired for exercises.tags, see migrations/README.md).
+--
+-- clients: a trainer's/gym's roster of trainees. owner_user_id scopes rows to
+-- the trainer who created them; the gym owner (isOwner) sees every trainer's.
+create table if not exists clients (
+  id            uuid primary key default gen_random_uuid(),
+  tenant_id     uuid not null references tenants(id) on delete cascade,
+  name          text not null,
+  contact       text,
+  owner_user_id text,
+  created_at    timestamptz not null default now()
+);
+
+-- tenant_workouts: a gym's saved/reusable workout circuits (the durable
+-- library a trainer builds up), each shareable via share_links.workout_id.
+create table if not exists tenant_workouts (
+  id            uuid primary key default gen_random_uuid(),
+  tenant_id     uuid not null references tenants(id) on delete cascade,
+  owner_user_id text,
+  name          text not null,
+  payload       jsonb not null,
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz not null default now()
+);
+
+-- share_links: a tokenized, public share of a workout (see lib/share.ts).
+-- client_id / workout_id are both nullable (a share can be created ad hoc,
+-- without an assigned client or a saved circuit) and SET NULL on delete so
+-- removing a client/circuit doesn't destroy the share's own history.
+create table if not exists share_links (
+  id            uuid primary key default gen_random_uuid(),
+  token         text not null unique,
+  tenant_id     uuid not null references tenants(id) on delete cascade,
+  name          text not null,
+  payload       jsonb not null,
+  created_at    timestamptz not null default now(),
+  expires_at    timestamptz,
+  opens         integer not null default 0,
+  client_id     uuid references clients(id) on delete set null,
+  owner_user_id text,
+  workout_id    uuid references tenant_workouts(id) on delete set null
+);
+
 -- equipment_catalog: the global, deduped equipment taxonomy. 9 'core' rows are
 -- the canonical set; gyms propose new pieces as 'pending' → admin moderation
 -- approves/rejects/merges (status). normalized is the dedup key.
@@ -237,6 +282,14 @@ create table if not exists syncrofit_events (
 -- -----------------------------------------------------------------------------
 create index if not exists idx_sf_events_circuit on syncrofit_events (circuit_id, received_at desc);
 create index if not exists idx_sf_events_event   on syncrofit_events (event, received_at desc);
+create index if not exists idx_clients_tenant on clients (tenant_id, created_at desc);
+create index if not exists idx_clients_owner  on clients (tenant_id, owner_user_id);
+create index if not exists idx_tenant_workouts_tenant on tenant_workouts (tenant_id, created_at desc);
+create index if not exists idx_tenant_workouts_owner  on tenant_workouts (tenant_id, owner_user_id);
+create index if not exists idx_share_links_tenant  on share_links (tenant_id, created_at desc);
+create index if not exists idx_share_links_owner   on share_links (tenant_id, owner_user_id);
+create index if not exists idx_share_links_client  on share_links (client_id);
+create index if not exists idx_share_links_workout on share_links (workout_id);
 create index if not exists idx_routine_exercises_routine_id on routine_exercises (routine_id);
 create index if not exists idx_routine_exercises_exercise_id on routine_exercises (exercise_id);
 create index if not exists idx_workouts_routine_id          on workouts (routine_id);

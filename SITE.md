@@ -75,6 +75,19 @@ database that already exists; every change lands in both so they can't drift.
   `log_entries` is the progressive-overload spine (`side` for unilateral).
 - **mobility_logs** — Daily 5.
 - **tenants** — white-label gyms (`slug`, `branding` jsonb, `clerk_org_id`, `plan`).
+- **clients** — a trainer's/gym's roster of trainees (`name`, `contact`,
+  `owner_user_id` scopes to the trainer who created them; the gym owner sees
+  every trainer's). Reconciled into `schema.sql`/migrations in `0012` — it
+  shipped to production and was queried app-wide before ever landing in
+  version control (same drift `0001` repaired for `exercises.tags`).
+- **tenant_workouts** — a gym's saved/reusable workout circuits (the durable
+  library a trainer builds up via `lib/tenant-workouts.ts`); `share_links` are
+  created from these (`share_links.workout_id`). Also reconciled in `0012`.
+- **share_links** — a tokenized, public share of a workout/circuit
+  (`lib/share.ts`); a client opens `/s/<token>` with no login, and SyncroFit
+  feedback correlates back via `circuit.id = token`. Optionally attached to a
+  `client_id` and/or a `tenant_workouts.workout_id`; `opens` counts views.
+  Also reconciled in `0012`.
 - **exercise_aliases** — per-tenant local renames of an *exercise's* display
   name. This is the mechanism that's genuinely "local, never leaves the gym" —
   see the taxonomy note below, which doesn't have an equivalent.
