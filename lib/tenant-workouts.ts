@@ -77,6 +77,27 @@ export async function createWorkout(
   return (rows[0] as TenantWorkout) ?? null;
 }
 
+/** Renames a saved circuit in place — the "Rename" affordance after a
+ *  one-tap Save circuit (StartSheet), which saves under the workout's
+ *  existing name up front rather than making naming a required first step. */
+export async function renameWorkout(
+  id: string,
+  tenantId: string,
+  userId: string,
+  isOwner: boolean,
+  name: string,
+): Promise<TenantWorkout | null> {
+  const sql = getSql();
+  if (!sql) return null;
+  const rows = await sql`
+    update tenant_workouts
+    set name = ${name}
+    where id = ${id} and tenant_id = ${tenantId} and (${isOwner} or owner_user_id = ${userId})
+    returning id, tenant_id, owner_user_id, name, payload, created_at
+  `;
+  return (rows[0] as TenantWorkout) ?? null;
+}
+
 export async function deleteWorkout(id: string, tenantId: string, userId: string, isOwner: boolean): Promise<void> {
   const sql = getSql();
   if (!sql) return;

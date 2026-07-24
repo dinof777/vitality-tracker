@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { currentTrainer } from '@/lib/current-tenant';
-import { listWorkouts, createWorkout, deleteWorkout } from '@/lib/tenant-workouts';
+import { listWorkouts, createWorkout, renameWorkout, deleteWorkout } from '@/lib/tenant-workouts';
 import type { ShareExercise, ShareParams } from '@/lib/share';
 
 export const runtime = 'nodejs';
@@ -47,6 +47,29 @@ export async function POST(req: Request) {
   });
 
   return NextResponse.json({ workout }, { status: 201 });
+}
+
+// Rename-in-place — the "Rename" affordance StartSheet reveals after its
+// one-tap Save circuit (which saves under the workout's existing name, no
+// text entry required up front).
+export async function PATCH(req: Request) {
+  const t = await currentTrainer();
+  if (!t) return NextResponse.json({ error: 'No gym for this account.' }, { status: 403 });
+
+  let body: { id?: string; name?: string };
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+  }
+  const id = body.id;
+  if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 });
+  const name = (body.name ?? '').trim().slice(0, 80);
+  if (!name) return NextResponse.json({ error: 'Give the workout a name.' }, { status: 400 });
+
+  const workout = await renameWorkout(id, t.tenant.id, t.userId, t.isOwner, name);
+  if (!workout) return NextResponse.json({ error: 'Workout not found.' }, { status: 404 });
+  return NextResponse.json({ workout });
 }
 
 export async function DELETE(req: Request) {
