@@ -288,7 +288,7 @@ export default function ConsumerMarketing() {
       </section>
 
       {/* Final CTA */}
-      <section className="relative overflow-hidden px-5 py-20">
+      <section className="relative isolate overflow-hidden px-5 py-20">
         <div className="absolute inset-0 -z-10">
           <Image
             src="/marketing/final-cta-bookend.jpg"

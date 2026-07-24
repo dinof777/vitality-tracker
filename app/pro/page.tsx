@@ -122,7 +122,7 @@ export default function ProLanding() {
       </header>
 
       {/* Hero */}
-      <section className="relative overflow-hidden px-5 pb-20 pt-12 sm:pt-16">
+      <section className="relative isolate overflow-hidden px-5 pb-20 pt-12 sm:pt-16">
         <div className="absolute inset-0 -z-10">
           <Image
             src="/marketing/gallery-strength.jpg"
