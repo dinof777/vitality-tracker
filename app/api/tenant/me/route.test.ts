@@ -114,12 +114,24 @@ describe('GET /api/tenant/me — happy path + field allowlist (no clerk_org_id/p
         brandName: 'Iron House',
         logoUrl: 'https://cdn.example.com/logo.png',
         slug: 'iron-house',
+        // accent/accentPress: added for the printed handout's QR-frame color
+        // (Ivy's design review, precedent: app/g/[slug]/poster/page.tsx).
+        // Priya extended the contract here — flagged for Theo to review.
+        accent: '#a3e635',
+        accentPress: '#84cc16',
       },
       trainer: { name: 'Sam Rivera' },
     });
 
     // Explicit negative assertions — the security-relevant part of this test.
-    expect(Object.keys(json.tenant).sort()).toEqual(['brandName', 'logoUrl', 'name', 'slug']);
+    expect(Object.keys(json.tenant).sort()).toEqual([
+      'accent',
+      'accentPress',
+      'brandName',
+      'logoUrl',
+      'name',
+      'slug',
+    ]);
     expect(json.tenant.id).toBeUndefined();
     expect(json.tenant.custom_domain).toBeUndefined();
     expect(json.tenant.plan).toBeUndefined();
@@ -131,7 +143,7 @@ describe('GET /api/tenant/me — happy path + field allowlist (no clerk_org_id/p
     expect(Object.keys(json.trainer)).toEqual(['name']);
   });
 
-  it('falls back to branding.brandName/logoUrl === null when branding has neither set', async () => {
+  it('falls back to brandName/logoUrl/accent/accentPress === null when branding is empty', async () => {
     vi.mocked(currentTrainer).mockResolvedValue({
       ...trainer,
       tenant: { ...baseTenant, branding: {} },
@@ -142,6 +154,8 @@ describe('GET /api/tenant/me — happy path + field allowlist (no clerk_org_id/p
     const json = await res.json();
     expect(json.tenant.brandName).toBeNull();
     expect(json.tenant.logoUrl).toBeNull();
+    expect(json.tenant.accent).toBeNull();
+    expect(json.tenant.accentPress).toBeNull();
   });
 
   it('trainer name falls back to username when first/last name are both absent', async () => {

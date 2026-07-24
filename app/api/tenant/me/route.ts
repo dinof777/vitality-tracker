@@ -6,8 +6,11 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 // The signed-in user's own gym identity + branding, scoped for a printable
-// PDF header in the consumer app (name, brandName, logoUrl, slug — not the
-// full branding jsonb, and never clerk_org_id/plan).
+// PDF header in the consumer app (name, brandName, logoUrl, slug, accent,
+// accentPress — not the full branding jsonb, and never clerk_org_id/plan).
+// accent/accentPress mirror the QR-frame accent precedent in
+// app/g/[slug]/poster/page.tsx; null when unset so the client can fall back
+// to the default Live Elevated accent.
 //
 // Unlike every other /api/tenant/* route, a caller with no gym gets a plain
 // 200 { tenant: null, trainer: null } rather than 403 — most callers of this
@@ -28,6 +31,8 @@ export async function GET() {
     brandName: branding.brandName ?? null,
     logoUrl: branding.logoUrl ?? null,
     slug: t.tenant.slug,
+    accent: branding.accent ?? null,
+    accentPress: branding.accentPress ?? null,
   };
 
   // Best-effort — a print header still works with just the gym's branding if
