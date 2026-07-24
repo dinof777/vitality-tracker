@@ -683,13 +683,13 @@ export default function StartSheet({ exercises, params, name, onLogInApp, onClos
           createPdf has resolved, so by the time anything actually prints,
           the header + QR are always populated. */}
       {pdfData && (
-        <div className="print-only-workout hidden min-h-[100vh] flex-col bg-white p-8 text-left print:flex print:[-webkit-print-color-adjust:exact] print:[print-color-adjust:exact]">
+        <div className="print-only-workout hidden bg-white p-8 text-left print:block print:[-webkit-print-color-adjust:exact] print:[print-color-adjust:exact]">
           <div>
             {/* Co-branded header — the gym/trainer is the primary personalization
                 when present; Live Elevated is always the header for a plain
                 consumer (tenant null) and drops to a small footer credit
                 otherwise, never competing with the gym's own brand. */}
-            <header className="mb-6 border-b pb-4" style={{ borderColor: '#e5e5e5' }}>
+            <header className="mb-8 border-b pb-4" style={{ borderColor: '#e5e5e5' }}>
               {pdfData.tenant ? (
                 <div className="flex min-w-0 items-center gap-3">
                   {pdfData.tenant.logoUrl && logoOk && (
@@ -732,7 +732,7 @@ export default function StartSheet({ exercises, params, name, onLogInApp, onClos
               {mode !== 'intervals' ? ` · ${workoutStyleLabel(mode)}` : ''}
             </p>
 
-            <ol className="mt-6 space-y-3">
+            <ol className="mt-8 space-y-3">
               {exercises.map((ex, i) => (
                 <li key={ex.id} className="border-b pb-2" style={{ borderColor: '#e5e5e5' }}>
                   <span className="text-base font-semibold" style={{ color: '#0b0b0c' }}>
@@ -746,7 +746,7 @@ export default function StartSheet({ exercises, params, name, onLogInApp, onClos
             </ol>
 
             {pdfData.qrSvg ? (
-              <div className="mt-8 flex items-center gap-5">
+              <div className="mt-10 flex items-center gap-5">
                 {/* Thin accent frame around the QR — the same personalization
                     precedent as QrFrame in app/g/[slug]/poster/page.tsx
                     (`borderColor: accent`), scaled down for this smaller code. */}
@@ -783,10 +783,14 @@ export default function StartSheet({ exercises, params, name, onLogInApp, onClos
             )}
           </div>
 
-          {/* Pinned to the bottom of the page (mt-auto, on the flex-col root
-              above) rather than trailing right after the QR block — fills the
-              page instead of leaving the bottom ~40% dead, per DESIGN.md §9. */}
-          <p className="mt-auto pt-8 text-center text-xs" style={{ color: '#8b8b93' }}>
+          {/* A deliberate gap below the QR block, not a bottom-pin — an
+              earlier version force-stretched this to the page edge
+              (min-h-[100vh] + mt-auto), which left a lone footer stranded
+              below a wide dead gap on a short workout. A top-anchored,
+              composed sheet with a normal blank bottom margin (every
+              printed page has one) reads better than an artificially
+              full-height page. */}
+          <p className="mt-16 text-center text-xs" style={{ color: '#8b8b93' }}>
             {pdfData.tenant ? 'Powered by Live Elevated · liveelevated.fit' : 'liveelevated.fit'}
           </p>
         </div>
