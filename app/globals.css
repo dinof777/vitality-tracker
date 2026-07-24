@@ -72,18 +72,19 @@ body {
 }
 
 /* Print isolation for StartSheet's "Create PDF" export (components/workout/
-   StartSheet.tsx). It renders its own light-paper `.print-only-workout`
-   block alongside the (fixed, dark) bottom sheet rather than nested inside
-   it — a full-viewport, opaque, very-high-z-index paint over everything
-   else in the document, rather than the more common `visibility:hidden` "hide
-   everything but X" trick: that recipe proved unreliable here (a `<button>`
-   several `visibility:hidden` ancestors deep kept computing back to
-   `visible` under Chromium's print-media style recalculation — a genuine
-   engine quirk, confirmed via computed-style inspection, not a specificity
-   mistake in this rule), so this sidesteps it by not depending on the rest
-   of the tree actually going invisible. Scoped to this one class, so every
-   other print surface in the app (poster, embed, the gym build page — which
-   use the plain `print:hidden` convention, DESIGN.md §9) is unaffected. */
+   StartSheet.tsx) — a single co-branded page (DESIGN.md §9 paper tokens),
+   rendered alongside the (fixed, dark) bottom sheet rather than nested
+   inside it — a full-viewport, opaque, very-high-z-index paint over
+   everything else in the document, rather than the more common
+   `visibility:hidden` "hide everything but X" trick: that recipe proved
+   unreliable here (a `<button>` several `visibility:hidden` ancestors deep
+   kept computing back to `visible` under Chromium's print-media style
+   recalculation — a genuine engine quirk, confirmed via computed-style
+   inspection, not a specificity mistake in this rule), so this sidesteps it
+   by not depending on the rest of the tree actually going invisible.
+   Scoped to this one class, so every other print surface in the app
+   (poster, embed, the gym build page — which use the plain `print:hidden`
+   convention, DESIGN.md §9) is unaffected. */
 @media print {
   .print-only-workout {
     position: fixed;
