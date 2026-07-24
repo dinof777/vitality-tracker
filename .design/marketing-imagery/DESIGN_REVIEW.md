@@ -411,3 +411,109 @@ clean, D and E need the exact changes above before this is closed out.**
 Once D/E ship, I need one more look — a real (non-frozen) screenshot of
 each — before I sign off without a caveat. Not re-opening F or the ethics
 check; both are clean.
+
+---
+
+## Round 3 — final sign-off (2026-07-23)
+
+Reviewed against: Round 2's two Must-Fix items above, `DESIGN.md` §6.
+Root cause resolved by Kevin, commit `089dffb`: both full-bleed sections
+(`ConsumerMarketing.tsx`, `app/pro/page.tsx`) were missing `isolate` on
+the section wrapping their `absolute inset-0 -z-10` photo — without it,
+the section never established its own CSS stacking context, so `-z-10`
+resolved against the page root and dropped the photo behind the page's
+opaque `bg-background` regardless of any scrim/opacity value. That was
+the true cause of D and E rendering as fully invisible across both prior
+rounds; every scrim/opacity/crop value tuned in Round 1 and Round 2 was
+correct in isolation and simply never had a chance to render. Fixed by
+adding `isolate` to both sections
+(`components/home/ConsumerMarketing.tsx:291`, `app/pro/page.tsx:125`).
+
+**Code confirmed directly** (not just the screenshots) before judging:
+
+- D — `ConsumerMarketing.tsx:291-302`: section is
+  `relative isolate overflow-hidden`; image is `object-cover object-center`
+  (Round 2's ruling, unchanged); scrim is
+  `bg-gradient-to-t from-background/90 via-background/40 to-transparent`
+  (Round 1's canonical recipe, unchanged). No opacity class on the image.
+- E — `app/pro/page.tsx:125-136`: section is `relative isolate
+  overflow-hidden`; image is plain `object-cover`, **no opacity class**
+  (the Round 2 "drop the opacity class, do all darkening in the gradient"
+  restructure, shipped as decided); scrim is
+  `bg-gradient-to-b from-background/70 via-background/90 to-background`
+  (Round 2's value, unchanged).
+
+Both match my Round 2 rulings exactly — this round is purely "does the
+now-unblocked render hold contrast," not a re-litigation of the values.
+
+### Screenshots reviewed (clean captures, animation-freeze defeated)
+
+| Screenshot | Placement | Verdict |
+|---|---|---|
+| `screenshots/review3-welcome-finalcta-FIXED-1280.jpg` | D — Final-CTA bookend | **Holds.** |
+| `screenshots/review3-pro-hero-FIXED-1280.jpg` | E — Pro hero backdrop | **Holds.** |
+
+### D — Final-CTA bookend: holds, no further nudge needed
+
+The photo is genuinely present and reads as the intended beat: athlete
+post-set with a towel, the phone's lime "WORKOUT COMPLETE!" glow and
+sparkline clearly visible, positioned right where Round 2's crop math said
+it would land (`object-center`, vertical-center of the source frame).
+
+**Headline** ("Build your first workout — see for yourself.") sits over
+the section's darker, more out-of-focus background territory (blurred gym
+equipment, not the lit subject or the phone glow) — full, unambiguous
+contrast, no caveat needed.
+
+**Body copy** ("No signup, no credit card. Answer a few quick questions and
+start today.") — the row Round 2 flagged as the thinnest-margin one,
+because it sits closest to the phone's lime glow horizontally — reads
+clearly. The text ends before the phone glow begins; there's real
+adjacency (the last word of the first line sits close to the phone's left
+edge) but no character overlaps the glow itself, and the `via-background/40`
+scrim at that vertical position is doing enough work that the glow reads
+as ambient color behind/beside the copy, not as visual noise fighting it.
+This holds as shipped. The pre-decided `object-[center_70%]` fallback is
+**not needed** — I'm not invoking it.
+
+One thing worth a name, not a fix: the margin here is real, not
+generous — if this copy line is ever lengthened (a longer sentence, a
+wider font-weight change) in a future edit, re-check this specific
+adjacency before shipping. Not a Must/Should now; a note for whoever
+touches this section next.
+
+### E — Pro hero backdrop: holds, correct level of restraint
+
+The top of the section now reads as genuine atmosphere — subtle gym-floor
+darkness and light variation — rather than the flat solid-black it was
+pre-fix. Critically, it stays exactly at the "texture, not a subject"
+level the brief called for (§2.E): `PhoneMock` is still unambiguously the
+first thing the eye lands on, the "Your gym's training app. Branded as
+yours." headline is fully crisp against the `/90`-opacity `via` zone it
+sits in, and nothing about the backdrop competes for attention. Given the
+brief's explicit instruction was restraint over reveal for this specific
+placement, I'm not asking for another opacity nudge — more texture here
+would be over-correcting past the brief's own intent, not toward it.
+
+### Verdict: DONE
+
+**Approved, no caveat, nothing further required from Kevin.** All six
+placements (A, B, D, E, F, and the retired-in-favor-of §6-HANDOFF third
+slot) now match their briefs and this file's accumulated rulings:
+
+- **Must Fix:** none remaining.
+- **Should Fix:** none remaining — the `DESIGN.md` §6 documentation
+  correction flagged at the end of Round 2 is done as part of this same
+  pass (this file's edit + `DESIGN.md` §6's full-bleed-band entry, both
+  2026-07-23): the crop-position line no longer claims `object-top` as
+  shared between D and E, and a new line documents the `isolate`
+  requirement for any future full-bleed `-z-10` photo so this exact defect
+  class doesn't recur.
+- **Could Improve:** the two Round 1 items (coach-client phone-screen
+  abstraction — moot, that image is retired; final-cta garbled micro-text)
+  still stand as originally written, at "no action required" status. No
+  new items from this round.
+
+Three rounds, one true root cause (`isolate`, a CSS-stacking-context bug,
+not a design-value bug) that every prior scrim/opacity/crop tuning pass
+was correctly aimed at a symptom of. Closing this thread out clean.

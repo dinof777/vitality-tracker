@@ -574,9 +574,33 @@ Aspect ratios, fixed per slot so the grid holds shape at every breakpoint:
   badge overlaid in the top-left corner (the Numbered-step-card circle above,
   repurposed as a photo chip) — rather than the older single full-bleed band
   it replaced.
-- Full-bleed band (Final-CTA bookend, `/pro` hero backdrop): `aspect-[21/9]`
-  desktop, `object-cover object-top` crops taller on mobile from the same
-  source image.
+- **Full-bleed band** (Final-CTA bookend, `/pro` hero backdrop): `aspect-[21/9]`
+  desktop. Crop position is **per-image, not a shared canonical value** —
+  earlier drafts of this doc documented `object-cover object-top` as shared
+  between the two; that was wrong and cost three review rounds to correct.
+  Pick whichever `object-position` centers the photo's actual payoff:
+  Final-CTA bookend (`final-cta-bookend.jpg`) uses `object-cover
+  object-center`, because the phone's "WORKOUT COMPLETE!" glow — the one
+  beat this image exists to show — sits at vertical-center in the source
+  frame, not near the top; `/pro` hero backdrop (`gallery-strength.jpg`)
+  uses plain `object-cover` (center default, no explicit `object-*`), since
+  that source has no single off-center focal point worth protecting. Don't
+  default a new full-bleed band to `object-top` without first checking where
+  its source photo's real subject actually sits.
+
+  **Gotcha, cost 3 review rounds to isolate:** a full-bleed background photo
+  living in an `absolute inset-0 -z-10` wrapper needs `isolate` on the
+  **section** that wraps it. Without `isolate`, the section never
+  establishes its own stacking context, so `-z-10` resolves against the
+  page root instead — it drops the photo behind the page's opaque
+  `bg-background` rather than just behind that section's own foreground
+  content, and the photo silently renders as fully invisible (not dim, not
+  low-opacity — gone) regardless of how the scrim/opacity values are tuned.
+  Both shipped full-bleed bands now carry `relative isolate overflow-hidden`
+  on the section (`ConsumerMarketing.tsx:291`, `app/pro/page.tsx:125`) —
+  treat that exact class triple as required on any future full-bleed
+  `-z-10` image, checked *before* touching scrim/opacity values if a photo
+  ever again renders as invisible.
 
 Alt text describes the action and, where a phone/app is visible, states that
 the Live Elevated app is shown on screen — never a name or testimonial
