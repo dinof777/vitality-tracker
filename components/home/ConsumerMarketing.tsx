@@ -299,7 +299,7 @@ export default function ConsumerMarketing() {
             sizes="100vw"
             className="object-cover object-top"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/70 to-background/40" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/40 to-transparent" />
         </div>
         <Reveal className="mx-auto max-w-2xl text-center">
           <h2 className="text-balance text-h2 font-extrabold text-text-primary">

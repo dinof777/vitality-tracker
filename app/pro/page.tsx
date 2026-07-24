@@ -68,6 +68,33 @@ const SEGMENTS = [
   { icon: '🤸', title: 'Studios', body: 'One library, your names, your look.' },
 ];
 
+// The remote-delivery story — build, send, train — replaces the retired
+// in-person "coach-client" band. See .design/marketing-imagery/
+// DESIGN_BRIEF.md §6 for the corrected use case.
+const HOW_IT_WORKS = [
+  {
+    n: '1',
+    src: '/marketing/pro-build-send.jpg',
+    alt: 'A trainer at a laptop building a leg-day workout in the Live Elevated app, phone in hand sending it to a client.',
+    title: 'Build & send',
+    body: 'Assemble sets, reps, and exercises from your library — then send it as a link, a QR, or straight to SyncroFit.',
+  },
+  {
+    n: '2',
+    src: '/marketing/pro-qr-scan.jpg',
+    alt: 'A gym member scanning a QR poster at the entrance, the workout opening in the Live Elevated app on his phone.',
+    title: 'Scan & go',
+    body: 'A QR poster at the door, a text link, or a SyncroFit push — however it arrives, it opens on their own phone.',
+  },
+  {
+    n: '3',
+    src: '/marketing/pro-train-remote.jpg',
+    alt: 'A woman training alone in a home gym, her phone propped up showing a live rep-and-set counter in the Live Elevated app.',
+    title: 'Train anywhere',
+    body: 'No app to install for them, no coach in the room — they follow the plan on their own time, wherever they train.',
+  },
+];
+
 const FAQ = [
   { q: 'Do my clients need to download anything or sign up?', a: 'No. Clients open a workout from a link or QR code — no account, no login. To run the timer, they use the free SyncroFit app.' },
   { q: 'Do I need to be technical?', a: "Not at all. Paste your website, we grab your branding, and you're sharing workouts within minutes." },
@@ -104,9 +131,9 @@ export default function ProLanding() {
             aria-hidden
             loading="lazy"
             sizes="100vw"
-            className="object-cover opacity-30"
+            className="object-cover opacity-45"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/90 to-background" />
+          <div className="absolute inset-0 bg-gradient-to-b from-background/55 via-background/80 to-background" />
         </div>
         <div aria-hidden className="pointer-events-none absolute left-1/2 top-0 h-96 w-[44rem] -translate-x-1/2 rounded-full bg-accent/10 blur-3xl" />
         <div className="relative mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-2">
@@ -153,18 +180,32 @@ export default function ProLanding() {
         </motion.div>
       </section>
 
-      {/* Who it's for — photo band */}
-      <section className="px-5 py-4">
-        <div className="relative mx-auto aspect-[21/9] max-w-5xl overflow-hidden rounded-2xl border border-border">
-          <Image
-            src="/marketing/pro-coach-client.jpg"
-            alt="A trainer coaching a client through a set, phone in hand showing the Live Elevated app"
-            fill
-            loading="lazy"
-            sizes="(min-width: 1024px) 80vw, 100vw"
-            className="object-cover object-top"
-          />
-        </div>
+      {/* The handoff — build, send, train */}
+      <section className="px-5 py-14">
+        <Reveal className="mx-auto mb-8 max-w-2xl text-center">
+          <p className="mb-2 text-label text-accent">THE HANDOFF</p>
+          <h2 className="text-h2 font-bold text-text-primary">You build it. They train wherever they are.</h2>
+        </Reveal>
+        <motion.div
+          variants={stagger}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: '-60px' }}
+          className="mx-auto grid max-w-5xl gap-6 sm:grid-cols-3"
+        >
+          {HOW_IT_WORKS.map((step) => (
+            <motion.div key={step.n} variants={fadeUp} className="flex flex-col gap-3">
+              <div className="relative aspect-[4/5] overflow-hidden rounded-xl border border-border">
+                <Image src={step.src} alt={step.alt} fill loading="lazy" sizes="(min-width: 640px) 33vw, 100vw" className="object-cover" />
+                <span aria-hidden className="absolute left-3 top-3 flex h-11 w-11 items-center justify-center rounded-full bg-accent text-h3 font-extrabold text-on-accent shadow-lift ring-2 ring-background">
+                  {step.n}
+                </span>
+              </div>
+              <h3 className="text-h3 font-semibold text-text-primary">{step.title}</h3>
+              <p className="text-body text-text-muted">{step.body}</p>
+            </motion.div>
+          ))}
+        </motion.div>
       </section>
 
       {/* Features */}

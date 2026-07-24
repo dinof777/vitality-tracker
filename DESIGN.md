@@ -449,7 +449,9 @@ body. Grid: `sm:grid-cols-2 lg:grid-cols-3`.
 **Numbered step card** — filled accent circle (`h-11 w-11 rounded-full
 bg-accent text-on-accent text-h3 font-extrabold`) holding the step number,
 `text-h3 font-semibold` title, `text-body text-text-muted` body. Grid:
-`sm:grid-cols-2 lg:grid-cols-4`.
+`sm:grid-cols-2 lg:grid-cols-4`. Same circle recipe is reused as a small
+photo-corner overlay badge (not an inline card element) by `/pro`'s "how it
+works" photo band — see Marketing photography below.
 
 **Callout box** — `rounded-2xl border border-border bg-surface p-8
 text-center`, `text-label text-accent` eyebrow, `text-h2 font-bold`
@@ -549,7 +551,10 @@ assorted stock:
   fitness-ad cliché.
 - Composition leaves deliberate negative space (rule-of-thirds, subject
   off-center) wherever an image sits behind or beside copy, so text never
-  fights the subject for attention.
+  fights the subject for attention. Exception: `/pro`'s "how it works" photo
+  band (below) — its copy sits *below* each image, not on top of it, so
+  those three images are composed as standalone story beats rather than
+  needing a reserved negative-space region.
 
 Legibility scrim — any image with copy directly on top (hero, Final-CTA
 bookend, `/pro` hero backdrop) gets a gradient scrim, not a flat overlay, so
@@ -562,10 +567,16 @@ Gallery-band tiles (no overlaid copy) carry the grade only — no scrim.
 
 Aspect ratios, fixed per slot so the grid holds shape at every breakpoint:
 - Hero image (Consumer split-hero right column / mobile-stacked): `aspect-[4/5]`.
-- Gallery-band tile: `aspect-[4/5]`, 3-up (`sm:grid-cols-3`).
-- Full-bleed band (Final-CTA bookend, `/pro` hero backdrop, `/pro` "who it's
-  for" band): `aspect-[21/9]` desktop, `object-cover object-top` crops taller
-  on mobile from the same source image.
+- Gallery-band tile: `aspect-[4/5]`, 3-up (`sm:grid-cols-3`). `/pro`'s "how it
+  works" band (build → deliver → train, the corrected remote-delivery story —
+  `.design/marketing-imagery/DESIGN_BRIEF.md` §6) reuses this exact slot
+  verbatim — three 4:5 photos, no scrim, each with a small numbered-circle
+  badge overlaid in the top-left corner (the Numbered-step-card circle above,
+  repurposed as a photo chip) — rather than the older single full-bleed band
+  it replaced.
+- Full-bleed band (Final-CTA bookend, `/pro` hero backdrop): `aspect-[21/9]`
+  desktop, `object-cover object-top` crops taller on mobile from the same
+  source image.
 
 Alt text describes the action and, where a phone/app is visible, states that
 the Live Elevated app is shown on screen — never a name or testimonial
