@@ -35,6 +35,7 @@ function SaveOption({
   onClick,
   expanded,
   panelId,
+  buttonRef,
   children,
 }: {
   icon: string;
@@ -43,12 +44,14 @@ function SaveOption({
   onClick: () => void;
   expanded?: boolean;
   panelId?: string;
+  buttonRef?: React.Ref<HTMLButtonElement>;
   children?: React.ReactNode;
 }) {
   const expandable = expanded !== undefined;
   return (
     <div>
       <button
+        ref={buttonRef}
         type="button"
         onClick={onClick}
         aria-expanded={expandable ? expanded : undefined}
@@ -140,7 +143,8 @@ export default function StartSheet({ exercises, params, name, onLogInApp, onClos
     return () => window.removeEventListener('keydown', onKey);
   }, [menuOpen]);
 
-  // Move focus into the window when it opens, back to the trigger when it closes.
+  // Move focus into the window (onto the first option) when it opens, back to
+  // the trigger when it closes.
   useEffect(() => {
     if (menuOpen) firstOptionRef.current?.focus();
     else menuTriggerRef.current?.focus();
@@ -231,6 +235,7 @@ export default function StartSheet({ exercises, params, name, onLogInApp, onClos
               className="mt-2 space-y-2 rounded-lg border border-border bg-surface-raised/50 p-2.5"
             >
               <SaveOption
+                buttonRef={firstOptionRef}
                 icon="▶"
                 label="Log in the app"
                 caption="Do the workout now and track your sets right here in the app."
@@ -240,51 +245,57 @@ export default function StartSheet({ exercises, params, name, onLogInApp, onClos
               <div>
                 <SaveOption
                   icon="⏱"
-                  label="Send to app"
+                  label="Send to SyncroFit"
                   caption="Open it in SyncroFit — the timer calls out every set and rest so you never touch your phone."
                   onClick={sendToTimer}
                 />
 
-                {/* Modifier + status for the Send-to-app path — preserved from the
-                    previous two-button layout, now scoped under its option. */}
-                <button
-                  type="button"
-                  onClick={toggleV2}
-                  className="mt-1.5 flex w-full items-center justify-between rounded-md border border-border bg-surface p-3 text-left"
-                >
-                  <span className="pr-3">
-                    <span className="block text-caption font-semibold text-text-primary">Send exercise images</span>
-                    <span className="block text-caption text-text-muted">
-                      On by default. Turn off only for an older SyncroFit build.
-                    </span>
-                  </span>
-                  <span
-                    className={`flex h-6 w-11 shrink-0 items-center rounded-full p-0.5 transition-colors ${
-                      useV2 ? 'bg-accent' : 'bg-surface-raised'
-                    }`}
-                  >
-                    <span className={`h-5 w-5 rounded-full bg-white transition-transform ${useV2 ? 'translate-x-5' : ''}`} />
-                  </span>
-                </button>
+                {/* Modifier + status for the Send-to-SyncroFit path — preserved
+                    from the previous two-button layout, now nested under its
+                    option with the same pl-1/pt-1 indent + toned-down second-
+                    tier panel the gym-only rows use below (DESIGN.md §6). */}
+                <div className="pl-1 pt-1">
+                  <div className="space-y-1.5 rounded-lg border border-border bg-surface-raised/50 p-2.5">
+                    <button
+                      type="button"
+                      onClick={toggleV2}
+                      className="flex w-full items-center justify-between text-left"
+                    >
+                      <span className="pr-3">
+                        <span className="block text-caption font-semibold text-text-primary">Send exercise images</span>
+                        <span className="block text-caption text-text-muted">
+                          On by default. Turn off only for an older SyncroFit build.
+                        </span>
+                      </span>
+                      <span
+                        className={`flex h-6 w-11 shrink-0 items-center rounded-full p-0.5 transition-colors ${
+                          useV2 ? 'bg-accent' : 'bg-surface-raised'
+                        }`}
+                      >
+                        <span className={`h-5 w-5 rounded-full bg-white transition-transform ${useV2 ? 'translate-x-5' : ''}`} />
+                      </span>
+                    </button>
 
-                {sent ? (
-                  <p className="mt-1.5 text-caption text-text-muted">
-                    Opening SyncroFit… if nothing happens, the link is copied — open SyncroFit ▸ Import to paste it.
-                  </p>
-                ) : mode !== 'intervals' ? (
-                  <p className="mt-1.5 text-caption text-text-muted">
-                    <span className="font-semibold text-text-primary">{workoutStyleLabel(mode)}</span>
-                    {(mode === 'amrap' || mode === 'emom') && styleMinutes ? ` · ${styleMinutes} min` : ''} runs on a
-                    live clock — Send to app has it called out for you. Logging in the app still tracks your sets,
-                    but won&apos;t time the round.
-                  </p>
-                ) : (
-                  <p className="mt-1.5 text-caption text-text-muted">
-                    {useV2
-                      ? 'New format: sends sets, reps, rest + exercise images (where available).'
-                      : 'Classic format: sends sets, reps, hold & rest (no images on the old build).'}
-                  </p>
-                )}
+                    {sent ? (
+                      <p className="text-caption text-text-muted">
+                        Opening SyncroFit… if nothing happens, the link is copied — open SyncroFit ▸ Import to paste it.
+                      </p>
+                    ) : mode !== 'intervals' ? (
+                      <p className="text-caption text-text-muted">
+                        <span className="font-semibold text-text-primary">{workoutStyleLabel(mode)}</span>
+                        {(mode === 'amrap' || mode === 'emom') && styleMinutes ? ` · ${styleMinutes} min` : ''} runs on
+                        a live clock — Send to SyncroFit has it called out for you. Logging in the app still tracks
+                        your sets, but won&apos;t time the round.
+                      </p>
+                    ) : (
+                      <p className="text-caption text-text-muted">
+                        {useV2
+                          ? 'New format: sends sets, reps, rest + exercise images (where available).'
+                          : 'Classic format: sends sets, reps, hold & rest (no images on the old build).'}
+                      </p>
+                    )}
+                  </div>
+                </div>
               </div>
 
               <SaveOption
@@ -299,7 +310,7 @@ export default function StartSheet({ exercises, params, name, onLogInApp, onClos
                   <SaveOption
                     icon="💾"
                     label="Save circuit"
-                    caption="Save this workout to your gym's library to reuse it."
+                    caption="Name it and it's in your gym's library, ready anytime."
                     onClick={() => setExpanded((e) => (e === 'save' ? null : 'save'))}
                     expanded={expanded === 'save'}
                     panelId="save-circuit-panel"
