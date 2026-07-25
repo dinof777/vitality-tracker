@@ -1,3 +1,4 @@
+import { unstable_cache } from 'next/cache';
 import { getSql } from './db';
 import type { Equipment } from './database.types';
 
@@ -17,7 +18,7 @@ export interface LibraryExercise {
   tags: string[];
 }
 
-export async function tenantLibrary(tenantId: string): Promise<LibraryExercise[]> {
+async function loadTenantLibrary(tenantId: string): Promise<LibraryExercise[]> {
   const sql = getSql();
   if (!sql) return [];
   const rows = await sql`
@@ -44,4 +45,16 @@ export async function tenantLibrary(tenantId: string): Promise<LibraryExercise[]
     order by coalesce(a.name, e.name)
   `;
   return rows as LibraryExercise[];
+}
+
+// Tagged `tenant:<id>` (this gym's own edits — aliases, custom exercises,
+// equipment) and `tenant-library` (a global-library edit via the admin routes,
+// which can change every tenant's effective library at once). See the
+// `revalidateTag` calls in app/api/tenant/{aliases,exercises,equipment}/route.ts
+// and app/api/admin/{exercises,equipment}/route.ts.
+export async function tenantLibrary(tenantId: string): Promise<LibraryExercise[]> {
+  return unstable_cache(() => loadTenantLibrary(tenantId), ['tenant-library', tenantId], {
+    revalidate: 3600,
+    tags: [`tenant:${tenantId}`, 'tenant-library'],
+  })();
 }

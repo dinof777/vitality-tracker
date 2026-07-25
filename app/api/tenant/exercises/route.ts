@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { getSql } from '@/lib/db';
 import { currentTenant } from '@/lib/current-tenant';
 import { TAG_BY_ID } from '@/lib/tags';
@@ -7,11 +8,21 @@ import { resolveTermName, tenantTagIds } from '@/lib/taxonomy-db';
 import { findSimilarExercise } from '@/lib/exercise-dedup';
 import { exerciseUsage } from '@/lib/lifecycle-db';
 import { deleteEffect, usageSummary } from '@/lib/lifecycle';
+import type { Tenant } from '@/lib/tenant';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const VALID_EQUIP = new Set<string>(EQUIPMENT_ORDER);
+
+// A custom-exercise add/edit/archive/delete changes tenantLibrary()'s output
+// for this gym — invalidate it + the public pages immediately (DECISION.md
+// item 4) instead of waiting out the hour-long revalidate window.
+function invalidateTenant(tenant: Tenant) {
+  revalidateTag(`tenant:${tenant.id}`);
+  revalidatePath(`/g/${tenant.slug}`);
+  revalidatePath(`/g/${tenant.slug}/exercises`);
+}
 
 type Sql = NonNullable<ReturnType<typeof getSql>>;
 
@@ -177,6 +188,7 @@ export async function POST(req: Request) {
     values (${name}, ${resolved.muscle}, ${resolved.equipment}, ${resolved.equipmentCatalogId}, ${resolved.cue}, ${tenant.id}, false, ${resolved.tags})
     returning id, name, muscle_group, equipment, equipment_catalog_id, default_cue, image_url, tags, archived_at
   `;
+  invalidateTenant(tenant);
   return NextResponse.json({ exercise: rows[0] }, { status: 201 });
 }
 
@@ -218,6 +230,7 @@ export async function PATCH(req: Request) {
       where id = ${body.id} and tenant_id = ${tenant.id}
       returning id, name, muscle_group, equipment, equipment_catalog_id, default_cue, image_url, tags, archived_at
     `;
+    invalidateTenant(tenant);
     return NextResponse.json({ exercise: rows[0], restored: true });
   }
 
@@ -244,6 +257,7 @@ export async function PATCH(req: Request) {
     where id = ${body.id} and tenant_id = ${tenant.id}
     returning id, name, muscle_group, equipment, equipment_catalog_id, default_cue, image_url, tags, archived_at
   `;
+  invalidateTenant(tenant);
   return NextResponse.json({ exercise: rows[0] });
 }
 
@@ -267,8 +281,10 @@ export async function DELETE(req: Request) {
       update exercises set archived_at = now(), archived_by = ${tenant.name}
       where id = ${id} and tenant_id = ${tenant.id}
     `;
+    invalidateTenant(tenant);
     return NextResponse.json({ ok: true, effect: 'archived', usage, summary: usageSummary(usage) });
   }
   await sql`delete from exercises where id = ${id} and tenant_id = ${tenant.id}`;
+  invalidateTenant(tenant);
   return NextResponse.json({ ok: true, effect: 'deleted', usage });
 }

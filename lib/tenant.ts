@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { unstable_cache } from 'next/cache';
 import { getSql } from './db';
 
 // A white-label tenant (gym / trainer). Branding overrides the default theme
@@ -45,8 +46,7 @@ export function brandingToCssVars(branding: Branding): CSSProperties {
   } as CSSProperties;
 }
 
-// Load a tenant by its URL slug (path-based: /g/<slug>). Server-only.
-export async function fetchTenantBySlug(slug: string): Promise<Tenant | null> {
+async function loadTenantBySlug(slug: string): Promise<Tenant | null> {
   const sql = getSql();
   if (!sql) return null;
   try {
@@ -58,6 +58,22 @@ export async function fetchTenantBySlug(slug: string): Promise<Tenant | null> {
   } catch {
     return null;
   }
+}
+
+// Load a tenant by its URL slug (path-based: /g/<slug>). Server-only.
+//
+// Wrapped in unstable_cache so the `/g/[slug]/*` routes stop making a `no-store`
+// Neon fetch on every request (lib/db.ts forces `cache: 'no-store'` on the driver
+// itself, deliberately, for live reads elsewhere — this wraps the *return value*
+// of the call, independent of that). A tag/keyPart derived from `slug` is created
+// fresh per call (rather than statically at module scope) so `revalidateTag`
+// can target one tenant's cache entry without touching every other tenant's —
+// see app/api/tenants/[slug]/route.ts's PATCH handler for the invalidation hook.
+export async function fetchTenantBySlug(slug: string): Promise<Tenant | null> {
+  return unstable_cache(() => loadTenantBySlug(slug), ['tenant-by-slug', slug], {
+    revalidate: 3600,
+    tags: [`tenant-slug:${slug}`],
+  })();
 }
 
 // Load a tenant by id (e.g. to theme a public share). Server-only.

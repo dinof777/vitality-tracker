@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { getSql } from '@/lib/db';
 import { isAdmin } from '@/lib/is-admin';
 
@@ -36,6 +37,19 @@ export async function GET() {
   return NextResponse.json({ items, canonical });
 }
 
+// A catalog moderation action (approve/reject/merge) is global — it can shift
+// what any tenant's equipment picks resolve to, not just one gym's. Blow away
+// every cached tenantEquipmentSlugs()/tenantLibrary() entry and every tenant's
+// public-page ISR cache rather than trying to enumerate affected tenants
+// (DECISION.md item 4 — this is the admin/global counterpart to the per-tenant
+// hooks in app/api/tenant/equipment/route.ts).
+function invalidateAllTenants() {
+  revalidateTag('tenant-equipment');
+  revalidateTag('tenant-library');
+  revalidatePath('/g/[slug]', 'page');
+  revalidatePath('/g/[slug]/exercises', 'page');
+}
+
 export async function PATCH(req: Request) {
   if (!(await isAdmin())) return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
   const sql = getSql();
@@ -52,10 +66,12 @@ export async function PATCH(req: Request) {
 
   if (action === 'approve') {
     await sql`update equipment_catalog set status = 'approved' where id = ${id} and status = 'pending'`;
+    invalidateAllTenants();
     return NextResponse.json({ ok: true, status: 'approved' });
   }
   if (action === 'reject') {
     await sql`update equipment_catalog set status = 'rejected' where id = ${id} and status = 'pending'`;
+    invalidateAllTenants();
     return NextResponse.json({ ok: true, status: 'rejected' });
   }
   if (action === 'merge') {
@@ -68,6 +84,7 @@ export async function PATCH(req: Request) {
     `;
     await sql`update tenant_equipment set catalog_id = ${mergeInto} where catalog_id = ${id}`;
     await sql`update equipment_catalog set status = 'merged', merged_into = ${mergeInto} where id = ${id}`;
+    invalidateAllTenants();
     return NextResponse.json({ ok: true, status: 'merged' });
   }
   return NextResponse.json({ error: 'Unknown action' }, { status: 400 });

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { getSql } from '@/lib/db';
 import { isAdmin } from '@/lib/is-admin';
 import { termSlug, checkSetParent, type TermKind } from '@/lib/taxonomy';
@@ -63,6 +64,19 @@ export async function GET(req: Request) {
   });
 }
 
+// Taxonomy moderation is global: a rename/merge rewrites exercises.muscle_group
+// or .tags (feeding every tenant's tenantLibrary()), and any muscle_group
+// grouping change (set-parent/promote/demote/archive/merge) can reshape
+// fetchRegionHierarchy() (used by every gym's /build page). Broad, tag-based
+// invalidation rather than per-tenant — mirrors the other two admin routes
+// (DECISION.md item 4).
+function invalidateAllTenants() {
+  revalidateTag('tenant-library');
+  revalidateTag('taxonomy-regions');
+  revalidatePath('/g/[slug]', 'page');
+  revalidatePath('/g/[slug]/exercises', 'page');
+}
+
 export async function PATCH(req: Request) {
   if (!(await isAdmin())) return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
   const sql = getSql();
@@ -98,11 +112,13 @@ export async function PATCH(req: Request) {
 
   if (action === 'approve') {
     await sql`update taxonomy_terms set status = 'approved' where id = ${id} and status = 'pending'`;
+    invalidateAllTenants();
     return NextResponse.json({ ok: true, status: 'approved' });
   }
 
   if (action === 'reject') {
     await sql`update taxonomy_terms set status = 'rejected' where id = ${id} and status = 'pending'`;
+    invalidateAllTenants();
     return NextResponse.json({ ok: true, status: 'rejected' });
   }
 
@@ -110,6 +126,7 @@ export async function PATCH(req: Request) {
   if (action === 'rename') {
     const result = await renameTerm(id, body.name ?? '');
     if (!result.ok) return NextResponse.json({ error: result.message }, { status: 409 });
+    invalidateAllTenants();
     return NextResponse.json({ ok: true, term: result.term });
   }
 
@@ -137,6 +154,7 @@ export async function PATCH(req: Request) {
     if (!check.allowed) return NextResponse.json({ error: check.reason }, { status: 409 });
 
     await sql`update taxonomy_terms set parent_id = ${parentId} where id = ${id}`;
+    invalidateAllTenants();
     return NextResponse.json({ ok: true, parentId });
   }
 
@@ -149,6 +167,7 @@ export async function PATCH(req: Request) {
       returning id, name
     `;
     if (!rows[0]) return NextResponse.json({ error: 'Already global.' }, { status: 409 });
+    invalidateAllTenants();
     return NextResponse.json({ ok: true, status: 'approved', scope: 'global' });
   }
 
@@ -188,6 +207,7 @@ export async function PATCH(req: Request) {
       insert into tenant_terms (tenant_id, term_id) values (${body.tenantId}, ${id})
       on conflict do nothing
     `;
+    invalidateAllTenants();
     return NextResponse.json({ ok: true, status: 'pending', scope: 'tenant' });
   }
 
@@ -200,19 +220,23 @@ export async function PATCH(req: Request) {
     const usage = await termUsage(id);
     if (deleteEffect(usage) === 'archived') {
       await sql`update taxonomy_terms set archived_at = now(), archived_by = 'admin' where id = ${id}`;
+      invalidateAllTenants();
       return NextResponse.json({ ok: true, effect: 'archived', usage, summary: usageSummary(usage) });
     }
     await sql`delete from taxonomy_terms where id = ${id}`;
+    invalidateAllTenants();
     return NextResponse.json({ ok: true, effect: 'deleted', usage });
   }
 
   if (action === 'archive') {
     await sql`update taxonomy_terms set archived_at = now(), archived_by = 'admin' where id = ${id}`;
+    invalidateAllTenants();
     return NextResponse.json({ ok: true, archived: true });
   }
 
   if (action === 'restore') {
     await sql`update taxonomy_terms set archived_at = null, archived_by = null where id = ${id}`;
+    invalidateAllTenants();
     return NextResponse.json({ ok: true, archived: false });
   }
 
@@ -271,6 +295,7 @@ export async function PATCH(req: Request) {
     `;
     await sql`update tenant_terms set term_id = ${mergeInto} where term_id = ${id}`;
     await sql`update taxonomy_terms set status = 'merged', merged_into = ${mergeInto} where id = ${id}`;
+    invalidateAllTenants();
     return NextResponse.json({ ok: true, status: 'merged' });
   }
 

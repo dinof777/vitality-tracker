@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { getSql } from '@/lib/db';
 import { isAdmin } from '@/lib/is-admin';
 import { exerciseDependents, exerciseUsage } from '@/lib/lifecycle-db';
@@ -44,6 +45,16 @@ export async function GET(req: Request) {
   `;
   const gyms = await sql`select id, name from tenants order by name`;
   return NextResponse.json({ exercises: rows, gyms });
+}
+
+// An admin exercise edit/promote/demote/delete/archive/restore can change a
+// GLOBAL move, which feeds every tenant's tenantLibrary() (not just one gym's)
+// — so this invalidates broadly rather than per-tenant, mirroring
+// app/api/admin/equipment/route.ts (DECISION.md item 4).
+function invalidateAllTenants() {
+  revalidateTag('tenant-library');
+  revalidatePath('/g/[slug]', 'page');
+  revalidatePath('/g/[slug]/exercises', 'page');
 }
 
 export async function PATCH(req: Request) {
@@ -92,6 +103,7 @@ export async function PATCH(req: Request) {
       where id = ${id}
       returning id, name, muscle_group, default_cue, is_global, tenant_id, archived_at
     `;
+    invalidateAllTenants();
     return NextResponse.json({ ok: true, exercise: rows[0] });
   }
 
@@ -102,6 +114,7 @@ export async function PATCH(req: Request) {
       update exercises set is_global = true, tenant_id = null where id = ${id}
       returning id, name, is_global, tenant_id
     `;
+    invalidateAllTenants();
     return NextResponse.json({ ok: true, scope: 'global', exercise: rows[0] });
   }
 
@@ -121,6 +134,7 @@ export async function PATCH(req: Request) {
     `;
     // Aliases belonging to gyms that no longer see the move would be dead rows.
     await sql`delete from exercise_aliases where exercise_id = ${id} and tenant_id <> ${body.tenantId}`;
+    invalidateAllTenants();
     return NextResponse.json({ ok: true, scope: 'tenant', exercise: rows[0] });
   }
 
@@ -129,19 +143,23 @@ export async function PATCH(req: Request) {
     const usage = await exerciseUsage(id);
     if (deleteEffect(usage) === 'archived') {
       await sql`update exercises set archived_at = now(), archived_by = 'admin' where id = ${id}`;
+      invalidateAllTenants();
       return NextResponse.json({ ok: true, effect: 'archived', usage, summary: usageSummary(usage) });
     }
     await sql`delete from exercises where id = ${id}`;
+    invalidateAllTenants();
     return NextResponse.json({ ok: true, effect: 'deleted', usage });
   }
 
   if (action === 'archive') {
     await sql`update exercises set archived_at = now(), archived_by = 'admin' where id = ${id}`;
+    invalidateAllTenants();
     return NextResponse.json({ ok: true, archived: true });
   }
 
   if (action === 'restore') {
     await sql`update exercises set archived_at = null, archived_by = null where id = ${id}`;
+    invalidateAllTenants();
     return NextResponse.json({ ok: true, archived: false });
   }
 

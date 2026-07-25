@@ -1,3 +1,4 @@
+import { unstable_cache } from 'next/cache';
 import { getSql } from './db';
 import {
   findTermDuplicate,
@@ -262,7 +263,7 @@ export interface RegionRow {
  * children-only would silently drop those exercises whenever a caller
  * generates a workout for the "Legs" region.
  */
-export async function fetchRegionHierarchy(): Promise<RegionRow[]> {
+async function loadRegionHierarchy(): Promise<RegionRow[]> {
   const sql = getSql();
   if (!sql) return [];
 
@@ -283,4 +284,15 @@ export async function fetchRegionHierarchy(): Promise<RegionRow[]> {
     byParent.set(key, entry);
   }
   return Array.from(byParent.values());
+}
+
+// Global (not per-tenant) — every gym's /build page reads the same admin-curated
+// region tree. Tagged `taxonomy-regions` so an admin set-parent/merge/rename in
+// app/api/admin/taxonomy/route.ts can invalidate it immediately instead of
+// waiting out the hour.
+export async function fetchRegionHierarchy(): Promise<RegionRow[]> {
+  return unstable_cache(loadRegionHierarchy, ['region-hierarchy'], {
+    revalidate: 3600,
+    tags: ['taxonomy-regions'],
+  })();
 }

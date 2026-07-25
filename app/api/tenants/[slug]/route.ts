@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { getSql } from '@/lib/db';
 import { currentTenant } from '@/lib/current-tenant';
 import { isAdmin } from '@/lib/is-admin';
@@ -51,5 +52,13 @@ export async function PATCH(req: Request, { params }: { params: { slug: string }
      returning slug, name, branding, plan
   `;
   if (!rows[0]) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+
+  // Branding feeds fetchTenantBySlug (lib/tenant.ts), cached per-slug for an
+  // hour — without this the gym's own branding edit wouldn't show on their
+  // public page until the window lapsed. See DECISION.md item 4.
+  revalidateTag(`tenant-slug:${params.slug}`);
+  revalidatePath(`/g/${params.slug}`);
+  revalidatePath(`/g/${params.slug}/exercises`);
+
   return NextResponse.json(rows[0]);
 }

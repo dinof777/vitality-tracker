@@ -1,12 +1,23 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { getSql } from '@/lib/db';
 import { currentTenant } from '@/lib/current-tenant';
+import type { Tenant } from '@/lib/tenant';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 // Per-tenant LOCAL exercise renames. An alias overrides an exercise's display
 // name for this gym only — it never changes the global library for anyone else.
+
+// An alias changes the `name` column tenantLibrary() returns for this gym —
+// invalidate that gym's cached library + its public page immediately (see
+// DECISION.md item 4) rather than waiting out the hour.
+function invalidateTenant(tenant: Tenant) {
+  revalidateTag(`tenant:${tenant.id}`);
+  revalidatePath(`/g/${tenant.slug}`);
+  revalidatePath(`/g/${tenant.slug}/exercises`);
+}
 
 export async function GET() {
   const tenant = await currentTenant();
@@ -38,6 +49,7 @@ export async function PUT(req: Request) {
   // Empty name → clear the alias (revert to the global name).
   if (!name) {
     await sql`delete from exercise_aliases where tenant_id = ${tenant.id} and exercise_id = ${exerciseId}`;
+    invalidateTenant(tenant);
     return NextResponse.json({ ok: true, cleared: true });
   }
 
@@ -46,6 +58,7 @@ export async function PUT(req: Request) {
     values (${tenant.id}, ${exerciseId}, ${name})
     on conflict (tenant_id, exercise_id) do update set name = excluded.name
   `;
+  invalidateTenant(tenant);
   return NextResponse.json({ ok: true, exerciseId, name });
 }
 
@@ -57,5 +70,6 @@ export async function DELETE(req: Request) {
   const exerciseId = new URL(req.url).searchParams.get('exerciseId');
   if (!exerciseId) return NextResponse.json({ error: 'exerciseId is required' }, { status: 400 });
   await sql`delete from exercise_aliases where tenant_id = ${tenant.id} and exercise_id = ${exerciseId}`;
+  invalidateTenant(tenant);
   return NextResponse.json({ ok: true });
 }

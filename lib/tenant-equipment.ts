@@ -1,3 +1,4 @@
+import { unstable_cache } from 'next/cache';
 import { getSql } from './db';
 import type { Equipment } from './database.types';
 
@@ -45,7 +46,7 @@ export function unlocksExercises(catalogName: string): boolean {
  * An empty result means "not set up yet" — callers fall back to allowing
  * everything rather than generating an empty workout.
  */
-export async function tenantEquipmentSlugs(tenantId: string): Promise<Equipment[]> {
+async function loadTenantEquipmentSlugs(tenantId: string): Promise<Equipment[]> {
   const sql = getSql();
   if (!sql) return [];
   try {
@@ -69,4 +70,15 @@ export async function tenantEquipmentSlugs(tenantId: string): Promise<Equipment[
   } catch {
     return [];
   }
+}
+
+// Tagged the same way as tenantLibrary — `tenant:<id>` for this gym's own
+// equipment edits, `tenant-equipment` for a global equipment-catalog change
+// (approve/reject/merge in app/api/admin/equipment/route.ts) that can shift
+// what every tenant's picks resolve to.
+export async function tenantEquipmentSlugs(tenantId: string): Promise<Equipment[]> {
+  return unstable_cache(() => loadTenantEquipmentSlugs(tenantId), ['tenant-equipment', tenantId], {
+    revalidate: 3600,
+    tags: [`tenant:${tenantId}`, 'tenant-equipment'],
+  })();
 }

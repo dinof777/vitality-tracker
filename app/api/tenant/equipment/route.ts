@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { getSql } from '@/lib/db';
 import { currentTenant } from '@/lib/current-tenant';
 import { findEquipDuplicate, normalizeEquip, type EquipRef } from '@/lib/equipment-normalize';
+import type { Tenant } from '@/lib/tenant';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -10,6 +12,15 @@ export const dynamic = 'force-dynamic';
 // against (core + globally-approved + this gym's) so the catalog can't sprawl;
 // a genuinely-new piece is created as a global 'pending' proposal (for SyncroFit
 // moderation) AND added to this gym immediately.
+
+// A pick/unpick changes tenantEquipmentSlugs() (unlocks/locks exercises) and
+// potentially tenantLibrary()'s custom_equip_name join — invalidate both for
+// this gym immediately (DECISION.md item 4).
+function invalidateTenant(tenant: Tenant) {
+  revalidateTag(`tenant:${tenant.id}`);
+  revalidatePath(`/g/${tenant.slug}`);
+  revalidatePath(`/g/${tenant.slug}/exercises`);
+}
 
 export async function GET() {
   const tenant = await currentTenant();
@@ -46,6 +57,7 @@ export async function POST(req: Request) {
     const ok = await sql`select id from equipment_catalog where id = ${body.catalogId} and status <> 'rejected'`;
     if (!ok[0]) return NextResponse.json({ error: 'Unknown equipment.' }, { status: 400 });
     await sql`insert into tenant_equipment (tenant_id, catalog_id) values (${tenant.id}, ${body.catalogId}) on conflict do nothing`;
+    invalidateTenant(tenant);
     return NextResponse.json({ linked: true, catalogId: body.catalogId });
   }
 
@@ -75,6 +87,7 @@ export async function POST(req: Request) {
     returning id, name, status
   `;
   await sql`insert into tenant_equipment (tenant_id, catalog_id) values (${tenant.id}, ${created[0].id}) on conflict do nothing`;
+  invalidateTenant(tenant);
   return NextResponse.json({ created: created[0] }, { status: 201 });
 }
 
@@ -86,6 +99,7 @@ export async function DELETE(req: Request) {
   const catalogId = new URL(req.url).searchParams.get('catalogId');
   if (!catalogId) return NextResponse.json({ error: 'catalogId is required' }, { status: 400 });
   await sql`delete from tenant_equipment where tenant_id = ${tenant.id} and catalog_id = ${catalogId}`;
+  invalidateTenant(tenant);
   return NextResponse.json({ ok: true });
 }
 
@@ -122,5 +136,6 @@ export async function PUT(req: Request) {
   } else {
     await sql`delete from tenant_equipment where tenant_id = ${tenant.id} and catalog_id = ${body.catalogId}`;
   }
+  invalidateTenant(tenant);
   return NextResponse.json({ ok: true, have: !!body.have });
 }
