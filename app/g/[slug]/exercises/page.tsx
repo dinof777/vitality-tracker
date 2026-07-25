@@ -7,7 +7,7 @@ import { EQUIPMENT_LABEL, EQUIPMENT_ORDER } from '@/lib/exercises';
 import ExerciseThumb from '@/components/workout/ExerciseThumb';
 import type { Equipment } from '@/lib/database.types';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 3600;
 
 // Public, themed: the gym's effective library (global + their custom moves, with
 // their local renames applied). The first tenant-aware content surface.
