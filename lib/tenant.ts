@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import { unstable_cache } from 'next/cache';
-import { getSql } from './db';
+import { getSql, getSqlCacheable } from './db';
 
 // A white-label tenant (gym / trainer). Branding overrides the default theme
 // tokens (see app/globals.css) per tenant.
@@ -47,7 +47,16 @@ export function brandingToCssVars(branding: Branding): CSSProperties {
 }
 
 async function loadTenantBySlug(slug: string): Promise<Tenant | null> {
-  const sql = getSql();
+  // getSqlCacheable(), not getSql() — this function is wrapped in
+  // unstable_cache() below and runs on an ISR route (app/g/[slug]/*). A
+  // `no-store` fetch (what getSql() forces) throws DYNAMIC_SERVER_USAGE the
+  // moment Next attempts to statically generate that route, even from inside
+  // unstable_cache — see lib/db.ts#getSqlCacheable's comment for the full
+  // reasoning. This was the root cause of the 2026-07-25/26 production
+  // incident: this catch block was silently swallowing that thrown error
+  // into a false "tenant not found" 404. Fixing the driver removes the
+  // throw itself, not just this catch.
+  const sql = getSqlCacheable();
   if (!sql) return null;
   try {
     const rows = await sql`
@@ -62,10 +71,8 @@ async function loadTenantBySlug(slug: string): Promise<Tenant | null> {
 
 // Load a tenant by its URL slug (path-based: /g/<slug>). Server-only.
 //
-// Wrapped in unstable_cache so the `/g/[slug]/*` routes stop making a `no-store`
-// Neon fetch on every request (lib/db.ts forces `cache: 'no-store'` on the driver
-// itself, deliberately, for live reads elsewhere — this wraps the *return value*
-// of the call, independent of that). A tag/keyPart derived from `slug` is created
+// Wrapped in unstable_cache so the `/g/[slug]/*` routes stop making a Neon
+// fetch on every request. A tag/keyPart derived from `slug` is created
 // fresh per call (rather than statically at module scope) so `revalidateTag`
 // can target one tenant's cache entry without touching every other tenant's —
 // see app/api/tenants/[slug]/route.ts's PATCH handler for the invalidation hook.

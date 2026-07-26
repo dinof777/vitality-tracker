@@ -11,22 +11,28 @@ import { hashString, seededRng } from '@/lib/seed';
 import TenantNav from '@/components/layout/TenantNav';
 import TodaySuggestion, { type PoolExercise } from '@/components/workout/TodaySuggestion';
 
-// EMERGENCY STOPGAP (2026-07-25, Iris): the ISR trio (revalidate/dynamicParams/
-// generateStaticParams) that Elena's DECISION.md specs is DISABLED here, not
-// shipped — enabling it triggers a pre-existing DB-layer defect: the Neon
-// serverless driver forces `cache: 'no-store'` on its own fetch (lib/db.ts,
-// deliberate), and `unstable_cache()` wrapping (lib/tenant.ts,
-// lib/tenant-library.ts, lib/tenant-equipment.ts) does NOT shield that inner
-// fetch from Next's static-generation "Dynamic server usage" detection.
-// Attempting to statically generate this route throws DYNAMIC_SERVER_USAGE —
-// verified in production (500 on /g/ironforge) and reproduced locally
-// (silently swallowed as a false 404 by fetchTenantBySlug's try/catch, or an
-// uncaught 500 via tenantLibrary/tenantEquipmentSlugs, which have none). See
-// the handoff report for the full repro. Back to force-dynamic until Priya
-// fixes the DB layer (or Elena revisits the caching approach) — the
-// searchParams-free refactor + client-side TodaySuggestion below stays; only
-// the render-strategy trio is reverted.
-export const dynamic = 'force-dynamic';
+// ISR, per .design/g-slug-caching/DECISION.md. The 2026-07-25/26 production
+// incident (DYNAMIC_SERVER_USAGE 500s on /g/ironforge) was a DB-layer defect,
+// not a problem with this render strategy: lib/tenant.ts, lib/tenant-library.ts,
+// and lib/tenant-equipment.ts's unstable_cache-wrapped reads were using the
+// same `no-store` Neon client as every live read, and a `no-store` fetch
+// cannot appear in a route Next is statically generating — see
+// lib/db.ts#getSqlCacheable, the fix. Restored here now that those three
+// reads use the cacheable driver instead.
+//
+// A dynamic App Router segment is only ISR-eligible if it exports
+// generateStaticParams; `revalidate` alone is silently inert without it (the
+// route falls through to full SSR, no CDN cache — see
+// app/g/[slug]/exercises/page.tsx, which proved this mechanism first). We
+// pre-build zero slugs and rely on dynamicParams=true (the default) so every
+// tenant page is generated + cached on first hit, then served from the edge
+// until the revalidate window (or an on-demand revalidateTag from an admin
+// edit — see app/api/tenants/[slug]/route.ts's PATCH handler).
+export const revalidate = 3600;
+export const dynamicParams = true;
+export function generateStaticParams() {
+  return [];
+}
 
 // A gym's front door. Everything shown here is REAL: the suggestion below is
 // generated from this gym's own library and the equipment they've registered,

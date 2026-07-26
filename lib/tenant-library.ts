@@ -1,5 +1,5 @@
 import { unstable_cache } from 'next/cache';
-import { getSql } from './db';
+import { getSqlCacheable } from './db';
 import type { Equipment } from './database.types';
 
 // One gym's effective exercise library: the global 227 + that gym's own custom
@@ -19,7 +19,14 @@ export interface LibraryExercise {
 }
 
 async function loadTenantLibrary(tenantId: string): Promise<LibraryExercise[]> {
-  const sql = getSql();
+  // getSqlCacheable(), not getSql() — this is wrapped in unstable_cache()
+  // below and runs on an ISR route (app/g/[slug]/*). A `no-store` fetch
+  // throws DYNAMIC_SERVER_USAGE during static generation, even nested
+  // inside unstable_cache — see lib/db.ts#getSqlCacheable. This function has
+  // no try/catch, so that error used to propagate as an uncaught 500 rather
+  // than a false 404 (see lib/tenant.ts's loadTenantBySlug for the other
+  // failure mode of the same root cause).
+  const sql = getSqlCacheable();
   if (!sql) return [];
   const rows = await sql`
     select

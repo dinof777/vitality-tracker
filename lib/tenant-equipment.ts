@@ -1,5 +1,5 @@
 import { unstable_cache } from 'next/cache';
-import { getSql } from './db';
+import { getSqlCacheable } from './db';
 import type { Equipment } from './database.types';
 
 // What gear a gym has. The catalog uses SyncroFit's canonical equipment names
@@ -47,7 +47,14 @@ export function unlocksExercises(catalogName: string): boolean {
  * everything rather than generating an empty workout.
  */
 async function loadTenantEquipmentSlugs(tenantId: string): Promise<Equipment[]> {
-  const sql = getSql();
+  // getSqlCacheable(), not getSql() — this is wrapped in unstable_cache()
+  // below and runs on an ISR route (app/g/[slug]/*). A `no-store` fetch
+  // throws DYNAMIC_SERVER_USAGE during static generation, even nested
+  // inside unstable_cache — see lib/db.ts#getSqlCacheable. The try/catch
+  // right below is for genuine query failures (falls back to "not set up
+  // yet" — see the function's own doc comment); it is NOT what's fixing the
+  // incident, switching drivers is.
+  const sql = getSqlCacheable();
   if (!sql) return [];
   try {
     const rows = await sql`
