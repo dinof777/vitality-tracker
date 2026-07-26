@@ -50,7 +50,11 @@ export default function ChipInput({
             type="button"
             onClick={() => remove(i)}
             aria-label={`Remove ${item}`}
-            className="leading-none text-accent/70 active:text-accent"
+            /* -m-2/p-2 grows the tap target to a thumb-friendly ~36px
+               without growing the pill's own visual size — the negative
+               margin cancels the added padding's footprint in the flex
+               row (gap-2 between chips leaves room for it). */
+            className="-m-2 p-2 leading-none text-accent/70 active:text-accent"
           >
             ×
           </button>

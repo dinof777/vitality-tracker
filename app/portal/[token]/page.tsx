@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { brandingToCssVars } from '@/lib/tenant';
 import { fetchPortalData } from '@/lib/client-portal-read';
 import Sparkline from '@/components/charts/Sparkline';
+import { fmt1 } from '@/lib/format-metric';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -63,7 +64,7 @@ export default async function TraineePortal({ params }: { params: { token: strin
       <main className="shell-tight px-5 pb-16 pt-10">
         <p className="text-label text-accent">{gym.toUpperCase()}</p>
         <h1 className="mb-1 mt-1 text-h1 text-text-primary">Hey, {firstName}</h1>
-        <p className="mb-8 text-caption text-text-faint">Only you and {gym} can see this page.</p>
+        <p className="mb-8 text-caption text-text-muted">Only you and {gym} can see this page.</p>
 
         {/* ── Activity — leads: effort-based, unconditionally positive ── */}
         <h2 className="mb-2 text-label text-accent">THIS WEEK</h2>
@@ -73,7 +74,7 @@ export default async function TraineePortal({ params }: { params: { token: strin
           ) : (
             <>
               {activity.sessionsThisWeek > 0 ? (
-                <p className="nums text-h1 text-text-primary">
+                <p className="text-balance nums text-h1 text-text-primary">
                   {activity.sessionsThisWeek} workout{activity.sessionsThisWeek === 1 ? '' : 's'} this week 🔥
                 </p>
               ) : (
@@ -97,11 +98,11 @@ export default async function TraineePortal({ params }: { params: { token: strin
         ) : (
           <div className="space-y-2 rounded-lg border border-border bg-surface p-4">
             <p className="nums text-h1 text-text-primary">
-              {weight.current.value} <span className="text-caption font-normal text-text-muted">{weight.unit}</span>
+              {fmt1(weight.current.value)} <span className="text-caption font-normal text-text-muted">{weight.unit}</span>
             </p>
             <p className="nums text-body text-text-muted">
-              Start {weight.starting?.value ?? weight.current.value} → Now {weight.current.value}
-              {weight.goal != null ? ` → Goal ${weight.goal}` : ''}
+              Start {fmt1(weight.starting?.value ?? weight.current.value)} → Now {fmt1(weight.current.value)}
+              {weight.goal != null ? ` → Goal ${fmt1(weight.goal)}` : ''}
             </p>
             <div className="h-12 w-full rounded-md bg-surface-raised/50 px-2 py-1">
               <Sparkline data={weightHistory} label="Weight history sparkline" />
@@ -124,9 +125,9 @@ export default async function TraineePortal({ params }: { params: { token: strin
         ) : (
           <div className="space-y-2 rounded-lg border border-border bg-surface p-4">
             <p className="nums text-h1 text-text-primary">
-              {hrv.current.value} <span className="text-caption font-normal text-text-muted">ms</span>
+              {fmt1(hrv.current.value)} <span className="text-caption font-normal text-text-muted">ms</span>
             </p>
-            <p className="nums text-body text-text-muted">Start {hrv.history[0]?.value ?? hrv.current.value}</p>
+            <p className="nums text-body text-text-muted">Start {fmt1(hrv.history[0]?.value ?? hrv.current.value)}</p>
             <div className="h-12 w-full rounded-md bg-surface-raised/50 px-2 py-1">
               <Sparkline data={hrvHistory} label="HRV history sparkline" />
             </div>

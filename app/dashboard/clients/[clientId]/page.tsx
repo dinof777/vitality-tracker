@@ -11,6 +11,7 @@ import {
   EQUIPMENT_MAX_ITEMS,
   ITEM_MAX_LEN,
 } from '@/lib/client-profile';
+import { fmt1 } from '@/lib/format-metric';
 
 interface Share {
   token: string;
@@ -113,13 +114,19 @@ function BiometricCard({
     <div className="space-y-2 rounded-lg border border-border bg-surface p-4">
       <h3 className="text-h3 text-text-primary">{label}</h3>
       <p className="nums text-h1 text-text-primary">
-        {current.value} <span className="text-caption font-normal text-text-muted">{unit}</span>
+        {fmt1(current.value)} <span className="text-caption font-normal text-text-muted">{unit}</span>
       </p>
-      {starting && (
+      {/* "Start X" next to Sparkline's own "No history yet" placeholder read
+          as contradictory for a card with exactly one reading (start and
+          current are the same point) — drop "Start" until there's an actual
+          trend, but still surface a set Goal on its own. */}
+      {starting && history.length >= 2 ? (
         <p className="nums text-caption text-text-muted">
-          Start {starting.value}
-          {goal != null ? ` → Goal ${goal}` : ''}
+          Start {fmt1(starting.value)}
+          {goal != null ? ` → Goal ${fmt1(goal)}` : ''}
         </p>
+      ) : (
+        goal != null && <p className="nums text-caption text-text-muted">Goal {fmt1(goal)}</p>
       )}
       <div className="h-12 w-full rounded-md bg-surface-raised/50 px-2 py-1">
         <Sparkline data={history} label={sparklineLabel} />
@@ -274,16 +281,28 @@ export default function ClientDetail() {
   };
 
   const saveProfile = async () => {
-    setSavingProfile(true);
     setProfileError('');
     setProfileSaved(false);
+
+    // A pasted non-numeric value (e.g. from a spreadsheet cell) turns into
+    // NaN here — Number(heightCm.trim() ? ... : null) would then silently
+    // save `null` and clear a previously-saved value with no error. Guard
+    // it client-side rather than letting that happen quietly.
+    const heightVal = heightCm.trim() ? Number(heightCm) : null;
+    const goalWeightVal = goalWeightKg.trim() ? Number(goalWeightKg) : null;
+    if ((heightVal !== null && !Number.isFinite(heightVal)) || (goalWeightVal !== null && !Number.isFinite(goalWeightVal))) {
+      setProfileError('Height and goal weight need to be numbers — check what was typed or pasted there.');
+      return;
+    }
+
+    setSavingProfile(true);
     try {
       const body = {
         goals,
         equipment,
         notes: notes.trim() ? notes.trim() : null,
-        heightCm: heightCm.trim() ? Number(heightCm) : null,
-        goalWeightKg: goalWeightKg.trim() ? Number(goalWeightKg) : null,
+        heightCm: heightVal,
+        goalWeightKg: goalWeightVal,
       };
       const r = await fetch(`/api/tenant/clients/${clientId}/profile`, {
         method: 'PUT',
@@ -417,7 +436,7 @@ export default function ClientDetail() {
 
   return (
     <div className="min-h-dvh bg-background text-text-primary">
-      <main className="shell px-5 pb-20 pt-10">
+      <main className="shell px-5 pb-28 pt-10">
         <Link href="/dashboard/clients" className="text-caption text-text-muted">
           ← Clients
         </Link>
@@ -587,6 +606,7 @@ export default function ClientDetail() {
                   onChange={(e) => setNotes(e.target.value)}
                   maxLength={2000}
                   rows={4}
+                  aria-label="Notes — private, only visible to you"
                   className="min-h-24 w-full rounded-md border border-dashed border-border bg-background/50 p-3 text-body text-text-primary"
                 />
               </div>
@@ -684,7 +704,7 @@ export default function ClientDetail() {
                   never pre-checked, re-shown on every regenerate since the server
                   re-validates consent on every POST. */}
               {consentOpen && (
-                <div className="mt-3 space-y-3 rounded-xl border border-accent/40 bg-accent/5 p-4">
+                <div className="mt-3 space-y-3 rounded-xl border border-accent bg-accent/10 p-4">
                   <label className="flex cursor-pointer items-start gap-3">
                     <input
                       type="checkbox"
