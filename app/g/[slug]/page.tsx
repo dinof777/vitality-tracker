@@ -5,28 +5,35 @@ import { brandingToCssVars, fetchTenantBySlug } from '@/lib/tenant';
 import { tenantLibrary } from '@/lib/tenant-library';
 import { tenantEquipmentSlugs } from '@/lib/tenant-equipment';
 import { generateWorkout } from '@/lib/workout-generator';
-import { workoutParams, type Profile } from '@/lib/profile';
+import { type Profile } from '@/lib/profile';
 import { EQUIPMENT_ORDER } from '@/lib/exercises';
-import { isTimed, exerciseMode, modeWorkLabel } from '@/lib/exercise-mode';
 import { hashString, seededRng } from '@/lib/seed';
 import TenantNav from '@/components/layout/TenantNav';
-import ExerciseRow from '@/components/workout/ExerciseRow';
-import SyncroFitButton from '@/components/workout/SyncroFitButton';
-import SaveCircuitBox from '@/components/workout/SaveCircuitBox';
-import { syncrofitRunUrl } from '@/lib/syncrofit';
+import TodaySuggestion, { type PoolExercise } from '@/components/workout/TodaySuggestion';
 
-export const dynamic = 'force-dynamic';
+// A dynamic App Router segment is only ISR-eligible if it exports generateStaticParams;
+// `revalidate` alone is silently inert without it (the route falls through to full SSR, no CDN
+// cache — see app/g/[slug]/exercises/page.tsx, which proved this mechanism first). We pre-build
+// zero slugs and rely on dynamicParams=true (the default) so every tenant page is generated +
+// cached on first hit, then served from the edge until the revalidate window (or an on-demand
+// revalidateTag from an admin edit).
+export const revalidate = 3600;
+export const dynamicParams = true;
+export function generateStaticParams() {
+  return [];
+}
 
 // A gym's front door. Everything shown here is REAL: the suggestion below is
 // generated from this gym's own library and the equipment they've registered,
 // seeded by the date so it's stable for the day.
-export default async function TenantHome({
-  params,
-  searchParams,
-}: {
-  params: { slug: string };
-  searchParams: { v?: string; sw?: string };
-}) {
+//
+// This Server Component deliberately does NOT read searchParams — that's what
+// makes it ISR-eligible (see .design/g-slug-caching/DECISION.md). It renders
+// only the canonical default (variant 1, no swaps); the `?v=`/`?sw=` refresh
+// and swap interactivity lives entirely client-side in <TodaySuggestion>,
+// which reuses these same pure functions in the browser to reproduce the
+// identical output for any variant/swap combination the URL carries.
+export default async function TenantHome({ params }: { params: { slug: string } }) {
   const tenant = await fetchTenantBySlug(params.slug);
   if (!tenant) notFound();
 
@@ -47,58 +54,43 @@ export default async function TenantHome({
       created_at: '',
       tags: e.tags,
     }));
+  // Trimmed payload actually shipped to the client — default_cue/created_at
+  // aren't read by generateWorkout's output consumers here, so they're
+  // reconstructed as constants client-side instead of sent over the wire.
+  const poolSlim: PoolExercise[] = pool.map(({ id, name: n, muscle_group, equipment, image_url, tags }) => ({
+    id,
+    name: n,
+    muscle_group,
+    equipment,
+    image_url,
+    tags,
+  }));
 
   const today = new Date().toISOString().slice(0, 10);
-  const variant = Math.max(1, Math.min(999, Number(searchParams.v) || 1));
-  const swaps = new Map<number, number>();
-  for (const part of (searchParams.sw ?? '').split(',').filter(Boolean)) {
-    const [i, k] = part.split(':').map(Number);
-    if (Number.isInteger(i) && i >= 0) swaps.set(i, Math.max(1, Math.min(50, k || 1)));
-  }
-
+  const variant = 1;
   const rng = seededRng(hashString(`${tenant.slug}|${today}|${variant}`));
   const profile: Profile = { equipment: allowed, focus: 'full', intensity: 'moderate' };
-  const generated = generateWorkout(profile, { focus: 'full', count: 5, pool, rng });
+  const workout = generateWorkout(profile, { focus: 'full', count: 5, pool, rng });
 
-  // Swap one move without disturbing the rest — deterministic so the link is stable.
-  const workout = generated.map((ex, i) => {
-    const bumps = swaps.get(i);
-    if (!bumps) return ex;
-    const used = new Set(generated.map((g) => g.id));
-    const alts = pool.filter((c) => !used.has(c.id));
-    if (alts.length === 0) return ex;
-    const pick = seededRng(hashString(`${tenant.slug}|today-swap|${i}|${bumps}|${variant}`));
-    return alts[Math.floor(pick() * alts.length)] ?? ex;
-  });
-
-  const swParam = swaps.size ? `&sw=${Array.from(swaps).map(([i, k]) => `${i}:${k}`).join(',')}` : '';
-  const rerollHref = (i: number) => {
-    const next = new Map(swaps);
-    next.set(i, (next.get(i) ?? 0) + 1);
-    return `/g/${tenant.slug}?v=${variant}&sw=${Array.from(next).map(([idx, k]) => `${idx}:${k}`).join(',')}`;
-  };
-  const refreshAllHref = `/g/${tenant.slug}?v=${variant + 1}`;
-  const wp = workoutParams(profile);
   const byId = new Map(library.map((e) => [e.id, e]));
-
-  const presc = (ex: Exercise) =>
-    isTimed(ex)
-      ? `${wp.sets} × ${wp.holdSec}s ${modeWorkLabel(exerciseMode(ex))}`
-      : `${wp.sets} × ${wp.reps} @ ${wp.tempo}`;
-
-  // Today's suggestion is a real workout, so it gets the same actions as any other.
-  const todayName = `${name} — Today`;
-  const displayToday = workout.map((ex) => ({ ...ex, name: byId.get(ex.id)?.name ?? ex.name }));
-  const sfUrl = workout.length
-    ? syncrofitRunUrl(todayName, displayToday, wp, '', `${tenant.slug}-today`, { name, organization: 'Live Elevated' })
-    : '#';
-  void swParam;
-  const todaySnapshot = workout.map((ex) => ({
-    name: byId.get(ex.id)?.name ?? ex.name,
-    equipment: ex.equipment,
-    image_url: ex.image_url,
-    notes: presc(ex),
-  }));
+  // Alias-display names for every exercise a client-side swap could ever land
+  // on — the whole pool, not just today's initial 5, since Swap draws its
+  // replacement from any pool exercise not already shown.
+  const libraryById: Record<string, { name: string }> = {};
+  for (const ex of pool) {
+    const entry = byId.get(ex.id);
+    if (entry) libraryById[ex.id] = { name: entry.name };
+  }
+  const initialWorkout: PoolExercise[] = workout.map(
+    ({ id, name: n, muscle_group, equipment, image_url, tags }) => ({
+      id,
+      name: byId.get(id)?.name ?? n,
+      muscle_group,
+      equipment,
+      image_url,
+      tags,
+    }),
+  );
 
   return (
     <div style={brandingToCssVars(tenant.branding)} className="min-h-dvh bg-background text-text-primary">
@@ -122,51 +114,18 @@ export default async function TenantHome({
           BROWSE THE LIBRARY
         </Link>
 
-        {/* A real suggestion from this gym's library — not a placeholder */}
-        {workout.length > 0 && (
-          <>
-            <div className="mb-2 flex items-center justify-between gap-2">
-              <p className="text-label text-accent">TODAY’S SUGGESTION</p>
-              <Link
-                href={refreshAllHref}
-                className="flex h-9 items-center gap-1 rounded-md border border-accent/40 bg-accent/10 px-3 text-caption font-semibold text-accent active:scale-[0.97]"
-              >
-                🔀 Refresh all
-              </Link>
-            </div>
-            <ul className="space-y-2 md:grid md:grid-cols-2 md:gap-2 md:space-y-0 lg:grid-cols-3">
-              {workout.map((ex, i) => (
-                <ExerciseRow
-                  key={ex.id}
-                  index={i + 1}
-                  name={byId.get(ex.id)?.name ?? ex.name}
-                  equipment={ex.equipment}
-                  imageUrl={ex.image_url}
-                  detail={presc(ex)}
-                  trailing={
-                    <Link
-                      href={rerollHref(i)}
-                      aria-label={`Swap ${byId.get(ex.id)?.name ?? ex.name}`}
-                      className="flex h-9 shrink-0 items-center gap-1 rounded-md border border-border px-2 text-caption text-text-muted active:scale-95 active:text-accent"
-                    >
-                      ↻ <span className="hidden sm:inline">Swap</span>
-                    </Link>
-                  }
-                />
-              ))}
-            </ul>
-            <div className="mt-4">
-              <SyncroFitButton url={sfUrl} />
-            </div>
-            <SaveCircuitBox exercises={todaySnapshot} params={wp} defaultName={todayName} />
-            <Link
-              href={`/g/${tenant.slug}/build`}
-              className="mt-3 flex h-12 w-full items-center justify-center rounded-md border border-border text-label text-text-primary active:bg-surface"
-            >
-              BUILD A DIFFERENT ONE
-            </Link>
-          </>
-        )}
+        {/* A real suggestion from this gym's library — not a placeholder. The
+            interactive refresh/swap surface is a client component (see its
+            header comment) so this page never reads searchParams. */}
+        <TodaySuggestion
+          slug={tenant.slug}
+          name={name}
+          today={today}
+          pool={poolSlim}
+          libraryById={libraryById}
+          initialWorkout={initialWorkout}
+          profile={profile}
+        />
 
         <p className="mt-12 text-center text-caption text-text-faint">Powered by Live Elevated</p>
       </main>
