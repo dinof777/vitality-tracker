@@ -3,6 +3,12 @@ interface SparklineProps {
   width?: number;
   height?: number;
   className?: string;
+  /** Screen-reader label for the chart — defaults to the original weight
+   *  wording so every pre-existing call site is unaffected. Pass an explicit
+   *  label for any other series (e.g. "HRV history sparkline") so a
+   *  screen-reader user isn't told "Weight history" while looking at a
+   *  different metric's trend. */
+  label?: string;
 }
 
 // Dependency-free SVG sparkline. Scales the series into the viewBox, draws a
@@ -13,6 +19,7 @@ export default function Sparkline({
   width = 100,
   height = 32,
   className,
+  label = 'Weight history sparkline',
 }: SparklineProps) {
   if (data.length < 2) {
     return (
@@ -46,7 +53,7 @@ export default function Sparkline({
       preserveAspectRatio="none"
       className={`h-8 w-full ${className ?? ''}`}
       role="img"
-      aria-label="Weight history sparkline"
+      aria-label={label}
     >
       <polyline
         points={polyline}
