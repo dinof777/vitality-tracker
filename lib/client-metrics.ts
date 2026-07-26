@@ -95,3 +95,16 @@ export function summarizeMetricRows(rows: MetricRow[]): { current: MetricPoint |
 export function toHistory(rows: MetricRow[]): MetricPoint[] {
   return [...rows].sort(byRecordedAtAsc).map(toPoint);
 }
+
+/** BMI is derived at read time, never stored (Elena §2b/§7) — computed from
+ * height_cm + the latest weight_kg reading. Returns null (not a wrong
+ * number) whenever either input is missing, so the trainee portal can omit
+ * the BMI card entirely rather than show something misleading. Standard
+ * kg/m² formula, rounded to 1 decimal. */
+export function computeBmi(heightCm: number | null | undefined, weightKg: number | null | undefined): number | null {
+  if (heightCm === null || heightCm === undefined || weightKg === null || weightKg === undefined) return null;
+  if (!Number.isFinite(heightCm) || !Number.isFinite(weightKg) || heightCm <= 0 || weightKg <= 0) return null;
+  const heightM = heightCm / 100;
+  const bmi = weightKg / (heightM * heightM);
+  return Math.round(bmi * 10) / 10;
+}
