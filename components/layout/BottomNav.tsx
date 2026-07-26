@@ -25,8 +25,13 @@ const TABS: Tab[] = [
   { href: '/settings', label: 'Profile', icon: I('M12 7a3.2 3.2 0 100 6.4 3.2 3.2 0 000-6.4|M5.5 20c0-3.6 3-5.6 6.5-5.6s6.5 2 6.5 5.6') },
 ];
 
-// Hidden on the focus screens (active workout) so logging is distraction-free.
-const HIDE_ON = ['/workout/', '/g/', '/pro', '/s/'];
+// Hidden on the focus screens (active workout) so logging is distraction-free,
+// and on every public, no-login surface (/g/, /pro, /s/, /portal/) — the
+// trainee portal in particular carries a hard app-isolation invariant (zero
+// nav/search/"other clients" affordance of any kind, see
+// .design/trainee-portal/DESIGN_BRIEF.md §0) since it's a bearer-token link
+// to one client's own biometric data, not a logged-in app surface.
+const HIDE_ON = ['/workout/', '/g/', '/pro', '/s/', '/portal/'];
 
 export default function BottomNav() {
   const pathname = usePathname();
