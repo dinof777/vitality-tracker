@@ -9,6 +9,17 @@ import type { Equipment } from '@/lib/database.types';
 
 export const revalidate = 3600;
 
+// A dynamic App Router segment is only ISR-eligible if it exports generateStaticParams;
+// `revalidate` alone is silently inert without it (the route falls through to full SSR, no CDN
+// cache). We pre-build zero slugs and rely on dynamicParams=true (the default) so every tenant
+// page is generated + cached on first hit, then served from the edge until the revalidate window
+// (or an on-demand revalidateTag from an admin edit). This is the piece that makes Priya's
+// unstable_cache DB layer observable as a cache HIT.
+export const dynamicParams = true;
+export function generateStaticParams() {
+  return [];
+}
+
 // Public, themed: the gym's effective library (global + their custom moves, with
 // their local renames applied). The first tenant-aware content surface.
 export default async function TenantExercises({ params }: { params: { slug: string } }) {
