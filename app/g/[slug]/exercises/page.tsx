@@ -7,18 +7,18 @@ import { EQUIPMENT_LABEL, EQUIPMENT_ORDER } from '@/lib/exercises';
 import ExerciseThumb from '@/components/workout/ExerciseThumb';
 import type { Equipment } from '@/lib/database.types';
 
-export const revalidate = 3600;
-
-// A dynamic App Router segment is only ISR-eligible if it exports generateStaticParams;
-// `revalidate` alone is silently inert without it (the route falls through to full SSR, no CDN
-// cache). We pre-build zero slugs and rely on dynamicParams=true (the default) so every tenant
-// page is generated + cached on first hit, then served from the edge until the revalidate window
-// (or an on-demand revalidateTag from an admin edit). This is the piece that makes Priya's
-// unstable_cache DB layer observable as a cache HIT.
-export const dynamicParams = true;
-export function generateStaticParams() {
-  return [];
-}
+// EMERGENCY STOPGAP (2026-07-25, Iris): reverted from ISR back to
+// force-dynamic — the ISR trio previously here (revalidate/dynamicParams/
+// generateStaticParams) is currently 500ing in production. Root cause: the
+// Neon serverless driver forces `cache: 'no-store'` on its own fetch
+// (lib/db.ts, deliberate), and `unstable_cache()` wrapping (lib/tenant.ts,
+// lib/tenant-library.ts) does NOT shield that inner fetch from Next's
+// static-generation "Dynamic server usage" detection, so attempting to
+// statically generate this route throws DYNAMIC_SERVER_USAGE — confirmed via
+// production curl (500) and a local repro. Restore ISR once Priya fixes the
+// DB layer (or Elena revisits the caching approach) — see the handoff report
+// for the full repro and app/g/[slug]/page.tsx's matching stopgap comment.
+export const dynamic = 'force-dynamic';
 
 // Public, themed: the gym's effective library (global + their custom moves, with
 // their local renames applied). The first tenant-aware content surface.
