@@ -6,6 +6,7 @@ import {
   clampNote,
   summarizeMetricRows,
   toHistory,
+  computeBmi,
   NOTE_MAX_LEN,
   type MetricRow,
 } from './client-metrics';
@@ -199,5 +200,48 @@ describe('toHistory — ordering contract (Sparkline consumes last = latest)', (
     const copy = [...rows];
     toHistory(rows);
     expect(rows).toEqual(copy);
+  });
+});
+
+describe('computeBmi', () => {
+  it('returns null when height is missing (null or undefined)', () => {
+    expect(computeBmi(null, 80)).toBeNull();
+    expect(computeBmi(undefined, 80)).toBeNull();
+  });
+
+  it('returns null when weight is missing (null or undefined)', () => {
+    expect(computeBmi(180, null)).toBeNull();
+    expect(computeBmi(180, undefined)).toBeNull();
+  });
+
+  it('returns null when both are missing', () => {
+    expect(computeBmi(null, null)).toBeNull();
+  });
+
+  it('returns null for zero or negative height', () => {
+    expect(computeBmi(0, 80)).toBeNull();
+    expect(computeBmi(-180, 80)).toBeNull();
+  });
+
+  it('returns null for zero or negative weight', () => {
+    expect(computeBmi(180, 0)).toBeNull();
+    expect(computeBmi(180, -80)).toBeNull();
+  });
+
+  it('returns null for non-finite input (NaN/Infinity slipping through)', () => {
+    expect(computeBmi(NaN, 80)).toBeNull();
+    expect(computeBmi(180, Infinity)).toBeNull();
+  });
+
+  it('computes the standard BMI formula for a normal height + weight, rounded to 1 decimal', () => {
+    // 82kg / (1.80m)^2 = 25.3086... -> 25.3
+    expect(computeBmi(180, 82)).toBe(25.3);
+  });
+
+  it('rounds to the nearest tenth in both directions', () => {
+    // 70kg / (1.75m)^2 = 22.857... -> 22.9
+    expect(computeBmi(175, 70)).toBe(22.9);
+    // 60kg / (1.60m)^2 = 23.4375 -> 23.4
+    expect(computeBmi(160, 60)).toBe(23.4);
   });
 });
