@@ -109,8 +109,11 @@ white-label vendor's name does not belong in a customer's tab, and a gym showing
 own members should not be advertising the platform for free. The platform's name still appears
 correctly on the platform's own pages, which is where it sells.
 
-The em-dash separator is not a new invention: `/llms.txt` already writes these same gyms as
-`Iron Forge — exercise library`, so the two surfaces read the same way.
+The em-dash separator is not a new invention, and there are two precedents for it already in the
+product. `/llms.txt` writes these same gyms as `Iron Forge — exercise library`. And the live gym
+page itself pre-fills its "save this workout" field with **`Iron Forge — Today`** — visible in
+`fleet-design.png`, the screenshot of the real deployed page. The format chosen here is the one
+the product was already using where it named a gym's thing; it is now also what the tab says.
 
 ## 5. The other identifiers on the page
 
@@ -207,6 +210,15 @@ Expected: `<title>Iron Forge</title>`.
 Also not done, deliberately and per the brief's floor: no dev server was started, no process was
 killed, no database was written, and the Clerk development-keys finding (Blocked #1) was not
 touched.
+
+**Nothing visual changed.** This fix lives entirely in `<head>`; a screenshot of the page body is
+byte-for-byte what it was. `fleet-design.png` / `fleet-design-mobile.png` are captures of the real
+deployed `/g/ironforge` — the branded surface this fix belongs to — included as evidence of the
+surface, not of the change. The change's evidence is §7's failing-then-passing test.
+
+**Parked, not fixed here** (added to STATUS.md rather than raised inline, per the one-task-at-a-time
+rule): the mobile capture shows the live gym page laying out **500px of content in a 390px
+viewport** — real horizontal overflow on the phone-first product's branded page.
 
 **Owner of the merge:** Cal (infrastructure / merge-and-deploy). The wording call behind §4 is
 Ivy's lane and is recorded here rather than asked, per the brief's instruction to decide it.
