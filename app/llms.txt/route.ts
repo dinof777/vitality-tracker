@@ -1,16 +1,34 @@
 import { SAMPLE_EXERCISES, EQUIPMENT_ORDER } from '@/lib/exercises';
 import { SITE_URL } from '@/lib/site';
+import { liveShowcaseTenants } from '@/lib/tenant-directory';
 
 export const dynamic = 'force-dynamic';
 
-// /llms.txt — the "sitemap for the AI era". Computed from the same library
-// module that drives the app, so the exercise/equipment counts never drift.
+// /llms.txt — the "sitemap for the AI era". Computed from the same modules that
+// drive the app, so nothing here can drift: the exercise/equipment counts come
+// from lib/exercises, and the example-gym links come from lib/tenant-directory —
+// the same switch middleware.ts uses to decide which /g/<slug> pages are served.
+// Before that module existed this file kept its own hardcoded copy and spent a
+// month advertising four /g/vitality pages the edge was answering 410 Gone for.
 const ORIGIN = SITE_URL;
 
 export async function GET(): Promise<Response> {
   const exercises = SAMPLE_EXERCISES.length;
   const equip = EQUIPMENT_ORDER.length;
   const u = (p: string) => `${ORIGIN}${p}`;
+
+  // One worked example per gym that is actually being served. A retired gym
+  // drops out of here the moment it is added to RETIRED_TENANT_SLUGS, and comes
+  // back the moment it is removed — no second edit, no stale links.
+  const gyms = liveShowcaseTenants();
+  const gymLines = gyms.length
+    ? gyms.flatMap((g) => [
+        `- [${g.name} — branded gym app (live example)](${u(`/g/${g.slug}`)}): A gym's public, themed home screen.`,
+        `- [${g.name} — exercise library](${u(`/g/${g.slug}/exercises`)}): The global library plus the gym's own custom exercises and local renames.`,
+        `- [${g.name} — build a workout](${u(`/g/${g.slug}/build`)}): Generate a workout from the gym's library, print it with a QR code, and send it to SyncroFit.`,
+        `- [${g.name} — QR poster](${u(`/g/${g.slug}/poster`)}): A print-ready QR poster for the front desk or wall — wall-poster and 2-up handout layouts.`,
+      ])
+    : ['- No public example gym is live right now; every gym below is created by its own trainer at /g/<slug>.'];
 
   const lines: string[] = [
     '# Live Elevated',
@@ -33,10 +51,7 @@ export async function GET(): Promise<Response> {
     `- [Sign up](${u('/sign-up')}): Create a trainer account.`,
     `- [Create your gym](${u('/onboarding')}): Name your gym and claim a URL — your branded app at /g/<your-gym>.`,
     `- [Trainer dashboard](${u('/dashboard')}): Manage your gym — branding, custom exercises, and equipment.`,
-    `- [Branded gym app (example)](${u('/g/vitality')}): A gym's public, themed home screen.`,
-    `- [A gym's exercise library](${u('/g/vitality/exercises')}): The global library plus the gym's own custom exercises and local renames.`,
-    `- [Build a workout for a gym](${u('/g/vitality/build')}): Generate a workout from the gym's library, print it with a QR code, and send it to SyncroFit.`,
-    `- [Gym QR poster (example)](${u('/g/vitality/poster')}): A print-ready QR poster for the front desk or wall — wall-poster and 2-up handout layouts.`,
+    ...gymLines,
     '',
     '## How it works for gyms',
     "- Brand autopilot: paste your website and we pull your logo, colors, and name.",

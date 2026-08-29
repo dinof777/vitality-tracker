@@ -1,22 +1,21 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+import { isRetiredTenant, tenantSlugFromPath } from '@/lib/tenant-directory';
 
 // Only the trainer admin area needs a login. The single-user app, the public
 // white-label tenant pages (/g/<slug>) and public APIs stay open — clients
 // never sign in.
 const isProtected = createRouteMatcher(['/dashboard(.*)', '/onboarding(.*)', '/admin(.*)', '/g/(.*)/branding']);
 
-// Retired public tenant slugs. Served a cheap 410 at the EDGE so bot floods never reach the
-// serverless renderer. `/g/[slug]` is `force-dynamic` (3 DB calls + a workout build + an
-// Observability Event per hit); `/g/vitality` alone was ~10 req/s of bot traffic and essentially
-// the entire Vercel bill. Handling it here means those requests cost an Edge Request (free tier)
-// instead of a Fluid function invocation. Add/remove slugs to toggle a public tenant on/off.
-const RETIRED_TENANTS = new Set(['vitality']);
-const TENANT_PATH = /^\/g\/([^/]+)/;
-
+// Retired public tenant slugs live in lib/tenant-directory (RETIRED_TENANT_SLUGS) so this
+// guard and /llms.txt cannot disagree about which gyms exist. Serving the 410 at the EDGE
+// means bot floods never reach the serverless renderer: `/g/[slug]` is `force-dynamic`
+// (3 DB calls + a workout build + an Observability Event per hit), and `/g/vitality` alone
+// was ~10 req/s of bot traffic and essentially the entire Vercel bill. Handled here, those
+// requests cost an Edge Request (free tier) instead of a Fluid function invocation.
 function edgeGuard(req: NextRequest): NextResponse | null {
-  const m = req.nextUrl.pathname.match(TENANT_PATH);
-  if (m && RETIRED_TENANTS.has(m[1].toLowerCase())) {
+  const slug = tenantSlugFromPath(req.nextUrl.pathname);
+  if (slug && isRetiredTenant(slug)) {
     // Cacheable so even repeat bot hits are served from the edge cache.
     return new NextResponse('This demo is offline.', {
       status: 410,
