@@ -6,6 +6,7 @@ import { brandingToCssVars, fetchTenantBySlug, DEFAULT_BRANDING } from '@/lib/te
 import { currentTrainer } from '@/lib/current-tenant';
 import { resolvePosterLayout } from '@/lib/poster';
 import PrintButton from '@/components/PrintButton';
+import { tenantMetadata } from '@/lib/tenant-metadata';
 
 export const dynamic = 'force-dynamic';
 
@@ -180,6 +181,11 @@ function HandoutSheet(props: PaperProps) {
       </div>
     </>
   );
+}
+
+// The gym's name in the tab, not the platform's — see lib/tenant-metadata.ts.
+export function generateMetadata({ params }: { params: { slug: string } }) {
+  return tenantMetadata(params.slug, 'poster');
 }
 
 export default async function GymPoster({

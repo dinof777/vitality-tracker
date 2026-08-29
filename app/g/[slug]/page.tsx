@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Exercise } from '@/lib/database.types';
 import { brandingToCssVars, fetchTenantBySlug } from '@/lib/tenant';
+import { tenantMetadata } from '@/lib/tenant-metadata';
 import { tenantLibrary } from '@/lib/tenant-library';
 import { tenantEquipmentSlugs } from '@/lib/tenant-equipment';
 import { generateWorkout } from '@/lib/workout-generator';
@@ -32,6 +33,12 @@ export const revalidate = 3600;
 export const dynamicParams = true;
 export function generateStaticParams() {
   return [];
+}
+
+// The tab, the bookmark and the share card carry the GYM's name, not the
+// platform's — see lib/tenant-metadata.ts.
+export function generateMetadata({ params }: { params: { slug: string } }) {
+  return tenantMetadata(params.slug, 'home');
 }
 
 // A gym's front door. Everything shown here is REAL: the suggestion below is

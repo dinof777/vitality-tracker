@@ -37,8 +37,14 @@ import { filterByFacets, tagsInCategory } from '@/lib/tags';
 import { tenantEquipmentSlugs } from '@/lib/tenant-equipment';
 import { currentTrainer } from '@/lib/current-tenant';
 import { fetchRegionHierarchy } from '@/lib/taxonomy-db';
+import { tenantMetadata } from '@/lib/tenant-metadata';
 
 export const dynamic = 'force-dynamic';
+
+// The gym's name in the tab, not the platform's — see lib/tenant-metadata.ts.
+export function generateMetadata({ params }: { params: { slug: string } }) {
+  return tenantMetadata(params.slug, 'build');
+}
 
 const LENGTHS = [4, 6, 8] as const;
 

@@ -46,6 +46,20 @@ export const SHOWCASE_TENANTS: readonly ShowcaseTenant[] = [
   { slug: 'vitality', name: 'Vitality' },
 ];
 
+/**
+ * The showcase display name for a slug, or null if we don't curate one.
+ *
+ * The DB (`fetchTenantBySlug`) is the real source of a gym's name; this is the
+ * fallback used when a render has no DB reachable, so a branded page still
+ * never falls back to the PLATFORM's name in its browser tab. Third consumer
+ * of this module, after `app/llms.txt/route.ts` and `middleware.ts` — the point
+ * of the module is that none of the three keeps its own gym list.
+ */
+export function showcaseTenantName(slug: string): string | null {
+  const s = slug.toLowerCase();
+  return SHOWCASE_TENANTS.find((t) => t.slug === s)?.name ?? null;
+}
+
 /** True when `/g/<slug>` is switched off and answered 410 at the edge. */
 export function isRetiredTenant(slug: string): boolean {
   return RETIRED_TENANT_SLUGS.has(slug.toLowerCase());

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { brandingToCssVars, fetchTenantBySlug } from '@/lib/tenant';
+import { tenantMetadata } from '@/lib/tenant-metadata';
 import TenantNav from '@/components/layout/TenantNav';
 import { tenantLibrary } from '@/lib/tenant-library';
 import { EQUIPMENT_LABEL, EQUIPMENT_ORDER } from '@/lib/exercises';
@@ -24,6 +25,11 @@ export const revalidate = 3600;
 export const dynamicParams = true;
 export function generateStaticParams() {
   return [];
+}
+
+// The gym's name in the tab, not the platform's — see lib/tenant-metadata.ts.
+export function generateMetadata({ params }: { params: { slug: string } }) {
+  return tenantMetadata(params.slug, 'exercises');
 }
 
 // Public, themed: the gym's effective library (global + their custom moves, with
