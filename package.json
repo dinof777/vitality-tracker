@@ -15,7 +15,9 @@
     "measure:viewport": "node scripts/measure-viewport.mjs",
     "migrate": "node scripts/run-migrations.mjs",
     "typecheck": "tsc --noEmit",
-    "ship:step": "tsx scripts/release/ship-step.ts"
+    "ship:step": "tsx scripts/release/ship-step.ts",
+    "backup": "node scripts/backup-db.mjs",
+    "restore": "node scripts/restore-db.mjs"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.39.5",
