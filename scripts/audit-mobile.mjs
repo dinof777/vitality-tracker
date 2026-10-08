@@ -277,10 +277,50 @@ const swProbe = await cmd('Runtime.evaluate', {
   awaitPromise: true,
 }, sessionId);
 
+// The manifest's CONTENTS, not just that it is linked. Installability turns on
+// what is inside it — a manifest can be present, valid JSON and still not
+// installable for want of a raster icon — and "manifest linked OK" was
+// previously the only thing reported, which reads as a pass.
+const manifestProbe = await cmd('Runtime.evaluate', {
+  expression: `(async () => {
+    const link = document.querySelector('link[rel="manifest"]');
+    if (!link) return JSON.stringify({ error: 'no <link rel="manifest">' });
+    try {
+      const res = await fetch(link.href, { credentials: 'include' });
+      if (!res.ok) return JSON.stringify({ error: 'HTTP ' + res.status + ' fetching ' + link.href });
+      const m = await res.json();
+      const icons = (m.icons || []).map((i) => ({
+        src: i.src, type: i.type || '', sizes: i.sizes || '', purpose: i.purpose || 'any',
+      }));
+      // Chrome's install criteria want a decodable icon of at least 192px, and
+      // Lighthouse's maskable-icon audit wants a maskable one. "sizes: any" is
+      // only meaningful for a vector; a raster icon must name real pixels.
+      const px = (s) => Math.max(0, ...String(s).split(/\\s+/)
+        .map((t) => parseInt(t, 10)).filter((n) => Number.isFinite(n)));
+      const raster = icons.filter((i) => i.type !== 'image/svg+xml' && !/\\.svg(\\?|$)/i.test(i.src));
+      return JSON.stringify({
+        name: m.name || null, shortName: m.short_name || null,
+        startUrl: m.start_url || null, display: m.display || null,
+        themeColor: m.theme_color || null, backgroundColor: m.background_color || null,
+        icons,
+        rasterAtLeast192: raster.some((i) => px(i.sizes) >= 192),
+        anyMaskable: icons.some((i) => /maskable/.test(i.purpose)),
+        svgOnly: icons.length > 0 && raster.length === 0,
+      });
+    } catch (e) {
+      return JSON.stringify({ error: String(e && e.message || e) });
+    }
+  })()`,
+  returnByValue: true,
+  awaitPromise: true,
+}, sessionId);
+
 await cmd('Browser.close'); // over the protocol — never by signal, never by pattern
 
 const report = JSON.parse(evaluated.result?.value ?? '{}');
 const swCount = swProbe.result?.value;
+let mf = {};
+try { mf = JSON.parse(manifestProbe.result?.value ?? '{}'); } catch { mf = { error: 'unparseable manifest probe' }; }
 
 if (report.viewport !== width) {
   console.error(`REFUSING TO REPORT: asked for a ${width}px viewport, got ${report.viewport}px.`);
@@ -313,14 +353,48 @@ if (!(vitals.cls < BUDGET.cls)) fail.push('CLS');
 console.log('\n  PWA installability');
 console.log(`   ${mark(pwa.https)} served over HTTPS`);
 console.log(`   ${mark(!!pwa.manifest)} manifest linked ${pwa.manifest || ''}`);
+if (mf.error) {
+  console.log(`   FAIL manifest could not be read: ${mf.error}`);
+  fail.push('manifest unreadable');
+} else if (mf.icons) {
+  console.log(`        name "${mf.name}" · display ${mf.display} · start_url ${mf.startUrl}`);
+  for (const i of mf.icons) {
+    console.log(`        icon ${i.src} (${i.type || 'no type'}, sizes ${i.sizes || 'none'}, ${i.purpose})`);
+  }
+  console.log(`   ${mark(mf.anyMaskable)} manifest declares a maskable icon`);
+  // A vector-only icon set is the open question, not a settled failure: iOS
+  // installs from apple-touch-icon and ignores this, and Chrome's handling of
+  // SVG manifest icons has changed between versions. So it is reported loudly
+  // and left to the DevTools → Application → Manifest check to adjudicate
+  // rather than being asserted either way from a script.
+  if (mf.svgOnly) {
+    console.log('   WARN every manifest icon is SVG; no raster icon is declared.');
+    console.log('        iOS installs from apple-touch-icon so Home Screen is unaffected,');
+    console.log('        but confirm Chrome installability in DevTools → Application →');
+    console.log('        Manifest before calling this clean. See LIGHTHOUSE_BASELINE.md §4.4.');
+  } else {
+    console.log(`   ${mark(mf.rasterAtLeast192)} a raster icon of at least 192px is declared`);
+    if (!mf.rasterAtLeast192) fail.push('manifest icon <192px');
+  }
+}
 console.log(`   ${mark(pwa.viewportMeta)} viewport meta`);
 console.log(`   ${mark(!!pwa.themeColor)} theme-color ${pwa.themeColor || ''}`);
 console.log(`   ${mark(pwa.appleTouchIcon)} apple-touch-icon (iOS Home Screen)`);
-console.log(`   ${mark(swCount > 0)} service worker registered (${swCount < 0 ? 'unsupported' : swCount})`);
+console.log(`   ${swCount > 0 ? 'OK  ' : 'WARN'} service worker registered (${swCount < 0 ? 'unsupported' : swCount})`);
 if (!pwa.https) fail.push('HTTPS');
 if (!pwa.manifest) fail.push('manifest');
 if (!pwa.appleTouchIcon) fail.push('apple-touch-icon');
-if (!(swCount > 0)) fail.push('service worker');
+// NOT a budget failure, on purpose. There is no service worker in this project
+// yet and adding one is a deliberate open decision, not an audit fix (see
+// docs/LIGHTHOUSE_BASELINE.md §4.2 — a wrong cache strategy serves stale JS to
+// already-installed users and is hard to undo remotely). Counting it as a
+// failure made `--strict` exit 1 on every run forever, which is an inert gate:
+// it can never go green, so a real regression next to it reads as the same
+// red it always was. It stays a visible WARN until the decision is made.
+if (!(swCount > 0)) {
+  console.log('        ^ deferred by decision, not counted as a budget failure.');
+  console.log('          Offline does not work. See docs/LIGHTHOUSE_BASELINE.md §4.2.');
+}
 
 console.log(`\n  Tap targets — ${tap.length} under ${BUDGET.tapDefault}px (DESIGN.md §5 default)`);
 if (tap.length === 0) {
