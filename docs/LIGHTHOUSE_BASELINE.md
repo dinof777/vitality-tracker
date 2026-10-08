@@ -3,13 +3,43 @@
 **Date:** 2026-10-08 · **Branch:** `mc-task-2edbf238-ed72-439e-aeb6-edd9d3e26c51` ·
 **Board item:** "Add Lighthouse PWA and performance audit task to validate mobile-first objective"
 
-**No audit has been run yet.** This document was written in an unattended run that could not start a
-browser, reach the network, or execute anything. It contains (1) the procedure, (2) the budgets the
-project is committing to, (3) three defects found by *reading the code*, one of which is fixed on
-this branch, and (4) an empty score table for the first real run to fill in. **Every score cell below
-is blank on purpose. Do not fill one in from memory or from a different page — a wrong baseline is
-worse than no baseline**, which this repo already learned the hard way in
+**No audit has been run yet — the score table in §5 is still empty.** This document was started in an
+unattended run that could not start a browser or reach the network, and was then reviewed and
+corrected in a second unattended run under the same limits. It contains (1) the procedure, (2) the
+budgets the project is committing to, (3) four defects found by *reading the code*, one of which is
+fixed on this branch, and (4) an empty score table for the first real run to fill in. **Every score
+cell below is blank on purpose. Do not fill one in from memory or from a different page — a wrong
+baseline is worse than no baseline**, which this repo already learned the hard way in
 `docs/FIX_MOBILE_OVERFLOW.md`.
+
+### What the second pass actually verified (2026-10-08)
+
+Still no browser and no network, so no measurement. What could be checked without one, was:
+
+| Checked | How | Result |
+|---|---|---|
+| The nav fix in §4.1 is really in the code | read `components/layout/BottomNav.tsx` | confirmed — inset on `<nav>`, row keeps its full `h-16` |
+| There is genuinely no service worker | `grep` across `app components lib public scripts next.config.mjs` | confirmed — the only hits are inside the audit script itself |
+| The contrast figures in §4.3 | recomputed the WCAG formula from the real tokens in `app/globals.css` | **both were wrong; corrected below** |
+| `scripts/audit-mobile.mjs` parses | `node --check` | passes |
+| The three browser-side probe strings inside it compile | extracted from the source and compiled with `new Function` | all three pass — they had never been compiled before |
+| Repo gates | `npx tsc --noEmit`, `npm run lint` | exit 0 / "No ESLint warnings or errors" |
+
+Two things were **changed** as a result, both in `scripts/audit-mobile.mjs`:
+
+- **`--strict` could never pass, which made it an inert gate.** The missing service worker was pushed
+  onto the budget-failure list, so every run exited 1 — forever, by design, since §4.2 deliberately
+  defers adding one. A gate that is always red is a gate nobody reads, and a real regression next to
+  it looks like the same red it always was. The service worker is now a visible `WARN` labelled
+  deferred-by-decision and is not counted as a budget failure.
+- **The manifest was only checked for being *linked*, never read.** "manifest linked OK" was the
+  whole report, which reads as a pass; a manifest can be present and valid and still not installable.
+  It now fetches the manifest and prints `name`, `display`, `start_url` and every icon with its type,
+  sizes and purpose, and flags a vector-only icon set — see §4.4, which that check surfaced.
+
+**Still unverified, and only a browser can settle it:** every number in §5, the §4.1 fix on a real
+notched iPhone, and whether `audit:mobile` behaves correctly end-to-end. It has never been executed
+against a live page. Compiling is not running.
 
 ---
 
@@ -49,12 +79,15 @@ Chrome on macOS will not open a window under ~500px, so any phone-width measurem
 
 **`npx lighthouse`** — the 0-100 scores, which `audit:mobile` deliberately does not try to compute.
 
-```
-cd /Users/dinoflora/dev/vitality-tracker && npx lighthouse https://www.liveelevated.fit \
-  --preset=desktop=false --form-factor=mobile --screenEmulation.mobile \
+```bash
+cd /Users/dinoflora/dev/vitality-tracker && npx -y lighthouse@12 https://www.liveelevated.fit \
   --only-categories=performance,accessibility,best-practices,seo \
   --output=html --output-path=/tmp/lh-home.html --view
 ```
+
+Mobile emulation and 4G throttling are the Lighthouse CLI's **defaults**, so no form-factor flags are
+needed — and an earlier draft of this file passed `--preset=desktop=false`, which is not a real flag
+and would have made the command fail before it measured anything.
 
 Or by hand: Chrome DevTools → Lighthouse → **Mobile** → Analyze page load.
 
@@ -124,13 +157,27 @@ Kevin with Elena on the caching strategy — see STATUS.md.
 ### 4.3 NOT fixed — the inactive tab label fails AA, but the colour is what DESIGN.md specifies
 
 The bottom nav's inactive tabs are `text-text-faint` (`#6b7280`) on `bg-surface/95` (`#1b1c20`) at
-`text-caption` — 12px, weight 600. Computed by hand:
+`text-caption` — 12px, weight 600.
 
 | | value |
 |---|---|
-| Contrast ratio | **3.83:1** |
+| Contrast ratio | **3.52:1** |
 | WCAG AA needs (12px is not "large text") | 4.5:1 |
 | Verdict | fails |
+
+**Corrected 2026-10-08.** The first draft of this file put the ratio at 3.83:1 and `text-muted` at
+7.25:1. Both were wrong — recomputing the WCAG 2.1 relative-luminance formula from the actual token
+values in `app/globals.css` (`--text-faint: #6b7280`, `--surface: #1b1c20`, `--bg: #121316`) gives
+**3.52:1** and **6.71:1**. The verdict does not change, and the real gap is slightly worse than
+reported. The corrected `text-muted` figure also agrees with `DESIGN.md:36`, which independently
+documents that pair as "≈ 6:1 (AA)"; 7.25:1 matched nothing and appears to have been produced from
+memory rather than computed. Compositing makes no difference here, which is worth recording so
+nobody re-derives it: `surface/95` over `bg` resolves to `#1b1c20` — the same colour — because the
+two tokens are three or four values apart per channel.
+
+A wrong number in a document whose stated job is to be the acceptance baseline is the specific
+failure this repo already has a postmortem for (`docs/FIX_MOBILE_OVERFLOW.md`), which is why it is
+corrected in place and the correction left visible rather than quietly overwritten.
 
 This is not an implementation slip — `DESIGN.md` §7 names `text-text-faint` as the inactive tab
 colour, and §3 lists `text-faint` for "placeholders, disabled, captions" without a contrast figure
@@ -140,7 +187,36 @@ token is doing what it was told to do, and the token is the problem at caption s
 **Not changed here on purpose.** `--text-faint` is a global design token used across the whole app;
 re-picking it is a design-system decision for Ivy, not something to slip into an audit branch
 unreviewed. Two candidate fixes for her: lighten `--text-faint` until it clears 4.5:1 on `surface`,
-or keep the token and use `text-text-muted` (7.25:1, passes) for the nav labels specifically.
+or keep the token and use `text-text-muted` (6.71:1, passes) for the nav labels specifically.
+
+### 4.4 NOT fixed — every manifest icon is a vector, and no raster icon is declared
+
+`app/manifest.ts` declares exactly two icons, both the same SVG:
+
+```json
+{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+```
+
+This was missed on the first pass, which called the manifest "otherwise complete and correct" — it
+is complete in its *fields*, and the icon set is the part that decides installability. Found only
+because the audit script was changed to read the manifest rather than just confirm it is linked.
+
+What is and is not at risk:
+
+- **iOS Home Screen is unaffected.** Safari installs from `apple-touch-icon`, which exists and is a
+  real 180×180 PNG (`app/apple-icon.tsx`), not from the manifest.
+- **Chrome/Android installability is the open question.** Chrome's install criteria want a decodable
+  icon of at least 192px, and its support for SVG manifest icons has varied across versions.
+
+**Deliberately not "fixed" here, and not asserted either way.** Chrome's current behaviour is a
+browser fact, not a code fact, so claiming a failure from a script would be exactly the guess this
+document exists to prevent — and the fix (generating raster icons via `ImageResponse`, as
+`apple-icon.tsx` already does) is a change that needs a build to verify, which this run cannot do.
+`audit:mobile` now prints the full icon list and a `WARN` on a vector-only set; **the adjudication
+is DevTools → Application → Manifest**, which either lists an install-blocking icon error or does
+not. Settle it there during the first real run, then either fix it or record here that Chrome
+accepted the SVG.
 
 ## 5. The baseline — to be filled in by the first real run
 
