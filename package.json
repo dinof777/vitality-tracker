@@ -13,6 +13,7 @@
     "sync:syncrofit": "node scripts/sync-syncrofit-contract.mjs",
     "check:syncrofit": "node scripts/check-syncrofit-contract.mjs",
     "measure:viewport": "node scripts/measure-viewport.mjs",
+    "audit:mobile": "node scripts/audit-mobile.mjs",
     "migrate": "node scripts/run-migrations.mjs"
   },
   "dependencies": {
