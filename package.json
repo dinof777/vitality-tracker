@@ -13,7 +13,9 @@
     "sync:syncrofit": "node scripts/sync-syncrofit-contract.mjs",
     "check:syncrofit": "node scripts/check-syncrofit-contract.mjs",
     "measure:viewport": "node scripts/measure-viewport.mjs",
-    "migrate": "node scripts/run-migrations.mjs"
+    "migrate": "node scripts/run-migrations.mjs",
+    "backup": "node scripts/backup-db.mjs",
+    "restore": "node scripts/restore-db.mjs"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.39.5",
