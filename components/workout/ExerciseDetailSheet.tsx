@@ -6,6 +6,7 @@ import { EQUIPMENT_LABEL } from '@/lib/exercises';
 import { TIER_LABEL, exerciseTier } from '@/lib/exercise-intensity';
 import { exerciseMode, modeWorkLabel } from '@/lib/exercise-mode';
 import { loadProfile, workoutParams } from '@/lib/profile';
+import { IMAGE_URL_HELP, IMAGE_URL_MAX } from '@/lib/exercise-image-url';
 import ScopeSelect, { type Gym } from '@/components/admin/ScopeSelect';
 import ExerciseThumb from './ExerciseThumb';
 import OverloadSparkline from './OverloadSparkline';
@@ -23,7 +24,9 @@ export interface ExerciseManageBlock {
   name: string;
   muscleGroup: string;
   defaultCue: string;
-  onFieldChange: (field: 'name' | 'muscle_group' | 'default_cue', value: string) => void;
+  /** Also what a shared workout hands SyncroFit as actionImageURL. */
+  imageUrl: string;
+  onFieldChange: (field: 'name' | 'muscle_group' | 'default_cue' | 'image_url', value: string) => void;
   scope: string; // GLOBAL, or the owning gym's id
   gyms: Gym[];
   onScopeChange: (next: string) => void;
@@ -232,6 +235,20 @@ export default function ExerciseDetailSheet({
                       onChange={(e) => manage.onFieldChange('default_cue', e.target.value)}
                       className="h-12 w-full rounded-md border border-border bg-surface-raised px-3 text-body text-text-primary"
                     />
+                  </label>
+                  <label className="block">
+                    <span className="mb-1 block text-label uppercase text-text-faint">Image link</span>
+                    <input
+                      value={manage.imageUrl}
+                      onChange={(e) => manage.onFieldChange('image_url', e.target.value)}
+                      maxLength={IMAGE_URL_MAX}
+                      inputMode="url"
+                      placeholder="/exercises/goblet-squat.jpg"
+                      className="h-12 w-full rounded-md border border-border bg-surface-raised px-3 text-body text-text-primary placeholder:text-text-faint"
+                    />
+                    <span className="mt-1 block text-caption text-text-muted">
+                      {IMAGE_URL_HELP} Sent to SyncroFit as the exercise background.
+                    </span>
                   </label>
 
                   <div className="space-y-3 border-t border-border pt-3">
