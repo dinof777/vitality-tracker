@@ -1,14 +1,15 @@
 # Tempo tracking — notation spec and acceptance audit
 
-MC card `cb0f0c75` · owner Theo (JS/TS test engineer) · audited 2026-10-08
+MC card `cb0f0c75` · owner Theo (JS/TS test engineer) · audited 2026-10-08 ·
+notation confirmed and enforced 2026-10-10
 
 Tempo tracking is the first of the four headline features in the project
 objective, and the logger UI was marked Done without anywhere stating what a
 tempo value is *supposed* to look like. This document is that statement, plus an
 audit of the code against it. The executable half lives in
-`lib/tempo-acceptance.test.ts` (19 assertions, 2 `it.todo` gaps).
+`lib/tempo-acceptance.test.ts` (38 assertions, 1 `it.todo` gap — §5).
 
-## 1. The notation, as the code currently defines it
+## 1. The notation — settled
 
 Three digits, hyphen-separated, **eccentric – pause – concentric**, each digit a
 whole number of seconds:
@@ -30,20 +31,33 @@ Every preset is eccentric-loaded (lowering ≥ lifting), which matches the
 Vitality emphasis on controlled negatives. That property is now asserted, so a
 preset like `1-0-3` cannot be added without the suite objecting.
 
-**Unconfirmed, and the one thing on this card only Dino can settle:** whether
-Brian Pruett writes tempo as **three** digits or **four** (`3-1-2-0`, adding a
-pause at the top / lockout). Every other claim above is verified from the code;
-this one is verified from nothing. It is on the card as an open question. If the
-answer is four digits, the fix touches `TEMPO_PRESETS`, `TEMPO_INFO`, the
-schema comment, `INTENSITY_CHOICES`, the `repSec` sums, and the regex in the
-test file — hence asking rather than guessing.
+**Confirmed by Dino on card `cb0f0c75`, 2026-10-08 (answer "a"):** three digits
+is right, and the Custom box must reject anything that isn't three digits. Four-
+digit notation (`3-1-2-0`, with a pause at the top) and the `X`-for-explosive
+convention are both **out** — deliberately, not by omission.
+
+The shape is now written down in production rather than only in prose:
+
+```ts
+// lib/workout-types.ts
+export const TEMPO_PATTERN = /^\d-\d-\d$/;
+export function isValidTempo(tempo: string): boolean;        // strength sets
+export function isStorableTempo(tempo: string | null): boolean; // adds '' / null
+```
+
+One judgment call inside the decision: `TEMPO_PATTERN` allows single digits
+only, so `10-1-1` is rejected along with `banana`. That follows the wording of
+the answer ("three digits") and every preset and prescription in the repo. A
+two-digit eccentric would be a notation change, i.e. another decision, not a bug
+to fix quietly — widening the regex is a one-line change in one file if Dino
+ever wants it, and the suite would fail loudly first.
 
 ## 2. Acceptance matrix
 
 | # | Subtask | Verdict | Evidence |
 | --- | --- | --- | --- |
-| 1 | Document the exact notation | **Partial** | §1 above. 3-vs-4-digit question open with Dino. |
-| 2 | Audit the tempo badge UI | **Pass, with one defect** | §3 |
+| 1 | Document the exact notation | **Pass** | §1 — three digits, confirmed by Dino and enforced in code. |
+| 2 | Audit the tempo badge UI | **Pass — the defect is fixed** | §3 |
 | 3 | Tempo stored in `log_entries` with correct type | **Pass** | §4 |
 | 4 | Tempo surfaces in the sparkline / detail view | **FAIL** | §5 |
 | 5 | Real in-gym round-trip test | **Not run** | Needs a phone, the live deployment and a gym; the board-runner worktree has no network. Dino's step. |
@@ -61,24 +75,34 @@ Correct:
 - Opening on a non-preset prior value correctly starts in Custom mode
   (`useState(!TEMPO_PRESETS.includes(defaultTempo as never))`).
 
-**Defect — the Custom input accepts anything (`SetLogRow.tsx:160-169`).**
-It is an unvalidated `<input type="text">`; whatever is typed is handed to
-`onLogSet` verbatim and persisted. `banana` is a loggable tempo. Worse, the
-placeholder reads `e.g. 2-1-X`, which is *not* the notation this app documents —
-`X` (explosive) is borrowed from a different convention and would break any
-later attempt to compute time-under-tension from stored tempo. Two choices, both
-legitimate, and the call is a methodology one rather than a code one: either
-validate to `/^\d-\d-\d$/` and fix the placeholder, or deliberately adopt `X`
-and document it as a fourth legal phase value. Not fixed here — this card is an
-acceptance audit and the file is production UI (Kevin's lane once the shape is
-decided).
+**Defect (found 2026-10-08, fixed 2026-10-10) — the Custom input accepted
+anything.** It was an unvalidated `<input type="text">` handed straight to
+`onLogSet`: `banana` was a loggable tempo, and the placeholder read `e.g. 2-1-X`,
+teaching a notation the app does not use. Now:
 
-**Minor, same area:** timed sets log `tempo: ''`. `ExerciseCard`'s prefill is
-`prefill?.tempo ?? '3-1-1'`, and `??` does not catch an empty string — so an
-exercise whose last logged set came from timed mode opens the next strength set
-in Custom mode with an empty box instead of the `3-1-1` pill. Low impact
-(requires the same exercise to be logged in both modes) and cosmetic, but it is
-a real `??`-vs-falsy bug, not a style preference.
+- the placeholder is `TEMPO_PLACEHOLDER` (`3-1-1`), so the one example on screen
+  is the documented notation and is itself a preset (asserted);
+- the input is capped at 5 characters, has autocorrect/autocapitalize off, and
+  carries `aria-invalid` plus an `aria-describedby` hint while invalid;
+- **LOG SET is disabled** until the tempo is valid (`canLogSet(reps) && tempoOk`),
+  with a `role="alert"` line reading "Tempo is three digits — eccentric-pause-
+  concentric, e.g. 3-1-1". Disabling the action was chosen over silently
+  coercing the value or over a toast on submit: coercion would log a set the
+  user didn't describe, and a toast arrives after the mistake is in the row.
+  It reuses the existing disabled affordance from `canLogSet`, so nothing new
+  had to be designed.
+
+Timed modes are untouched — the whole tempo block is already behind `{!timed}`,
+and `tempoOk` is hard-wired `true` there, so holds and carries still log with no
+tempo and the LOG SET button cannot be gated by a field that isn't on screen.
+
+**Minor, same area (fixed 2026-10-10):** timed sets log `tempo: ''`, and
+`ExerciseCard`'s prefill was `prefill?.tempo ?? '3-1-1'` — `??` does not catch an
+empty string, so an exercise last logged in timed mode opened the next strength
+set in Custom mode with an empty box. It now falls back through `isValidTempo`
+rather than through `??`/`||`, which also covers a legacy row holding `banana`
+from before the validator existed: the pill row opens on `3-1-1` instead of
+re-offering the bad value for editing.
 
 ## 4. Storage audit — `supabase/schema.sql`, `app/api/log/route.ts`
 
@@ -92,11 +116,18 @@ of the set (`route.ts:52-58`), and `GET /api/exercises/[exerciseId]/last`
 selects `weight, reps, tempo` ordered by `created_at desc limit 1` — so the
 write and the pre-fill read are both real, not stubbed.
 
-What the schema deliberately does **not** have is a `CHECK` constraint on tempo
-shape, unlike `set_type` (which does have one). That is the storage-side half of
-the defect in §3: nothing between the free-text input and the row rejects
-garbage. Adding a `CHECK` is a migration against a table with live rows, so it
-is a separate, guarded piece of work and not something to slip into an audit.
+`POST /api/log` now **rejects a malformed tempo with a 400** before the insert
+(`isStorableTempo`), so the rule is enforced on the server and not only in the
+component — a stale PWA cached on the Home Screen, or a hand-rolled request,
+can't write a tempo no reader can parse. `''` and `null` stay legal: they mean
+"no tempo", which is exactly what a timed set logs.
+
+What the schema still does **not** have is a `CHECK` constraint on tempo shape,
+unlike `set_type` (which does have one). That remains deliberate: a `CHECK` is a
+migration against a table with live rows that may already contain pre-validator
+garbage, so it needs a look at the existing values first and Dino's go-ahead —
+guarded work, not an audit side-effect. The route guard is the cheap 95% of it
+and needs no migration.
 
 ## 5. The real gap — logged tempo is invisible after the session
 
@@ -125,12 +156,19 @@ from unverifiable into a one-glance check. The alternative — a full per-set
 history sheet — is a feature, not a fix, and should be its own card if Dino
 wants it.
 
-## 6. What this audit did not do
+## 6. What this work did not do
 
-- Did not edit any production file. The two defects above are reported with
-  file and line, not patched; the methodology call in §3 is Dino's and the
-  migration in §4 is guarded work.
-- Did not run the app or hit a live database. The board-runner worktree has no
-  network, so every claim here is read from committed code or from the test
-  suite, and the in-gym round-trip (subtask 5) stays open.
-- Did not assume Pruett's notation. See §1.
+- **Did not fix §5.** Surfacing logged tempo in the overload view is a new piece
+  of read path and a visible UI change; it wants its own card and a screenshot
+  from a preview, which a no-network worktree cannot produce. The §5 defect note
+  stands, and gap #2 stays a named `it.todo` so it shows in every test run.
+- **Did not add the `CHECK` constraint.** See §4 — migration against live rows.
+- **Did not validate `routine_exercises.default_tempo`.** The routine builder
+  writes `default_tempo` through a different route and was outside this card's
+  question (which was about the logger's Custom box). It currently takes
+  whatever the builder sends; `isStorableTempo` is exported and ready for it.
+- **Did not run the app, hit a database, or capture a screenshot.** The
+  board-runner worktree has no network, so every claim here is read from
+  committed code, `tsc --noEmit`, `next lint` or the test suite. The validation
+  change is visible in the logger, so it has not been seen rendered — that is
+  part of what subtask 5 (the in-gym round-trip) will show.

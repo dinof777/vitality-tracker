@@ -5,7 +5,7 @@ import type { Exercise } from '@/lib/database.types';
 import { exerciseMode, isPerSide, modeWorkLabel } from '@/lib/exercise-mode';
 import { loadProfile, workoutParams } from '@/lib/profile';
 import type { LoggedSet } from '@/lib/workout-types';
-import { SET_TYPES } from '@/lib/workout-types';
+import { SET_TYPES, isValidTempo } from '@/lib/workout-types';
 import SetLogRow from './SetLogRow';
 import RestTimer from './RestTimer';
 import OverloadSparkline from './OverloadSparkline';
@@ -101,6 +101,10 @@ export default function ExerciseCard({ exercise, onLogSet, onUndoSet }: Exercise
   const nextSide: 'L' | 'R' = perSide && lastSide === 'L' ? 'R' : 'L';
   // First-set default: previous reps/seconds, or the recommended hold for timed moves.
   const defaultReps = timed ? (prefill?.reps ?? holdDefault) : (prefill?.reps ?? null);
+  // Validity test, not `??`: a timed set logs tempo as '', which `??` lets
+  // through and which would open the next strength set in Custom mode with an
+  // empty box. Anything that isn't a real three-digit tempo falls back.
+  const prefillTempo = isValidTempo(prefill?.tempo ?? '') ? (prefill!.tempo as string) : '3-1-1';
 
   return (
     <section className="space-y-3 rounded-lg border border-border bg-surface p-4">
@@ -187,7 +191,7 @@ export default function ExerciseCard({ exercise, onLogSet, onUndoSet }: Exercise
           defaultSide={nextSide}
           defaultWeight={prefill?.weight ?? null}
           defaultReps={defaultReps}
-          defaultTempo={prefill?.tempo ?? '3-1-1'}
+          defaultTempo={prefillTempo}
           onLogSet={handleLogSet}
         />
       )}
