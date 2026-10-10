@@ -3,9 +3,13 @@
 **Card:** Verify PWA install and offline behavior on real iPhone hardware and document pass criteria
 (`6152942f-bc47-4927-8543-4d02508cc942`)
 **Written:** 2026-10-08
+**Updated:** 2026-10-10 — C6 settled by Dino's decision; C2b and C3 closed from code (§6).
 **Scope of this document:** the pass criteria, the code-level audit behind each one, and the
 device record to fill in. It is the QA gate the project was missing — previously "Build the
 navigation shell + PWA install flow" was marked Done with no definition of done for iOS.
+
+**Current state:** four of the seven criteria still need a phone (C1, C2, C4, C5). C2b and C3 are
+closed as FAIL from the code and need no device. C6 is withdrawn by decision. See §6.
 
 ---
 
@@ -38,7 +42,7 @@ not a pass.
 | C3 | Offline shell | With the iPhone in Airplane mode, a **cold** launch from the Home Screen icon renders the app shell (nav + last-loaded screen), not Safari's "no internet" page |
 | C4 | Icon at 180×180 | Home Screen icon is the lime chevron on the dark square, **sharp, not blurry, not a screenshot of the page** |
 | C5 | Splash on cold open | Cold open shows a dark branded splash, **not a white flash**, before first paint |
-| C6 | iOS 16 and iOS 17 | C1–C5 recorded on both majors, with any difference between them named |
+| C6 | ~~iOS 16 and iOS 17~~ | **Withdrawn 2026-10-10** by Dino's decision (option A): iOS 17+ only. See §6.1 |
 
 ## 3. Code audit — what each criterion rests on
 
@@ -132,13 +136,18 @@ Whether a *branded* splash with the icon appears, or just a flat dark screen, an
 behaves like iOS 17 here, is precisely what the device test is for. I am not going to assert an
 iOS-version behaviour table from memory; that is how a QA doc becomes confidently wrong.
 
-### C6 — two iOS majors
+### C6 — two iOS majors: **withdrawn, not failed**
 
-Needs either two physical devices or the Xcode Simulator with an iOS 16 runtime installed.
-Note the limit before relying on it: the Simulator can exercise the meta tags, standalone display
-and the icon, but Airplane-mode offline behaviour and a true cold-launch splash are not
-faithfully reproduced there. C3 and C5 need real hardware on both versions, or the result has to
-be recorded as device-only-on-17.
+Originally this needed either two physical devices or the Xcode Simulator with an iOS 16 runtime.
+The limit worth naming before anyone relies on the Simulator: it can exercise the meta tags,
+standalone display and the icon, but Airplane-mode offline behaviour and a true cold-launch splash
+are not faithfully reproduced there — so a Simulator pass on C3 or C5 would be worthless.
+
+**Dino chose option A on 2026-10-08: iOS 17+ only.** The card is recorded single-version. The
+reason the recommendation was A rather than C is exactly the Simulator limit above: the two
+criteria that actually matter here (C3 offline, C5 splash) are the two the Simulator cannot
+reproduce, so an iOS 16 Simulator run would have added coverage only of the three things already
+provable from code. This criterion is withdrawn by decision, not left unmet.
 
 ## 4. Summary of the prediction
 
@@ -146,11 +155,11 @@ be recorded as device-only-on-17.
 |-----------|----------|-------|
 | C1 installs | Pass | meta tags + manifest present, start_url unauthenticated |
 | C2 full-screen | Pass | `apple-mobile-web-app-capable` + `display: standalone` |
-| C2b no status-bar overlap | **Fail** | `black-translucent` + `viewportFit: cover` with zero `safe-area-inset-top` usage |
-| C3 offline cold launch | **Fail** | no service worker anywhere in the repo |
+| C2b no status-bar overlap | **Fail — settled, see §6.2** | `black-translucent` + `viewportFit: cover` with zero `safe-area-inset-top` usage |
+| C3 offline cold launch | **Fail — settled, see §6.2** | no service worker anywhere in the repo |
 | C4 icon 180×180 | Pass | `app/apple-icon.tsx` at exactly 180×180 |
 | C5 splash | Unknown | no startup-image; depends on iOS-generated fallback |
-| C6 16 vs 17 | Unknown | no second runtime available to this session |
+| C6 16 vs 17 | **Withdrawn** | Dino's decision 2026-10-08, option A: iOS 17+ only |
 
 Two of the seven are expected to fail for reasons already readable in the code. That is the
 useful output of this card: the device test should **confirm** C2b and C3 rather than discover
@@ -168,10 +177,13 @@ Installed from:            (URL used — www.liveelevated.fit or a preview URL)
 
 C1  installs ...................  PASS / FAIL   notes:
 C2  full-screen ................  PASS / FAIL   notes:
-C2b no status-bar overlap ......  PASS / FAIL   notes: (which screen, how much is hidden)
-C3  offline cold launch ........  PASS / FAIL   notes: (force-quit first — confirm you did)
 C4  icon sharp at 180 ..........  PASS / FAIL   notes:
 C5  splash not a white flash ...  PASS / FAIL   notes: (branded? flat colour? which colour?)
+
+-- the two below are already closed as FAIL from code (§6.2). Record them only if
+-- one of them unexpectedly PASSES, which would mean the code audit is wrong:
+C2b no status-bar overlap ......  (expected FAIL) unexpected pass? which screen:
+C3  offline cold launch ........  (expected FAIL) unexpected pass? force-quit first? yes/no:
 ```
 
 **Procedure, in order** — C3 is last because Airplane mode has to come after a successful online
@@ -183,4 +195,60 @@ load, and the force-quit is the step that makes the test honest:
 3. Open `/`, `/daily5`, `/plan`, `/settings` and screenshot the top of each (C2b per screen).
 4. Let data load on `/`. Then: Airplane mode **on** → swipe up from the app switcher to
    **force-quit** the app → tap the icon again. Screenshot whatever appears (C3).
-5. Repeat 1–4 on the second iOS major, or record that only one was available (C6).
+5. ~~Repeat 1–4 on the second iOS major~~ — not required; C6 withdrawn (§6.1).
+
+Steps 3 and 4 are now optional: they only confirm what §6.2 already establishes. Do them if you
+want the screenshots for the record, skip them if you are short on time — the two fixes are
+scoped either way.
+
+---
+
+## 6. Unstall pass — 2026-10-10
+
+This card sat In Progress for 23 hours and was raised as stalled
+(`0acc647c-60d3-4fba-a581-418bd869bcdc`). What that pass changed:
+
+### 6.1 C6 withdrawn by decision
+
+Dino answered the open question with **`a`** on 2026-10-08: iOS 17+ only. That answer had not been
+written into this document, so the card still read as needing two iOS majors. It does not. C6 is
+withdrawn, and the reason is recorded in §3 rather than left as a bare letter in the card's
+question log.
+
+### 6.2 C2b and C3 closed as FAIL without a device
+
+Both predicted failures were **re-verified independently** on 2026-10-10 against the committed
+tree, by a different session than the one that wrote them:
+
+- `grep -rn safe-area` over `*.ts`/`*.tsx`/`*.css` returns **7 hits, all `safe-area-inset-bottom`**.
+  `safe-area-inset-top` appears **nowhere**. `app/layout.tsx` still sets
+  `statusBarStyle: "black-translucent"` with `viewportFit: "cover"`. C2b **fails** — this is a
+  property of the source, not of any particular handset, so no device can overturn it.
+- `grep -rniE 'serviceworker|workbox|next-pwa|caches\.'` over `*.ts`/`*.tsx`/`*.mjs`/`*.json`/`*.js`
+  returns **zero hits** outside `node_modules`. There is no service worker, therefore no cache for
+  iOS standalone mode to cold-launch from. C3 **fails** for the same reason: absence of a worker is
+  not device-dependent.
+
+**Why this matters for the card:** a QA gate does not need hardware to record a failure whose cause
+is absent code. Holding C2b and C3 open pending a phone was the main thing keeping this card
+stalled, and it was keeping two actionable fixes unscoped behind a test nobody had run.
+
+### 6.3 What still genuinely needs a phone
+
+C1, C2, C4 and C5 only. None of them can be established from source: an install gesture, the
+absence of browser chrome at runtime, icon sharpness, and an iOS-generated splash are all
+observations, not code properties. **These four are the entire remaining scope of this card, and
+they need Dino holding an iPhone.** No agent can clear them.
+
+### 6.4 Deliberately not done
+
+- **Neither failure was fixed.** Unchanged from the original reasoning, and still right: the
+  safe-area fix is a UI change that needs a screenshot from a notched viewport before it ships, and
+  the offline shell is a feature with cache-invalidation consequences on a repo where a push
+  deploys immediately. Fixing either inside a QA card would ship an unreviewed visual change.
+- **No new cards were created** for the two fixes. That is a scoping decision for Dino, not for a
+  stalled-card sweep to make unilaterally; the fix directions in §3 are written to be liftable
+  straight into a card when he wants them.
+- **Nothing was pushed.** This session's sandbox denies outbound network — `git ls-remote origin`
+  returned `CONNECT tunnel failed, response 403`. Commit `863875d` and this update are on local
+  branches only and are not on GitHub.
