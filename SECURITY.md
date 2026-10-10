@@ -1,7 +1,9 @@
 # Live Elevated (vitality-tracker) — auth & data-access model
 
-**Written:** 2026-10-08. Every claim below was resolved from the files named beside it, in this
-repo, at commit `64cbed3`. Where something could not be verified from the code, it says so.
+**Written:** 2026-10-08 at commit `64cbed3`. **§4 rewritten 2026-10-10** when the exposure it
+described was fixed (migration `0014_device_identity.sql` + `lib/device.ts`). Every claim below
+was resolved from the files named beside it, in this repo. Where something could not be verified
+from the code, it says so.
 
 Re-resolve the route table with:
 
@@ -91,25 +93,29 @@ table.** There is no cross-gym leak.
 `workouts` and `log_entries`, but those three tables have **no `tenant_id` column** (see
 `supabase/schema.sql`). Its header comment describes this as planned Phase 1 work that did not
 land. Nothing currently calls the builders for those tables, so this is not a live bug — but the
-first caller that does will get a SQL error at runtime, not a quiet leak. Either add the columns
-or drop the three names from the whitelist.
+first caller that does will get a SQL error at runtime, not a quiet leak. As of 0014 those three
+are owned by `device_id` (§4), not by a gym, which makes the whitelist entry more clearly wrong
+rather than merely premature: drop the three names, or decide a routine belongs to a gym and add
+`tenant_id` deliberately. Queued in `STATUS.md`, not fixed here.
 
-## 4. The real exposure: the public app has no per-user identity
+## 4. The public app's identity: anonymous per-device, closed 2026-10-10
 
-This is the finding that matters, and it is **not** an RLS problem — RLS could not fix it, because
-there is no identity to write a policy against.
+### 4a. What was wrong (the original finding, kept for the record)
 
-`routines`, `workouts`, `log_entries` and `mobility_logs` (`supabase/schema.sql`) have **no
+This was the finding that mattered, and it was **not** an RLS problem — RLS could not have fixed
+it, because there was no identity to write a policy against.
+
+`routines`, `workouts`, `log_entries` and `mobility_logs` (`supabase/schema.sql`) had **no
 `user_id`, no `tenant_id`, and no device column**. The routes that read and write them —
 `/api/log`, `/api/log/[entryId]`, `/api/workouts`, `/api/workouts/finish`, `/api/routines`,
 `/api/routines/[routineId]`, `/api/routines/[routineId]/exercises`, `/api/overload/[exerciseId]`,
-`/api/exercises/[exerciseId]/last`, `/api/mobility` — have **no authentication and no scoping of
+`/api/exercises/[exerciseId]/last`, `/api/mobility` — had **no authentication and no scoping of
 any kind**.
 
 Those tables were designed when this was a single-user tracker for one person. The app is now
 public with no login (`STATUS.md` §1: *"anyone can open it, no account, no login"*), and
-`components/workout/WorkoutSession.tsx` posts real sets to `/api/log`. So every visitor writes
-into one shared pile. Concretely, on the live site:
+`components/workout/WorkoutSession.tsx` posts real sets to `/api/log`. So every visitor wrote
+into one shared pile. Concretely, on the live site, until 0014:
 
 | Route | Consequence |
 |---|---|
@@ -119,19 +125,68 @@ into one shared pile. Concretely, on the live site:
 | `DELETE /api/routines` | Unauthenticated, no body, deletes every `from_plan = true` routine — wipes the weekly plan for all users. One `curl` away. |
 | `POST /api/log`, `DELETE /api/log/[entryId]`, `PATCH`/`DELETE /api/routines/[id]` | Unauthenticated write and delete of other people's logged training data. |
 
-Workout and body data is personal health data. Under the standing PII floor it should not be
-readable by an unrelated visitor, which it currently is.
+Workout and body data is personal health data. Under the standing PII floor it should not have
+been readable by an unrelated visitor, which it was.
 
-**This needs a product decision before any code changes**, because the two ways out differ a lot
-in scope:
+### 4b. The decision
 
-- give the public app an **anonymous per-device identity** (a cookie/localStorage id, stamped onto
-  these four tables and filtered in every query) — keeps the no-login promise; or
-- require a **Clerk account** for logging — loses the no-login promise, gains real identity.
+Two ways out, differing a lot in scope: an **anonymous per-device identity**, or requiring a
+**Clerk account** to log a workout. Asked on MC card `99e9dadb` and answered by Dino on
+2026-10-08: **anonymous per-device identity** — the no-account, no-login promise the public app is
+built on is kept. Either way the fix is "add an owner column and filter on it," never "enable
+RLS."
 
-Either way the fix is "add an owner column and filter on it," not "enable RLS." Owner of the
-decision: Elena (architecture). Owner of the implementation once decided: Nolan (TypeScript/Node
-route handlers).
+### 4c. What shipped
+
+**`device_id text` on all four tables** (`supabase/migrations/0014_device_identity.sql`), carrying
+a uuid minted server-side and held in an **httpOnly `vt_device` cookie**. `lib/device.ts` is the
+only place that reads or mints it:
+
+- `readDeviceId(req)` parses the cookie and returns `null` for anything that is not a well-formed
+  uuid, so a crafted cookie value never reaches SQL. Unit-tested in `lib/device.test.ts`,
+  including the `' or 1=1 --` case.
+- `resolveDeviceId(req)` is for writes: reuse the existing identity, or mint one. The route then
+  calls `attachDeviceCookie()` on its own response to persist it. **Minting lives in the write
+  routes, not in `middleware.ts`** — middleware runs on every path including the cacheable `410`
+  for retired gym slugs, and attaching a `Set-Cookie` to a `public, s-maxage` edge response is a
+  cache-correctness bug waiting to happen.
+- No request ever supplies its own device id. Body and query string are not consulted.
+
+Every one of the ten routes in the table above now filters on it, and **fails closed**: no cookie
+means no rows, not all rows. Reads with no cookie return an empty result (`{workouts: []}`,
+`{history: []}`, `{log: null}`, `{routine: null}`) — a browser that has never written anything
+genuinely owns nothing. Single-row writes return `404` on a miss, never `403`, so they don't
+confirm the id exists (same convention as `authorizeClient()`, §3). `routine_exercises` has no
+`device_id` of its own: `PUT /api/routines/[routineId]/exercises` checks the parent routine's
+owner before the `delete`, because otherwise that `delete` would empty any routine by id.
+
+`mobility_logs` also needed its **`unique (logged_date)` dropped** and replaced with a partial
+unique index on `(device_id, logged_date)`. That table-wide unique was the Daily 5 bug itself —
+one row per calendar day for the whole internet.
+
+### 4d. What this is not, and what it cost
+
+- **`device_id` is an identity, not a credential.** It separates one browser's data from
+  another's. It does not withstand someone who obtains the cookie value, and it is not an
+  authorization boundary. `httpOnly` keeps it away from page JavaScript (an XSS cannot read it),
+  `SameSite=Lax` keeps it off cross-site requests, `Secure` in production.
+- **Pre-0014 rows keep `device_id = NULL` and are now unreachable.** They are the old shared pile:
+  Dino's own training blended with strangers', with no column, timestamp or join that can separate
+  them. Every scoped query (`device_id = $1`) matches none of them. Rejected the alternative —
+  backfilling them all to one id — because that hands strangers' logged sets to whichever browser
+  got that id. **Nothing is deleted**; the rows are still in the table, so a later card could
+  adopt a date range into a device if Dino wants his own history back. The visible effect is that
+  existing history disappears from the app's UI.
+- **Cookies blocked entirely** (e.g. a locked-down private window): each write mints an id that is
+  never stored, so the second set of a session fails its ownership check and
+  `WorkoutSession.handleLogSet` falls back to its existing `'local'` on-device mode. Degraded, not
+  broken — and the right outcome, since a browser that refuses to hold an identity cannot be given
+  separated storage.
+- **Clearing cookies starts a fresh identity**, which is also the deletion path the PII floor asks
+  for: the old rows become unreachable orphans.
+- **Not verified here:** nothing in this change was run against the live Neon database or the
+  deployed site. The migration needs `npm run migrate` after merge, and it must land **before or
+  with** the code — the scoped queries reference a column the production schema does not yet have.
 
 ## 5. Other standing items (recorded elsewhere, not re-opened here)
 
@@ -156,3 +211,7 @@ route handlers).
 4. **Values go in `$n` placeholders.** Identifiers get whitelisted, never interpolated from input.
 5. **A new route under `/api` is unauthenticated unless it guards itself.** `middleware.ts` does
    not protect `/api/*`.
+6. **Touching `routines`, `workouts`, `log_entries` or `mobility_logs`?** Get the owner from
+   `readDeviceId(req)` (reads) or `resolveDeviceId(req)` (writes) in `lib/device.ts`, and filter
+   on it. Reads with no device id return **empty**, never everything. Writes return `404` on a
+   miss. Never accept a device id from a body, query string or header — only the cookie.

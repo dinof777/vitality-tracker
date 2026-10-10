@@ -73,7 +73,13 @@ database that already exists; every change lands in both so they can't drift.
   `equipment_catalog_id` links custom-equipment exercises.
 - **routines / routine_exercises / workouts / log_entries** — training data;
   `log_entries` is the progressive-overload spine (`side` for unilateral).
-- **mobility_logs** — Daily 5.
+  All but `routine_exercises` carry **`device_id`** (`0014`) — the anonymous
+  per-visitor owner, a uuid in the httpOnly `vt_device` cookie. Every consumer
+  API route filters on it via `lib/device.ts`; `routine_exercises` is scoped
+  through its parent routine. See `SECURITY.md` §4.
+- **mobility_logs** — Daily 5. Unique on **(`device_id`, `logged_date`)**, not
+  on the date alone: a table-wide unique date meant one Daily 5 row for every
+  visitor at once.
 - **tenants** — white-label gyms (`slug`, `branding` jsonb, `clerk_org_id`, `plan`).
 - **clients** — a trainer's/gym's roster of trainees (`name`, `contact`,
   `owner_user_id` scopes to the trainer who created them; the gym owner sees
