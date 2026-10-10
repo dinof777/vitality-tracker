@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { TEMPO_PRESETS, TEMPO_INFO } from './workout-types';
+import {
+  TEMPO_PRESETS,
+  TEMPO_INFO,
+  TEMPO_PATTERN,
+  TEMPO_PLACEHOLDER,
+  isValidTempo,
+  isStorableTempo,
+} from './workout-types';
 import { INTENSITY_CHOICES, intensityParams, workoutParams, type Profile } from './profile';
 
 // Acceptance coverage for TEMPO TRACKING — the headline feature the project
@@ -11,8 +18,11 @@ import { INTENSITY_CHOICES, intensityParams, workoutParams, type Profile } from 
 // eccentric-pause-concentric order, hyphen-separated, each 0-9 seconds.
 // "3-1-1" = 3s lowering · 1s pause at the bottom · 1s lifting.
 //
-// This regex is the spec. Production has no validator of its own (gap #1), so
-// this test file is currently the only place the shape is written down as code.
+// Dino settled the three-digit question on card cb0f0c75 (2026-10-08, "a"), so
+// the shape now lives in production as `TEMPO_PATTERN` and is enforced by the
+// Custom box and by POST /api/log. This local copy is kept deliberately
+// independent: if someone widens the production regex (to four digits, or to
+// allow `X`), this file fails rather than silently agreeing with the change.
 const TEMPO_NOTATION = /^\d-\d-\d$/;
 
 // Sum of the three phases = seconds of one rep. The workout generator's timing
@@ -107,12 +117,56 @@ describe('the timed-mode sentinel is distinguishable from a real tempo', () => {
   });
 });
 
-describe('known gaps — NOT fixed here (this suite may not edit production code)', () => {
-  // Gap #1. The Custom-tempo input in SetLogRow is unvalidated free text and its
-  // placeholder ("e.g. 2-1-X") is not even the documented notation. Any string
-  // reaches log_entries.tempo, which is `text` with no CHECK constraint.
-  it.todo('rejects a custom tempo that is not three hyphen-separated digits');
+describe('isValidTempo — the validator behind the Custom box and POST /api/log', () => {
+  it('is the same shape this suite independently specifies', () => {
+    expect(TEMPO_PATTERN.source).toBe(TEMPO_NOTATION.source);
+  });
 
+  it.each(TEMPO_PRESETS)('accepts the preset "%s"', (preset) => {
+    expect(isValidTempo(preset)).toBe(true);
+  });
+
+  it.each([
+    ['banana', 'free text — the original defect: this was a loggable tempo'],
+    ['2-1-X', 'the old placeholder: X (explosive) is a different convention'],
+    ['3-1-2-0', 'four digits — rejected per Dino, 2026-10-08'],
+    ['3-1', 'two phases'],
+    ['31 1', 'no hyphens'],
+    ['3--1', 'empty phase'],
+    ['10-1-1', 'two-digit phase: out of scope by the three-digit decision'],
+    ['3-1-1 ', 'trailing space'],
+    [' 3-1-1', 'leading space'],
+    ['', 'the timed-mode sentinel is not a tempo'],
+  ])('rejects %j (%s)', (bad) => {
+    expect(isValidTempo(bad)).toBe(false);
+  });
+
+  it('uses a placeholder that is itself valid and a real preset', () => {
+    // The old placeholder taught the wrong notation; the suite now stops that
+    // from happening again rather than just having fixed it once.
+    expect(isValidTempo(TEMPO_PLACEHOLDER)).toBe(true);
+    expect(TEMPO_PRESETS).toContain(TEMPO_PLACEHOLDER as (typeof TEMPO_PRESETS)[number]);
+  });
+});
+
+describe('isStorableTempo — the boundary POST /api/log enforces', () => {
+  it('allows the timed-mode sentinel and null, which are "no tempo", not bad tempo', () => {
+    expect(isStorableTempo('')).toBe(true);
+    expect(isStorableTempo(null)).toBe(true);
+    expect(isStorableTempo(undefined)).toBe(true);
+  });
+
+  it('allows every preset', () => {
+    for (const preset of TEMPO_PRESETS) expect(isStorableTempo(preset)).toBe(true);
+  });
+
+  it('refuses garbage, so a stale client cannot write an unreadable tempo', () => {
+    expect(isStorableTempo('banana')).toBe(false);
+    expect(isStorableTempo('2-1-X')).toBe(false);
+  });
+});
+
+describe('known gaps — NOT fixed here (this suite may not edit production code)', () => {
   // Gap #2. Logged tempo surfaces only inside the live workout session. The
   // progressive-overload sparkline reads max(weight) only, and
   // ExerciseDetailSheet's "@ 3-1-1" is the PROFILE RECOMMENDATION, not what was
