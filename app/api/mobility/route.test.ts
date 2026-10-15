@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { getSql } from '@/lib/db';
 import { DEVICE_COOKIE } from '@/lib/device';
-import { GET, POST, parseDays } from './route';
+import { GET, POST } from './route';
+import { parseDays } from '@/lib/mobility-days';
 
 // /api/mobility is the Daily 5 persistence boundary. Three things have to be
 // true of it and none was before this pass:
