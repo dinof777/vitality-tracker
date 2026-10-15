@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSql } from '@/lib/db';
 import type { SetType } from '@/lib/database.types';
+import { isStorableTempo } from '@/lib/workout-types';
 
 interface LogBody {
   workoutId?: string | null;
@@ -36,6 +37,16 @@ export async function POST(req: Request) {
 
   if (!body.exerciseId || typeof body.setNumber !== 'number') {
     return NextResponse.json({ error: 'exerciseId and setNumber are required' }, { status: 400 });
+  }
+
+  // The notation is three digits (docs/TEMPO_ACCEPTANCE.md §1). Rejected here as
+  // well as in the Custom box, so a stale client or a hand-rolled request can't
+  // write a tempo nothing can read back. '' / null stay legal — timed sets.
+  if (!isStorableTempo(body.tempo)) {
+    return NextResponse.json(
+      { error: `Invalid tempo "${body.tempo}" — expected three digits, e.g. 3-1-1` },
+      { status: 400 },
+    );
   }
 
   try {

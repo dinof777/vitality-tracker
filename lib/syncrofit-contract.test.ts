@@ -1,9 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { syncrofitRunUrl, SF_EQUIPMENT } from './syncrofit';
+import { syncrofitRunUrl, syncrofitRunUrlFromRoutine, SF_EQUIPMENT } from './syncrofit';
+import { resolveImageUrl } from './exercise-image-url';
+import type { RoutineWithExercises } from './routines';
 import { EQUIPMENT_ORDER } from './exercises';
 import type { Exercise } from './database.types';
 import type { WorkoutParams } from './profile';
 import contract from '../contracts/syncrofit.json';
+import { SITE_URL } from './site';
 
 // Conformance: our SyncroFit integration must honor contracts/syncrofit.json (the
 // vendored copy of SyncroFit's canonical integration-contract.json). This is the
@@ -166,6 +169,128 @@ describe('SyncroFit contract conformance', () => {
       expect(allowed).toContain('amrapMinutes');
       expect(allowed).toContain('emomMinutes');
       expect(allowed).toContain('setOrder');
+    });
+  });
+
+  // Exercise images. The library stores image_url as a site-relative path
+  // (`/exercises/<slug>.jpg`), but the contract requires an absolute HTTPS URL
+  // SyncroFit can download on import. These assert BOTH halves of the resolution:
+  // a caller-supplied origin wins, and the fallback is the app's canonical site
+  // URL — never a second domain hardcoded in lib/syncrofit.ts. That hardcoded
+  // preview domain is what this group exists to stop coming back: every server
+  // call site but one passed '', so every image URL pointed at the preview
+  // deployment instead of the live site.
+  describe('exercise image URLs', () => {
+    const withImage = (imageUrl: string | null): Exercise => ({ ...ex('Goblet Squat', 'dumbbell'), image_url: imageUrl });
+    const firstImage = (origin: string, imageUrl: string | null = '/exercises/goblet-squat.jpg') =>
+      decodeCircuit(syncrofitRunUrl('Test', [withImage(imageUrl)], params, origin, 'x')).exercises[0].actionImageURL;
+
+    it('resolves a relative image against the canonical site URL when no origin is given', () => {
+      expect(firstImage('')).toBe(`${SITE_URL}/exercises/goblet-squat.jpg`);
+    });
+
+    it('does not point images at a hardcoded preview deployment', () => {
+      expect(String(firstImage(''))).not.toContain('vercel.app');
+    });
+
+    it('honors a real request origin over the canonical fallback', () => {
+      expect(firstImage('https://www.ironforge.example')).toBe(
+        'https://www.ironforge.example/exercises/goblet-squat.jpg',
+      );
+    });
+
+    it('never emits a non-HTTPS image URL, even from a local origin', () => {
+      // The contract is HTTPS-only; http://localhost must fall back, not ship.
+      expect(firstImage('http://localhost:3000')).toBe(`${SITE_URL}/exercises/goblet-squat.jpg`);
+    });
+
+    it('omits actionImageURL entirely when the exercise has no image', () => {
+      expect(firstImage('', null)).toBeUndefined();
+    });
+
+    it('points the feedback webhook at the canonical site URL, not a preview domain', () => {
+      const c = decodeCircuit(syncrofitRunUrl('Test', [withImage(null)], params, '', 'x'));
+      expect(c.webhook).toBe(`${SITE_URL}/api/syncrofit/events`);
+    });
+  });
+
+  // The image hand-off, end to end in the two shapes image_url is ever stored
+  // in. This is the half of "images never reach SyncroFit" that lives in the
+  // codec: it was already correct, and these tests pin it so the newly-opened
+  // write path (lib/exercise-image-url) can be trusted to show up here.
+  describe('exercise images (actionImageURL)', () => {
+    const withImage = (name: string, imageUrl: string | null): Exercise => ({
+      ...ex(name, 'dumbbell'),
+      image_url: imageUrl,
+    });
+
+    const routine = (imageUrl: string | null): RoutineWithExercises => ({
+      id: 'routine-1',
+      name: 'Push A',
+      day_of_week: 1,
+      sort_order: 0,
+      from_plan: true,
+      favorite: false,
+      set_order: 'straightSets',
+      mode: 'intervals',
+      amrap_minutes: 12,
+      emom_minutes: 12,
+      exercises: [
+        {
+          id: 're-1',
+          exercise_id: 'e-1',
+          sort_order: 0,
+          default_sets: 3,
+          default_reps: '8-10',
+          default_tempo: '3-1-1',
+          name: 'Goblet Squat',
+          muscle_group: 'Legs',
+          equipment: 'dumbbell',
+          image_url: imageUrl,
+          default_cue: null,
+        },
+      ],
+    } as RoutineWithExercises);
+
+    it('sends an absolute https image through untouched', () => {
+      const c = decodeCircuit(
+        syncrofitRunUrl('T', [withImage('Goblet Squat', 'https://cdn.example.com/gs.jpg')], params, '', 'x'),
+      );
+      expect(c.exercises[0].actionImageURL).toBe('https://cdn.example.com/gs.jpg');
+    });
+
+    it('absolutises a site-relative image against the https origin', () => {
+      const c = decodeCircuit(
+        syncrofitRunUrl('T', [withImage('Goblet Squat', '/exercises/gs.jpg')], params, 'https://vitality.example.com', 'x'),
+      );
+      expect(c.exercises[0].actionImageURL).toBe('https://vitality.example.com/exercises/gs.jpg');
+    });
+
+    it('falls back to the production origin when the caller passes none (server render)', () => {
+      const c = decodeCircuit(syncrofitRunUrl('T', [withImage('Goblet Squat', '/exercises/gs.jpg')], params, '', 'x'));
+      expect(c.exercises[0].actionImageURL).toMatch(/^https:\/\/.+\/exercises\/gs\.jpg$/);
+    });
+
+    it('omits actionImageURL entirely when the exercise has no image', () => {
+      const c = decodeCircuit(syncrofitRunUrl('T', [withImage('Goblet Squat', null)], params, '', 'x'));
+      expect(c.exercises[0]).not.toHaveProperty('actionImageURL');
+    });
+
+    it('carries the image on the routine hand-off too, not just ad-hoc workouts', () => {
+      const c = decodeCircuit(syncrofitRunUrlFromRoutine(routine('/exercises/gs.jpg')));
+      expect(c.exercises[0].actionImageURL).toMatch(/^https:\/\/.+\/exercises\/gs\.jpg$/);
+    });
+
+    // The two layers have to agree, or a value that saves cleanly still
+    // disappears on the hand-off — the original bug's exact shape.
+    it('every image the write path accepts survives the codec', () => {
+      for (const candidate of ['https://cdn.example.com/a.jpg', '/exercises/a.jpg']) {
+        const resolved = resolveImageUrl(candidate);
+        expect(resolved, candidate).not.toHaveProperty('error');
+        const stored = (resolved as { url: string | null }).url;
+        const c = decodeCircuit(syncrofitRunUrl('T', [withImage('A', stored)], params, '', 'x'));
+        expect(c.exercises[0].actionImageURL, `"${candidate}" was dropped by the codec`).toMatch(/^https:\/\//);
+      }
     });
   });
 

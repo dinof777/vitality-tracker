@@ -37,9 +37,17 @@ export default function BottomNav() {
   const pathname = usePathname();
   if (HIDE_ON.some((p) => pathname.startsWith(p))) return null;
 
+  // The safe-area inset pads the BAR, never the tab row. It used to sit on the
+  // `ul` next to `h-16`, and border-box sizing takes padding *out of* a fixed
+  // height rather than extending it — so on a notched iPhone in standalone mode
+  // (~34px inset) the tappable row collapsed to ~30px, under DESIGN.md §5's 48px
+  // nav default and its hard 44px floor, on the one control that has to be
+  // hittable one-handed mid-set. The inset is 0 in a desktop browser, which is
+  // why it looked fine. On the nav it clears the home indicator (DESIGN.md §7)
+  // and leaves the row its full 64px.
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-xl border-t border-border bg-surface/95 backdrop-blur">
-      <ul className="flex h-16 items-stretch pb-[env(safe-area-inset-bottom)]">
+    <nav className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-xl border-t border-border bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
+      <ul className="flex h-16 items-stretch">
         {TABS.map((tab) => {
           const active = tab.href === '/' ? pathname === '/' : pathname.startsWith(tab.href);
           return (
