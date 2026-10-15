@@ -1,9 +1,17 @@
 # Daily 5 streak persistence — rework plan on top of `device_id`
 
 **Card:** 41a6b996 — "Add Daily 5 streak regression test after PWA reinstall or localStorage clear"
-**Status:** on hold, by Dino's decision (option **A**, 2026-10-15). Written 2026-10-14.
-**This document carries no code.** It is the handoff that lets the rework happen in one short
-session once the blocker clears, instead of re-deriving the conflict analysis below.
+**Status: EXECUTED 2026-10-15.** Written 2026-10-14 as a handoff while the card was on hold by
+Dino's decision (option **A**). Every step in §3–§7 below has been carried out; this document is
+kept as the record of *why* the rework deleted this card's own identity mechanism rather than
+merging it, because that reasoning is not visible in the resulting diff. The current design is
+described in `DAILY5_STREAK_PERSISTENCE.md`.
+
+**One deviation from §7 step 1, deliberately:** `0014_device_identity.sql` is **not** on `main` yet.
+Rather than idle until it is, the rework was done on a branch **stacked on `origin/mc-task-99e9dadb`
+(cb610a8)**, which is pushed and approved and therefore a fixed target. The result is byte-identical
+to reworking after the merge, and the ship order Dino chose is unchanged: 99e9dadb merges first,
+this follows. If 99e9dadb is itself reworked before merging, this branch needs rebasing.
 
 ---
 
