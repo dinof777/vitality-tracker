@@ -203,10 +203,17 @@ export default async function TenantBuild({
   const workout = focusChoiceFull?.byStage ? [...swapped].sort((a, b) => stageOf(a) - stageOf(b)) : swapped;
   const wp = workoutParams(profile);
 
+  const h = headers();
+  const host = h.get('host') ?? 'vitality-tracker-mauve.vercel.app';
+  const proto = h.get('x-forwarded-proto') ?? (host.includes('localhost') ? 'http' : 'https');
+  const origin = `${proto}://${host}`;
+
   // SyncroFit shows the gym's names; circuit id is tenant-scoped so feedback maps back.
+  // The origin is this page's real host, so the exercise images SyncroFit downloads
+  // resolve there rather than against lib/syncrofit.ts's canonical fallback.
   const displayExercises = workout.map((ex) => ({ ...ex, name: byId.get(ex.id)?.name ?? ex.name }));
   const sfUrl = workout.length
-    ? syncrofitRunUrl(`${name} — ${focusLabel}`, displayExercises, wp, '', `${tenant.slug}-build`, {
+    ? syncrofitRunUrl(`${name} — ${focusLabel}`, displayExercises, wp, origin, `${tenant.slug}-build`, {
         name,
         organization: 'Live Elevated',
       })
@@ -244,10 +251,7 @@ export default async function TenantBuild({
   const usedTagIds = new Set(library.flatMap((e) => e.tags ?? []));
 
   // Absolute URL of THIS exact workout → encode it in a QR to scan/print.
-  const h = headers();
-  const host = h.get('host') ?? 'vitality-tracker-mauve.vercel.app';
-  const proto = h.get('x-forwarded-proto') ?? (host.includes('localhost') ? 'http' : 'https');
-  const shareUrl = `${proto}://${host}/g/${tenant.slug}/build${qs(focusVal, count)}`;
+  const shareUrl = `${origin}/g/${tenant.slug}/build${qs(focusVal, count)}`;
   const qrSvg = await QRCode.toString(shareUrl, {
     type: 'svg',
     margin: 1,
