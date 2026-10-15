@@ -15,7 +15,8 @@
     "measure:viewport": "node scripts/measure-viewport.mjs",
     "migrate": "node scripts/run-migrations.mjs",
     "backup": "node scripts/backup-db.mjs",
-    "restore": "node scripts/restore-db.mjs"
+    "restore": "node scripts/restore-db.mjs",
+    "audit:mobile": "node scripts/audit-mobile.mjs"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.39.5",
