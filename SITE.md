@@ -79,7 +79,10 @@ database that already exists; every change lands in both so they can't drift.
   through its parent routine. See `SECURITY.md` §4.
 - **mobility_logs** — Daily 5. Unique on **(`device_id`, `logged_date`)**, not
   on the date alone: a table-wide unique date meant one Daily 5 row for every
-  visitor at once.
+  visitor at once. `GET /api/mobility` with no `?date=` returns the device's
+  logged days, which is what lets a cleared store restore its streak;
+  localStorage stays authoritative while the app runs — see
+  `docs/DAILY5_STREAK_PERSISTENCE.md`.
 - **tenants** — white-label gyms (`slug`, `branding` jsonb, `clerk_org_id`, `plan`).
 - **clients** — a trainer's/gym's roster of trainees (`name`, `contact`,
   `owner_user_id` scopes to the trainer who created them; the gym owner sees
