@@ -64,6 +64,7 @@ export async function GET(): Promise<Response> {
     '',
     '## Integrations',
     '- SyncroFit interval timer: workouts are handed off as timed circuits via deep link; import/completion events flow back to a webhook for engagement analytics.',
+    '- [SyncroFit](https://www.mysyncrofit.com): build your own interval timers, group them into workouts or circuits, and share them by QR code or link.',
     '',
     '## Optional',
     `- [Robots](${u('/robots.txt')})`,

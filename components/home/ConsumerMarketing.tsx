@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { SAMPLE_EXERCISES, EQUIPMENT_ORDER } from '@/lib/exercises';
 import { Reveal, fadeUp, stagger } from '@/components/marketing/Reveal';
 import BuilderPreview from '@/components/home/BuilderPreview';
+import { SYNCROFIT_SITE, SYNCROFIT_GET_URL } from '@/components/workout/SyncroFitButton';
 
 // Counts come from the library module itself — same source /llms.txt and
 // /pro read — so this copy can never drift from what's actually shipped.
@@ -82,6 +83,12 @@ const STEPS = [
     title: 'Log it, or send it',
     body: "Log sets right here with progressive overload, or hand it to SyncroFit's timer in one tap.",
   },
+];
+
+const SYNCROFIT_STEPS = [
+  { title: 'Make a timer', body: 'Set your work, rest, and rounds.' },
+  { title: 'Group them', body: 'Stack timers into a full workout or circuit.' },
+  { title: 'Share it', body: 'Send it to anyone by QR code or link.' },
 ];
 
 // The consumer sales pitch — hero, feature grid, builder walkthrough, and
@@ -230,6 +237,42 @@ export default function ConsumerMarketing() {
             <div className="rounded-lg border border-border bg-background p-3">
               <p className="text-body font-semibold text-text-primary">No re-typing</p>
               <p className="text-caption text-text-muted">One tap sends the whole workout.</p>
+            </div>
+          </div>
+
+          {/* Build-your-own — SyncroFit stands on its own, not just as our timer */}
+          <div className="mx-auto mt-8 max-w-2xl border-t border-border pt-6">
+            <h3 className="text-h3 font-semibold text-text-primary">Build your own workouts and timers</h3>
+            <p className="mx-auto mt-2 max-w-xl text-body text-text-muted">
+              Want to make your own? SyncroFit lets you build timers from scratch and share them.
+            </p>
+            <ol className="mx-auto mt-4 grid max-w-2xl gap-3 text-left sm:grid-cols-3">
+              {SYNCROFIT_STEPS.map((s, i) => (
+                <li key={s.title} className="rounded-lg border border-border bg-background p-3">
+                  <p className="text-body font-semibold text-text-primary">
+                    <span className="text-accent">{i + 1}.</span> {s.title}
+                  </p>
+                  <p className="text-caption text-text-muted">{s.body}</p>
+                </li>
+              ))}
+            </ol>
+            <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <a
+                href={SYNCROFIT_GET_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex h-12 w-full max-w-xs items-center justify-center rounded-md border border-border text-label text-text-primary transition-all duration-150 active:scale-[0.97]"
+              >
+                GET SYNCROFIT
+              </a>
+              <a
+                href={SYNCROFIT_SITE}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex h-12 items-center text-caption text-accent underline"
+              >
+                Learn more at mysyncrofit.com
+              </a>
             </div>
           </div>
         </Reveal>

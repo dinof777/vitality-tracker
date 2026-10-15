@@ -3,6 +3,10 @@
 import { useEffect, useState } from 'react';
 
 export const SYNCROFIT_SITE = 'https://www.mysyncrofit.com';
+// SyncroFit isn't in the App Store yet. Fill this in at launch; until then every
+// "get the app" link falls back to SYNCROFIT_SITE. Never guess the URL.
+export const SYNCROFIT_APP_STORE_URL: string | null = null;
+export const SYNCROFIT_GET_URL = SYNCROFIT_APP_STORE_URL ?? SYNCROFIT_SITE;
 
 // Handing a workout to SyncroFit fails SILENTLY when the app isn't installed —
 // the custom-scheme link just does nothing, leaving you staring at an unchanged
@@ -71,7 +75,7 @@ export default function SyncroFitButton({ url, disabled = false }: { url: string
             this workout — it calls out every exercise, set and rest so you never touch your phone mid-set.
           </p>
           <a
-            href={SYNCROFIT_SITE}
+            href={SYNCROFIT_GET_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="flex h-12 w-full items-center justify-center rounded-md bg-accent text-label text-on-accent"
@@ -108,7 +112,7 @@ export default function SyncroFitButton({ url, disabled = false }: { url: string
           </ol>
           <p className="text-caption text-text-muted">
             Don’t have it?{' '}
-            <a href={SYNCROFIT_SITE} target="_blank" rel="noopener noreferrer" className="text-accent underline">
+            <a href={SYNCROFIT_GET_URL} target="_blank" rel="noopener noreferrer" className="text-accent underline">
               Get SyncroFit
             </a>
             .
