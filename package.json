@@ -13,7 +13,9 @@
     "sync:syncrofit": "node scripts/sync-syncrofit-contract.mjs",
     "check:syncrofit": "node scripts/check-syncrofit-contract.mjs",
     "measure:viewport": "node scripts/measure-viewport.mjs",
-    "migrate": "node scripts/run-migrations.mjs"
+    "migrate": "node scripts/run-migrations.mjs",
+    "typecheck": "tsc --noEmit",
+    "ship:step": "tsx scripts/release/ship-step.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.39.5",
@@ -34,6 +36,7 @@
     "eslint-config-next": "14.2.35",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
+    "tsx": "^4.23.15",
     "typescript": "^5",
     "vitest": "^4.1.8"
   }
