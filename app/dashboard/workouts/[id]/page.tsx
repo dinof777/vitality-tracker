@@ -48,7 +48,9 @@ export default async function WorkoutDetail({ params }: { params: { id: string }
     image_url: e.image_url,
     created_at: '',
   }));
-  const sfUrl = syncrofitRunUrl(workout.name, exForSf, wp, '', workout.id);
+  // Real request origin, so SyncroFit's image downloads resolve against the host
+  // this page was served from rather than the canonical fallback.
+  const sfUrl = syncrofitRunUrl(workout.name, exForSf, wp, `${proto}://${host}`, workout.id);
 
   // The newest share link is the workout's public address — QR, PDF and embed
   // all point at it.
