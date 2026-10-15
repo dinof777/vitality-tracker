@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSql } from '@/lib/db';
+import { readDeviceId } from '@/lib/device';
 
 // Always read fresh — Neon's fetch driver would otherwise be cached by Next.
 export const dynamic = 'force-dynamic';
@@ -7,9 +8,14 @@ export const dynamic = 'force-dynamic';
 // GET /api/workouts — recent workout sessions for the history list. Each row
 // carries the routine name (if any), set + exercise counts, and timestamps so
 // the client can show duration. Only sessions with at least one logged set.
-export async function GET() {
+// Scoped to the calling device (lib/device.ts): no cookie means this browser
+// has never logged anything, so the honest answer is an empty list — before
+// 0014 this returned every visitor's sessions.
+export async function GET(req: Request) {
   const sql = getSql();
   if (!sql) return NextResponse.json({ workouts: [] });
+  const deviceId = readDeviceId(req);
+  if (!deviceId) return NextResponse.json({ workouts: [] });
   try {
     const rows = await sql`
       select
@@ -22,6 +28,7 @@ export async function GET() {
       from workouts w
       left join routines r on r.id = w.routine_id
       left join log_entries l on l.workout_id = w.id
+      where w.device_id = ${deviceId}
       group by w.id, r.name
       having count(l.id) > 0
       order by w.started_at desc

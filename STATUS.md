@@ -44,7 +44,43 @@ is the real, short list of loose ends.
 
 ## In flight — owner named
 
-**Nothing.** No specialist is working in this repo right now, and nothing is part-built.
+### [2026-10-10] Per-visitor data separation — built, awaiting merge AND a database change
+
+[MAJOR] Until this merges, **every visitor to the training app writes into one shared pile**: the
+history list shows strangers' sessions, the progressive-overload sparkline blends everyone's
+weights into one line, two people on the same day overwrite each other's Daily 5, and
+`DELETE /api/routines` — unauthenticated, no body — wipes the weekly plan for every user on the
+site. Those four tables (`routines`, `workouts`, `log_entries`, `mobility_logs`) were designed for
+one person and the app went public without an owner column ever being added. Full audit and the
+reasoning behind the fix: `SECURITY.md` §4.
+
+Dino chose **anonymous per-device identity** on MC card `99e9dadb` (2026-10-08), keeping the
+no-account promise. Branch `mc-task-99e9dadb`. `device_id` on all four tables, a uuid held in an
+httpOnly `vt_device` cookie, minted server-side on a browser's first write; `lib/device.ts` is the
+only reader. All ten consumer API routes filter on it and fail closed — no cookie means no rows,
+not all rows. `tsc`, `next lint` and the full suite (40 files / 470 tests, 21 of them new) green.
+Not run against the live database or the deployed site.
+
+**Two ordering constraints, both real:**
+
+1. **The migration must be applied before or with the code**, not after. The new queries reference
+   a `device_id` column the production database does not have yet — deploy the code alone and
+   every one of those ten routes returns a 500. The step is
+   `cd /Users/dinoflora/dev/vitality-tracker && npm run migrate` (safe to re-run; skips what is
+   already applied), and it must run after the branch is merged, since `0014_device_identity.sql`
+   exists only on the branch. Same hand-applied process as item 8 in Queued.
+2. **Existing history disappears from the app.** Pre-0014 rows keep `device_id = NULL` and are
+   matched by nothing. They are the old shared pile — Dino's own training mixed with strangers',
+   with no column that can separate them — so they are orphaned rather than handed to anyone.
+   **Nothing is deleted;** the rows stay in the table and a later card could adopt a date range if
+   Dino wants his own history back. This is the deliberate trade and it is Dino's to reverse.
+
+Merge is **Dino's** (the Deployments page button). Owner of the code: **Nolan**.
+
+---
+
+Otherwise **nothing**. No other specialist is working in this repo right now, and nothing else is
+part-built.
 
 Verified rather than assumed:
 
@@ -91,6 +127,7 @@ from this side has to go through a NEED. Verified today that the two are **in ag
 | 10 | [MINOR] [since 2026-08-29] **A phone touch target on the branded gym page is 17px tall.** Measured at a true 390px viewport: the "What happens when I tap this?" disclosure link under the SyncroFit button has a 17px hit box, against the ~44px minimum for a thumb. Every other control on the page measures 35–56px and is fine. Found while disproving finding #10 below; recorded rather than fixed, because it is a separate question from that one. Reproduce with `cd /Users/dinoflora/dev/vitality-tracker && npm run measure:viewport -- https://www.liveelevated.fit/g/ironforge 390 844`. Owner: **Ivy** (is the link the right control at all) then **Kevin** (build). |
 | 7 | [MINOR] [since 2026-08-29] **The stale branch `phase-0-multitenant` can be deleted.** 122 commits behind `main`, last touched 2026-06-08, and its only distinct commit is already merged into `main` and on GitHub (verified — nothing would be lost). It exists only as clutter that makes the branch list look like there is unfinished work. Owner: **Cal**. Confirm with Dino before deleting, per the standing rule that branch deletion is never done unasked. |
 | 8 | [MINOR] [since 2026-08-29] **Whether the live database has had the latest structural change applied is unverified.** Database changes in this project are applied **by hand** — they do not happen automatically when the site deploys. The repo holds 13 numbered change files, the newest being `0013`, which added the client-profile and body-measurement tables the trainee portal depends on. Whether the live database has actually had `0013` applied **cannot be checked from here** — it needs the database password, which this board deliberately did not touch. Strong circumstantial evidence that it has: the trainee-profile features that need those tables were built and shipped on top of them. Confirming it is one command Dino can run from the repo folder: `cd /Users/dinoflora/dev/vitality-tracker && npm run migrate` — it is safe to re-run and skips anything already applied. |
+| 11 | [MINOR] [since 2026-10-10] **`lib/scoped-db.ts`'s table whitelist names three tables that have no `tenant_id` column.** `TENANT_TABLES` lists `routines`, `workouts` and `log_entries` alongside the genuinely tenant-owned tables, but those three have no `tenant_id` — the header comment describes it as Phase 1 work that never landed. Nothing calls the builders for them, so it is not a live leak; the first caller that does gets a SQL error, not quiet cross-gym data. Found while adding `device_id` to those tables (`SECURITY.md` §4), which makes the entry more clearly wrong rather than merely premature: as of `0014` they are owned by a device, not by a gym. Either drop the three names, or decide a routine belongs to a gym and add `tenant_id` on purpose — that is a product call, not a cleanup. Owner: **Elena** to decide which, then **Nolan**. |
 | 9 | [MINOR] [since 2026-08-29] **The trainee portal has no written design review on file, unlike every other recent feature.** Four other features each have a `DESIGN_REVIEW.md` saved in `.design/`; the trainee-portal folder has only the brief. A review clearly *did* happen — the commit message for `8cf46ef` lists Ivy's findings and the fixes applied to them — but it lives only in a commit message, so the reasoning is not findable where anyone would look for it. Recorded so it is not mistaken for a skipped review. Owner: **Ivy**. |
 
 ---
