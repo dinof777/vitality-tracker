@@ -1,0 +1,231 @@
+name: Ship
+run-name: Release ${{ inputs.ship_task_id || 'preflight' }}
+on:
+  workflow_dispatch:
+    inputs:
+      ship_task_id:
+        description: "ship_task_id"
+        type: string
+        required: false
+        default: ""
+      project_id:
+        description: "project_id"
+        type: string
+        required: false
+        default: ""
+      branches:
+        description: "branches"
+        type: string
+        required: false
+        default: "[]"
+      dry_run:
+        description: "dry_run"
+        type: boolean
+        required: false
+        default: false
+      resume:
+        description: "resume"
+        type: boolean
+        required: false
+        default: false
+      preflight:
+        description: "preflight"
+        type: boolean
+        required: false
+        default: false
+permissions:
+  contents: read
+  deployments: read
+concurrency:
+  group: ship
+  cancel-in-progress: false
+env:
+  SHIP_TASK_ID: ${{ inputs.ship_task_id }}
+  SHIP_PROJECT_ID: ${{ inputs.project_id }}
+  SHIP_DRY_RUN: ${{ inputs.dry_run }}
+  SHIP_RESUME: ${{ inputs.resume }}
+  SHIP_BRANCHES: ${{ inputs.branches }}
+jobs:
+  preflight:
+    if: inputs.preflight && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+          path: trusted
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+        working-directory: trusted
+      - run: npm run ship:step -- --step=preflight
+        working-directory: trusted
+        env:
+          SHIP_RUN_SECRET: ${{ secrets.SHIP_RUN_SECRET }}
+          MC_BASE_URL: ${{ secrets.MC_BASE_URL }}
+          LIVE_URL: ${{ vars.LIVE_URL }}
+  prepare:
+    if: ${{ !inputs.preflight && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      sha: ${{ steps.pin.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+          path: trusted
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+        working-directory: trusted
+      - id: plan
+        run: npm run ship:step -- --step=plan --resume="$SHIP_RESUME" --dry-run="$SHIP_DRY_RUN"
+        working-directory: trusted
+        env:
+          SHIP_RUN_SECRET: ${{ secrets.SHIP_RUN_SECRET }}
+          MC_BASE_URL: ${{ secrets.MC_BASE_URL }}
+      - name: Build deterministic release
+        if: steps.plan.outputs.do_build == 'true'
+        working-directory: trusted
+        run: bash scripts/release/build-release.sh --worktree "$GITHUB_WORKSPACE/release" --branches "$SHIP_BRANCHES" --report "$RUNNER_TEMP/build-report.json" --base origin/main
+      - uses: actions/checkout@v5
+        if: steps.plan.outputs.do_build != 'true'
+        with:
+          ref: ${{ steps.plan.outputs.sha }}
+          path: release
+          fetch-depth: 0
+          persist-credentials: false
+      - id: pin
+        working-directory: trusted
+        run: |
+          if [ -f "$RUNNER_TEMP/build-report.json" ]; then
+            [ "$(jq -r '.merged' "$RUNNER_TEMP/build-report.json")" != 0 ] || { echo "::error::No branches merged; inspect heldBack report"; exit 1; }
+          fi
+          npm run ship:step -- --step=pushref --release-dir="$GITHUB_WORKSPACE/release"
+        env:
+          SHIP_RUN_SECRET: ${{ secrets.SHIP_RUN_SECRET }}
+          MC_BASE_URL: ${{ secrets.MC_BASE_URL }}
+          SHIP_GIT_TOKEN: ${{ github.token }}
+      - name: Report build
+        working-directory: trusted
+        env:
+          SHIP_RUN_SECRET: ${{ secrets.SHIP_RUN_SECRET }}
+          MC_BASE_URL: ${{ secrets.MC_BASE_URL }}
+          SHA: ${{ steps.pin.outputs.sha }}
+        run: |
+          if [ -f "$RUNNER_TEMP/build-report.json" ]; then
+            npm run ship:step -- --step=report --set=build:done,checks:running --current=checks --sha="$SHA" --build-report="$RUNNER_TEMP/build-report.json"
+          else
+            npm run ship:step -- --step=report --set=checks:running --current=checks --sha="$SHA"
+          fi
+      - name: Report prepare failure
+        if: failure()
+        working-directory: trusted
+        run: npm run ship:step -- --step=report --state=failed --current=build --failure=publish-failed --production-changed=no
+        env:
+          SHIP_RUN_SECRET: ${{ secrets.SHIP_RUN_SECRET }}
+          MC_BASE_URL: ${{ secrets.MC_BASE_URL }}
+  checks:
+    needs: prepare
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.prepare.outputs.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+      - run: npm ci --no-audit --no-fund
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run build
+        env:
+          DATABASE_URL: "postgres://ci:ci@127.0.0.1:1/ci"
+          DATABASE_URL_UNPOOLED: "postgres://ci:ci@127.0.0.1:1/ci"
+  publish:
+    needs: [prepare, checks]
+    if: always() && needs.prepare.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      deployments: read
+    env:
+      SHIP_EXPECTED_SHA: ${{ needs.prepare.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+          path: trusted
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+        working-directory: trusted
+      - name: Report checks failure
+        if: needs.checks.result != 'success'
+        working-directory: trusted
+        run: npm run ship:step -- --step=report --state=failed --current=checks --failure=checks-failed --production-changed=no
+        env:
+          SHIP_RUN_SECRET: ${{ secrets.SHIP_RUN_SECRET }}
+          MC_BASE_URL: ${{ secrets.MC_BASE_URL }}
+      - uses: actions/checkout@v5
+        if: needs.checks.result == 'success'
+        with:
+          ref: ${{ needs.prepare.outputs.sha }}
+          path: release
+          fetch-depth: 0
+          persist-credentials: false
+      # Database: none. This project's migrations (supabase/migrations) are applied
+      # by hand with `npm run migrate`; Push takes no restore point and runs no
+      # migration. The step only reports "skipped" to Mission Control.
+      - name: Database (none for this project)
+        if: needs.checks.result == 'success'
+        working-directory: trusted
+        run: npm run ship:step -- --step=database
+        env:
+          SHIP_RUN_SECRET: ${{ secrets.SHIP_RUN_SECRET }}
+          MC_BASE_URL: ${{ secrets.MC_BASE_URL }}
+      - name: Publish checked SHA
+        if: needs.checks.result == 'success' && !inputs.dry_run
+        working-directory: trusted
+        run: npm run ship:step -- --step=publish --release-dir="$GITHUB_WORKSPACE/release"
+        env:
+          SHIP_RUN_SECRET: ${{ secrets.SHIP_RUN_SECRET }}
+          MC_BASE_URL: ${{ secrets.MC_BASE_URL }}
+          SHIP_GIT_TOKEN: ${{ github.token }}
+      - name: Verify exact Vercel SHA and probe
+        if: needs.checks.result == 'success' && !inputs.dry_run
+        working-directory: trusted
+        run: npm run ship:step -- --step=verify
+        env:
+          SHIP_RUN_SECRET: ${{ secrets.SHIP_RUN_SECRET }}
+          MC_BASE_URL: ${{ secrets.MC_BASE_URL }}
+          GITHUB_TOKEN: ${{ github.token }}
+          SHIP_GIT_TOKEN: ${{ github.token }}
+          LIVE_URL: ${{ vars.LIVE_URL }}
+      - name: Report success
+        if: success() && needs.checks.result == 'success'
+        working-directory: trusted
+        run: |
+          if [ "$SHIP_DRY_RUN" = true ]; then
+            npm run ship:step -- --step=report --state=succeeded --current=none --set=checks:done,database:skipped,publish:skipped,golive:skipped,verify:skipped --dry-run=true --production-changed=no
+          else
+            npm run ship:step -- --step=report --state=succeeded --current=none --set=checks:done,database:skipped,publish:done,golive:done,verify:done --dry-run=false --production-changed=live
+          fi
+        env:
+          SHIP_RUN_SECRET: ${{ secrets.SHIP_RUN_SECRET }}
+          MC_BASE_URL: ${{ secrets.MC_BASE_URL }}
