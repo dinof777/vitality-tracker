@@ -3,7 +3,16 @@
 import { useState } from 'react';
 import type { SetType } from '@/lib/database.types';
 import { modeWorkLabel, type ExerciseMode } from '@/lib/exercise-mode';
-import { SET_TYPES, SET_TYPE_INFO, TEMPO_INFO, TEMPO_PRESETS, canLogSet, type LoggedSet } from '@/lib/workout-types';
+import {
+  SET_TYPES,
+  SET_TYPE_INFO,
+  TEMPO_INFO,
+  TEMPO_PLACEHOLDER,
+  TEMPO_PRESETS,
+  canLogSet,
+  isValidTempo,
+  type LoggedSet,
+} from '@/lib/workout-types';
 
 interface SetLogRowProps {
   exerciseId: string;
@@ -51,7 +60,9 @@ export default function SetLogRow({
     });
   };
 
-  const canLog = canLogSet(reps);
+  // Strength sets must carry a real three-digit tempo; timed sets carry none.
+  const tempoOk = timed || isValidTempo(tempo);
+  const canLog = canLogSet(reps) && tempoOk;
 
   const inputClass =
     'h-12 w-full rounded-md bg-surface-raised text-center text-2xl font-extrabold nums text-text-primary placeholder:text-text-faint outline-none focus:ring-2 focus:ring-accent';
@@ -162,12 +173,26 @@ export default function SetLogRow({
                 type="text"
                 value={tempo}
                 onChange={(e) => setTempo(e.target.value)}
-                placeholder="e.g. 2-1-X"
-                className="h-11 w-24 rounded-full bg-surface-raised px-3 text-caption nums text-text-primary outline-none focus:ring-2 focus:ring-accent"
+                placeholder={TEMPO_PLACEHOLDER}
+                maxLength={5}
+                autoCapitalize="off"
+                autoCorrect="off"
+                spellCheck={false}
                 aria-label="Custom tempo"
+                aria-invalid={!tempoOk}
+                aria-describedby={!tempoOk ? `tempo-hint-${setNumber}` : undefined}
+                className={`h-11 w-24 rounded-full bg-surface-raised px-3 text-caption nums text-text-primary outline-none focus:ring-2 ${
+                  tempoOk ? 'focus:ring-accent' : 'ring-1 ring-destructive focus:ring-destructive'
+                }`}
               />
             )}
           </div>
+
+          {!tempoOk && (
+            <p id={`tempo-hint-${setNumber}`} role="alert" className="text-caption text-destructive">
+              Tempo is three digits — eccentric-pause-concentric, e.g. {TEMPO_PLACEHOLDER}.
+            </p>
+          )}
 
           <div className="inline-flex w-full rounded-full bg-surface-raised p-1">
             {SET_TYPES.map((st) => {
