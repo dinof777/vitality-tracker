@@ -4,6 +4,7 @@ import { EQUIPMENT_ORDER } from './exercises';
 import type { Exercise } from './database.types';
 import type { WorkoutParams } from './profile';
 import contract from '../contracts/syncrofit.json';
+import { SITE_URL } from './site';
 
 // Conformance: our SyncroFit integration must honor contracts/syncrofit.json (the
 // vendored copy of SyncroFit's canonical integration-contract.json). This is the
@@ -166,6 +167,48 @@ describe('SyncroFit contract conformance', () => {
       expect(allowed).toContain('amrapMinutes');
       expect(allowed).toContain('emomMinutes');
       expect(allowed).toContain('setOrder');
+    });
+  });
+
+  // Exercise images. The library stores image_url as a site-relative path
+  // (`/exercises/<slug>.jpg`), but the contract requires an absolute HTTPS URL
+  // SyncroFit can download on import. These assert BOTH halves of the resolution:
+  // a caller-supplied origin wins, and the fallback is the app's canonical site
+  // URL — never a second domain hardcoded in lib/syncrofit.ts. That hardcoded
+  // preview domain is what this group exists to stop coming back: every server
+  // call site but one passed '', so every image URL pointed at the preview
+  // deployment instead of the live site.
+  describe('exercise image URLs', () => {
+    const withImage = (imageUrl: string | null): Exercise => ({ ...ex('Goblet Squat', 'dumbbell'), image_url: imageUrl });
+    const firstImage = (origin: string, imageUrl: string | null = '/exercises/goblet-squat.jpg') =>
+      decodeCircuit(syncrofitRunUrl('Test', [withImage(imageUrl)], params, origin, 'x')).exercises[0].actionImageURL;
+
+    it('resolves a relative image against the canonical site URL when no origin is given', () => {
+      expect(firstImage('')).toBe(`${SITE_URL}/exercises/goblet-squat.jpg`);
+    });
+
+    it('does not point images at a hardcoded preview deployment', () => {
+      expect(String(firstImage(''))).not.toContain('vercel.app');
+    });
+
+    it('honors a real request origin over the canonical fallback', () => {
+      expect(firstImage('https://www.ironforge.example')).toBe(
+        'https://www.ironforge.example/exercises/goblet-squat.jpg',
+      );
+    });
+
+    it('never emits a non-HTTPS image URL, even from a local origin', () => {
+      // The contract is HTTPS-only; http://localhost must fall back, not ship.
+      expect(firstImage('http://localhost:3000')).toBe(`${SITE_URL}/exercises/goblet-squat.jpg`);
+    });
+
+    it('omits actionImageURL entirely when the exercise has no image', () => {
+      expect(firstImage('', null)).toBeUndefined();
+    });
+
+    it('points the feedback webhook at the canonical site URL, not a preview domain', () => {
+      const c = decodeCircuit(syncrofitRunUrl('Test', [withImage(null)], params, '', 'x'));
+      expect(c.webhook).toBe(`${SITE_URL}/api/syncrofit/events`);
     });
   });
 
