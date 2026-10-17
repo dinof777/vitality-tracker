@@ -28,6 +28,11 @@ yarn-error.log*
 # local env files
 .env*.local
 
+# database backups — these contain client PII and must never enter git
+# history, whatever BACKUP_DIR is set to. See docs/BACKUP_AND_RESTORE.md.
+vitality-backup-*.json
+vitality-backup-*.json.gz
+
 # vercel
 .vercel
 
