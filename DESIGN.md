@@ -244,6 +244,55 @@ inline-flex w-full rounded-full bg-surface-raised p-1
   > amrap selected: bg-energy text-on-accent   (amber = push state)
 ```
 
+#### Behaviour contract
+What the toggle actually changes, end to end. Written down because "AMRAP
+toggle" names a core feature but nothing said what picking it does, which left
+it unclear whether the control was cosmetic. It is not — the value reaches the
+database. Verified against the code on 2026-10-08.
+
+**1. Nothing about the inputs changes.** Picking AMRAP does *not* hide, clear
+or relabel the weight and reps fields. You still type the weight you used and
+the reps you actually got. The toggle records training *intent*; it is not a
+different input mode, and the app does not run an AMRAP clock (that is
+SyncroFit's job — see §"Workout style control", a separate and unrelated
+`amrap` value on `routines.mode`).
+
+**2. It persists as `log_entries.set_type`.** `SetLogRow`'s local `setType`
+state → `LoggedSet.setType` → `POST /api/log` → the `set_type` column, which
+is `CHECK`-constrained to `normal · amrap · dropset · half_rep`. One set type
+per set; there is no "AMRAP workout" flag above the set.
+
+**3. The toggle does not stick between sets.** Every logged set starts the next
+row at `normal`. `ExerciseCard` remounts `SetLogRow` on a `key` of the set
+count, so its `useState('normal')` re-initializes — deliberately, and unlike
+weight / reps / tempo, which *are* carried forward. AMRAP is normally the last
+set of an exercise, so a sticky toggle would silently mislabel whatever came
+after it. Mislabelling is the worse failure: the numbers are still right either
+way, but a wrongly-tagged set corrupts the pre-fill rule below.
+
+**4. Timed moves cannot be AMRAP.** For holds / cardio / carries the set type
+is forced to `normal` (`SetLogRow`, `setType: timed ? 'normal' : setType`),
+because the control is inside the strength-only block and there are no reps to
+max out.
+
+**5. It changes which set the next one pre-fills from.** The pre-fill is a
+target to beat, so only a straight set qualifies: `/api/exercises/[id]/last`
+returns the most recent `normal` set, not the most recent set
+(`lib/prefill.ts`). Within a session, `ExerciseCard`'s own previous set still
+wins over the DB — you are mid-exercise and that is the number you just hit.
+Falls back to the newest set of any type when an exercise has only ever been
+logged AMRAP, so history is never hidden.
+
+**6. It does not change the sparkline, and that is intended.** The progressive-
+overload sparkline is `max(weight)` per day (`/api/overload/[id]`) with no
+`set_type` filter, which is safe rather than lucky: AMRAP, drop and 1.5-rep
+sets are all performed at or below the day's working weight, so none of them
+can raise a day's maximum. **The limitation to know:** AMRAP progress is
+getting *more reps at the same weight*, and a weight-only chart cannot show
+that. An AMRAP-only session therefore reads as a flat line. Adding a reps
+dimension is a feature, not a fix, and is parked on `STATUS.md` rather than
+done here.
+
 ### L/R side toggle
 Unilateral moves. Dense-in-row exception (§5) — two segments, edge-to-edge,
 no internal gap.
