@@ -6,6 +6,7 @@ import { TAG_BY_ID } from '@/lib/tags';
 import { EQUIPMENT_ORDER } from '@/lib/exercises';
 import { resolveTermName, tenantTagIds } from '@/lib/taxonomy-db';
 import { findSimilarExercise } from '@/lib/exercise-dedup';
+import { resolveImageUrl } from '@/lib/exercise-image-url';
 import { exerciseUsage } from '@/lib/lifecycle-db';
 import { deleteEffect, usageSummary } from '@/lib/lifecycle';
 import type { Tenant } from '@/lib/tenant';
@@ -31,6 +32,7 @@ interface FieldInput {
   equipment?: string;
   default_cue?: string;
   tags?: string[];
+  image_url?: string | null;
 }
 
 interface ResolvedFields {
@@ -39,6 +41,8 @@ interface ResolvedFields {
   equipmentCatalogId: string | null;
   cue: string | null;
   tags: string[];
+  /** null clears the image; undefined means the caller didn't send the field. */
+  imageUrl: string | null | undefined;
 }
 
 /**
@@ -87,12 +91,23 @@ async function resolveFields(
     ? body.tags.filter((t) => TAG_BY_ID[t] || gymTags.has(t)).slice(0, 12)
     : [];
 
+  // The image is what a shared workout carries to SyncroFit as actionImageURL,
+  // so a value the codec would drop is refused here instead of looking saved.
+  // An absent key leaves the stored image alone (undefined below); "" clears it.
+  let imageUrl: string | null | undefined;
+  if (body.image_url !== undefined) {
+    const image = resolveImageUrl(body.image_url);
+    if ('error' in image) return { error: image.error };
+    imageUrl = image.url;
+  }
+
   return {
     muscle,
     equipment,
     equipmentCatalogId,
     cue: (body.default_cue ?? '').trim().slice(0, 200) || null,
     tags,
+    imageUrl,
   };
 }
 
@@ -161,6 +176,7 @@ export async function POST(req: Request) {
     equipment?: string;
     default_cue?: string;
     tags?: string[];
+    image_url?: string | null;
     /** Set once the trainer has confirmed this really is a different movement. */
     confirmDistinct?: boolean;
   };
@@ -184,8 +200,8 @@ export async function POST(req: Request) {
   }
 
   const rows = await sql`
-    insert into exercises (name, muscle_group, equipment, equipment_catalog_id, default_cue, tenant_id, is_global, tags)
-    values (${name}, ${resolved.muscle}, ${resolved.equipment}, ${resolved.equipmentCatalogId}, ${resolved.cue}, ${tenant.id}, false, ${resolved.tags})
+    insert into exercises (name, muscle_group, equipment, equipment_catalog_id, default_cue, image_url, tenant_id, is_global, tags)
+    values (${name}, ${resolved.muscle}, ${resolved.equipment}, ${resolved.equipmentCatalogId}, ${resolved.cue}, ${resolved.imageUrl ?? null}, ${tenant.id}, false, ${resolved.tags})
     returning id, name, muscle_group, equipment, equipment_catalog_id, default_cue, image_url, tags, archived_at
   `;
   invalidateTenant(tenant);
@@ -208,6 +224,7 @@ export async function PATCH(req: Request) {
     equipment?: string;
     default_cue?: string;
     tags?: string[];
+    image_url?: string | null;
     confirmDistinct?: boolean;
     /** Restore an archived move back into the library. */
     restore?: boolean;
@@ -253,6 +270,7 @@ export async function PATCH(req: Request) {
       equipment = ${resolved.equipment},
       equipment_catalog_id = ${resolved.equipmentCatalogId},
       default_cue = ${resolved.cue},
+      image_url = case when ${resolved.imageUrl !== undefined}::boolean then ${resolved.imageUrl ?? null}::text else image_url end,
       tags = ${resolved.tags}
     where id = ${body.id} and tenant_id = ${tenant.id}
     returning id, name, muscle_group, equipment, equipment_catalog_id, default_cue, image_url, tags, archived_at
