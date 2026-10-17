@@ -2,6 +2,7 @@ import type { Exercise } from './database.types';
 import { exerciseMode, isTimed, modeWorkLabel } from './exercise-mode';
 import type { WorkoutParams } from './profile';
 import type { RoutineWithExercises } from './routines';
+import { SITE_URL } from './site';
 
 // Hand a Vitality routine to the SyncroFit interval-timer app as a timed
 // circuit, using SyncroFit's app-to-app share format (GroupShareCodec):
@@ -97,7 +98,12 @@ export function syncrofitUrlFromWorkout(name: string, exercises: Exercise[], p: 
   return `intervaltimer://import-circuit?data=${toBase64Url(JSON.stringify(payload))}`;
 }
 
-const VITALITY_ORIGIN = 'https://vitality-tracker-mauve.vercel.app';
+// The origin SyncroFit will fetch our exercise images and POST its webhook to,
+// when the caller can't supply the real request origin. This MUST be the app's
+// canonical public address, so it rides on lib/site.ts rather than a second
+// hardcoded domain: a duplicate here is how the handoff ends up pointing at a
+// preview deployment while the site itself lives somewhere else.
+const VITALITY_ORIGIN = SITE_URL;
 
 // SyncroFit POSTs import/completion feedback to the `webhook` URL embedded in the
 // circuit we send (per-circuit, not a global partner URL) — so it MUST be present
