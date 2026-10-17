@@ -7,6 +7,13 @@ import { OrganizationProfile, OrganizationSwitcher } from '@clerk/nextjs';
 // remove). Everyone invited becomes a member of the gym's org → resolves to the
 // same tenant. The owner (admin) sees every trainer's clients & workouts; each
 // trainer sees only their own.
+//
+// Clerk's org components throw when no <ClerkProvider> is mounted, and
+// app/layout.tsx mounts it only when the publishable key is set. Without the
+// key (the release checks build, any local build without .env) this page must
+// still prerender, so it renders the panels under the same condition.
+const clerkEnabled = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
+
 export default function Trainers() {
   return (
     <div className="min-h-dvh bg-background text-text-primary">
@@ -19,12 +26,18 @@ export default function Trainers() {
           Invite trainers to your gym and manage access. Each trainer sees only their own clients &amp; workouts; you,
           the owner, see everyone’s. The gym’s brand, exercises, and equipment are shared.
         </p>
-        <div className="mb-4">
-          <OrganizationSwitcher hidePersonal afterSelectOrganizationUrl="/dashboard/trainers" />
-        </div>
-        <div className="overflow-hidden rounded-xl border border-border">
-          <OrganizationProfile routing="hash" />
-        </div>
+        {clerkEnabled ? (
+          <>
+            <div className="mb-4">
+              <OrganizationSwitcher hidePersonal afterSelectOrganizationUrl="/dashboard/trainers" />
+            </div>
+            <div className="overflow-hidden rounded-xl border border-border">
+              <OrganizationProfile routing="hash" />
+            </div>
+          </>
+        ) : (
+          <p className="text-body text-text-muted">Sign-in is not configured here, so trainer management is unavailable.</p>
+        )}
       </main>
     </div>
   );
