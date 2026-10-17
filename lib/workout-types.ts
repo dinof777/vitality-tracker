@@ -10,6 +10,24 @@ export const SET_TYPES: { value: SetType; label: string }[] = [
 
 export const TEMPO_PRESETS = ['2-0-1', '3-0-1', '3-1-1', '4-0-1'] as const;
 
+// A tempo is exactly three single digits, hyphen-separated —
+// eccentric–pause–concentric, each a whole second (docs/TEMPO_ACCEPTANCE.md §1;
+// Dino settled three-digit notation on MC card cb0f0c75, 2026-10-08).
+export const TEMPO_PATTERN = /^\d-\d-\d$/;
+
+export const TEMPO_PLACEHOLDER = '3-1-1';
+
+export function isValidTempo(tempo: string): boolean {
+  return TEMPO_PATTERN.test(tempo);
+}
+
+// Timed modes (hold / cardio / carry) have no lowering-lifting tempo and log an
+// empty string, so '' and null are legal at the storage boundary even though the
+// Custom box in strength mode will not accept them.
+export function isStorableTempo(tempo: string | null | undefined): boolean {
+  return tempo == null || tempo === '' || isValidTempo(tempo);
+}
+
 // Hover/tap explanations for the numbers and toggles in the logger.
 export const TEMPO_INFO =
   'Tempo = seconds per phase (eccentric–pause–concentric). e.g. 3-1-1 = 3s lowering · 1s pause · 1s lifting.';

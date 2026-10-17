@@ -51,6 +51,7 @@ interface Draft {
   name: string;
   muscle_group: string;
   default_cue: string;
+  image_url: string;
 }
 
 export default function ExerciseAdmin() {
@@ -111,7 +112,12 @@ export default function ExerciseAdmin() {
 
   const openRow = (ex: AdminExercise) => {
     setOpenId(ex.id);
-    setDraft({ name: ex.name, muscle_group: ex.muscle_group ?? '', default_cue: ex.default_cue ?? '' });
+    setDraft({
+      name: ex.name,
+      muscle_group: ex.muscle_group ?? '',
+      default_cue: ex.default_cue ?? '',
+      image_url: ex.image_url ?? '',
+    });
   };
 
   const closeSheet = () => {
@@ -173,7 +179,7 @@ export default function ExerciseAdmin() {
           muscle_group: draft.muscle_group || null,
           default_cue: draft.default_cue || null,
           equipment: openExercise.equipment,
-          image_url: openExercise.image_url,
+          image_url: draft.image_url || null,
           created_at: '',
           tags: openExercise.tags,
           tenant_id: openExercise.tenant_id,
@@ -255,6 +261,7 @@ export default function ExerciseAdmin() {
             name: draft.name,
             muscleGroup: draft.muscle_group,
             defaultCue: draft.default_cue,
+            imageUrl: draft.image_url,
             onFieldChange: (field, value) => setDraft((d) => (d ? { ...d, [field]: value } : d)),
             scope: openExercise.is_global ? GLOBAL : (openExercise.tenant_id ?? GLOBAL),
             gyms,
@@ -267,6 +274,7 @@ export default function ExerciseAdmin() {
                 name: draft.name,
                 muscle_group: draft.muscle_group,
                 default_cue: draft.default_cue,
+                image_url: draft.image_url,
               });
               if (ok) closeSheet();
             },
