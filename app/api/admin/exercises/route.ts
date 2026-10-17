@@ -4,6 +4,7 @@ import { getSql } from '@/lib/db';
 import { isAdmin } from '@/lib/is-admin';
 import { exerciseDependents, exerciseUsage } from '@/lib/lifecycle-db';
 import { checkScopeMove, deleteEffect, usageSummary } from '@/lib/lifecycle';
+import { resolveImageUrl } from '@/lib/exercise-image-url';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -68,6 +69,7 @@ export async function PATCH(req: Request) {
     name?: string;
     muscle_group?: string;
     default_cue?: string;
+    image_url?: string | null;
     /** Which gym takes ownership on demote. */
     tenantId?: string;
   };
@@ -97,11 +99,23 @@ export async function PATCH(req: Request) {
       `)[0];
       if (!ok) return NextResponse.json({ error: 'Muscle group must be a shared term.' }, { status: 400 });
     }
+    // Same image rule as the trainer path (lib/exercise-image-url) — this is
+    // where a library move missing its illustration gets one, and where a bad
+    // link is refused before it becomes an image SyncroFit silently drops.
+    //
+    // An ABSENT image_url key means "leave it alone", not "clear it": 291
+    // library rows carry an illustration, and an older client that posts an
+    // edit without the field must not blank them. Sending "" clears it.
+    const touchImage = body.image_url !== undefined;
+    const image = resolveImageUrl(body.image_url);
+    if (touchImage && 'error' in image) return NextResponse.json({ error: image.error }, { status: 400 });
+    const nextImage = 'error' in image ? null : image.url;
     const rows = await sql`
       update exercises
-      set name = ${name}, muscle_group = ${muscle}, default_cue = ${(body.default_cue ?? '').trim().slice(0, 200) || null}
+      set name = ${name}, muscle_group = ${muscle}, default_cue = ${(body.default_cue ?? '').trim().slice(0, 200) || null},
+          image_url = case when ${touchImage}::boolean then ${nextImage}::text else image_url end
       where id = ${id}
-      returning id, name, muscle_group, default_cue, is_global, tenant_id, archived_at
+      returning id, name, muscle_group, default_cue, image_url, is_global, tenant_id, archived_at
     `;
     invalidateAllTenants();
     return NextResponse.json({ ok: true, exercise: rows[0] });
