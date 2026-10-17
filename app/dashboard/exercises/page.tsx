@@ -10,7 +10,9 @@ import { termSlug } from '@/lib/taxonomy';
 import TermPicker, { type Term } from '@/components/dashboard/TermPicker';
 import type { Equipment } from '@/lib/database.types';
 import { buildExerciseImagePrompt } from '@/lib/exercise-image-prompt';
+import { IMAGE_URL_HELP, IMAGE_URL_MAX } from '@/lib/exercise-image-url';
 import CopyField from '@/components/CopyField';
+import ExerciseThumb from '@/components/workout/ExerciseThumb';
 
 interface CustomExercise {
   id: string;
@@ -19,6 +21,7 @@ interface CustomExercise {
   equipment: string | null;
   custom_equip_name?: string | null;
   default_cue: string | null;
+  image_url?: string | null;
   tags?: string[];
   archived_at?: string | null;
   /** What points at this move — decides whether delete removes or archives it. */
@@ -39,6 +42,9 @@ export default function CustomExercises() {
   const [muscle, setMuscle] = useState('');
   const [equipment, setEquipment] = useState<string>(EQUIPMENT_CHOICES[0]?.value ?? 'dumbbell');
   const [cue, setCue] = useState('');
+  /** The exercise's illustration. Also what a shared workout hands SyncroFit
+   *  as actionImageURL — without it, the move arrives there with no picture. */
+  const [imageUrl, setImageUrl] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -131,6 +137,7 @@ export default function CustomExercises() {
     setName('');
     setMuscle('');
     setCue('');
+    setImageUrl('');
     setTags([]);
     setSimilar(null);
     setShowImagePrompt(false);
@@ -151,6 +158,7 @@ export default function CustomExercises() {
           muscle_group: muscle.trim(),
           equipment,
           default_cue: cue.trim(),
+          image_url: imageUrl.trim(),
           tags,
           confirmDistinct,
         }),
@@ -195,6 +203,7 @@ export default function CustomExercises() {
     setMuscle(ex.muscle_group ?? '');
     setEquipment(ex.equipment ?? (ex.custom_equip_name ? equipment : equipment));
     setCue(ex.default_cue ?? '');
+    setImageUrl(ex.image_url ?? '');
     setTags(ex.tags ?? []);
     setSimilar(null);
     setError(null);
@@ -220,6 +229,7 @@ export default function CustomExercises() {
           muscle_group: muscle.trim(),
           equipment,
           default_cue: cue.trim(),
+          image_url: imageUrl.trim(),
           tags,
           confirmDistinct,
         }),
@@ -342,11 +352,43 @@ export default function CustomExercises() {
           {showImagePrompt && (
             <div id="ai-image-prompt-panel" className="rounded-lg border border-border bg-background p-3">
               <p className="mb-2 text-caption text-text-muted">
-                Paste into any AI image generator (ChatGPT, Gemini…) to get art that matches the library.
+                Paste into any AI image generator (ChatGPT, Gemini…) to get art that matches the library. Save the
+                result somewhere public, then paste its link into <span className="text-text-primary">Image link</span>{' '}
+                below.
               </p>
               <CopyField value={imagePrompt} multiline />
             </div>
           )}
+
+          {/* The image link. This is the one field that was missing: the column
+              existed and every screen already rendered it, but nothing could
+              ever write it — so a custom move stayed imageless here AND arrived
+              at SyncroFit with no actionImageURL. */}
+          <div className="flex items-start gap-3">
+            <div className="pt-0.5">
+              <ExerciseThumb
+                equipment={(equipment.startsWith('cat:') ? null : (equipment as Equipment)) ?? null}
+                imageUrl={imageUrl.trim() || null}
+                name={name.trim() || 'Exercise image'}
+                size={48}
+              />
+            </div>
+            <div className="min-w-0 flex-1">
+              <input
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                maxLength={IMAGE_URL_MAX}
+                inputMode="url"
+                aria-label="Image link"
+                aria-describedby="image-url-help"
+                placeholder="Image link (optional)"
+                className="h-11 w-full rounded-md border border-border bg-background px-3 text-body text-text-primary placeholder:text-text-faint"
+              />
+              <p id="image-url-help" className="mt-1 text-caption text-text-muted">
+                {IMAGE_URL_HELP} Sent to SyncroFit as the exercise background.
+              </p>
+            </div>
+          </div>
 
           {/* Tags — so custom moves show up in the same filters as the library */}
           <div>
@@ -482,7 +524,13 @@ export default function CustomExercises() {
                   ex.archived_at ? 'border-dashed border-border bg-background' : 'border-border bg-surface'
                 }`}
               >
-                <div className="min-w-0">
+                <ExerciseThumb
+                  equipment={(ex.equipment as Equipment) ?? null}
+                  imageUrl={ex.image_url ?? null}
+                  name={ex.name}
+                  size={40}
+                />
+                <div className="min-w-0 flex-1">
                   <p
                     className={`truncate text-body font-semibold ${
                       ex.archived_at ? 'text-text-faint line-through' : 'text-text-primary'
@@ -495,6 +543,9 @@ export default function CustomExercises() {
                       ex.archived_at ? 'Archived' : null,
                       ex.muscle_group,
                       equipLabel(ex),
+                      // Say it plainly — a move with no image is the one that
+                      // reaches SyncroFit with a blank background.
+                      ex.image_url ? null : 'No image',
                       usageOf(ex) ? `in use by ${usageOf(ex)}` : null,
                     ]
                       .filter(Boolean)
