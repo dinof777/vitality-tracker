@@ -33,12 +33,15 @@ export default async function SharedWorkout({ params }: { params: { token: strin
     image_url: e.image_url,
     created_at: '',
   }));
-  const sfUrl = syncrofitRunUrl(name, exForSf, wp, '', params.token);
-
   const h = headers();
   const host = h.get('host') ?? 'vitality-tracker-mauve.vercel.app';
   const proto = h.get('x-forwarded-proto') ?? (host.includes('localhost') ? 'http' : 'https');
-  const shareUrl = `${proto}://${host}/s/${params.token}`;
+  const origin = `${proto}://${host}`;
+  // Hand SyncroFit the origin this page was actually served from, so the
+  // exercise image URLs it downloads resolve against the real host rather than
+  // lib/syncrofit.ts's canonical fallback.
+  const sfUrl = syncrofitRunUrl(name, exForSf, wp, origin, params.token);
+  const shareUrl = `${origin}/s/${params.token}`;
   const qrSvg = await QRCode.toString(shareUrl, { type: 'svg', margin: 1, color: { dark: '#0b0b0c', light: '#ffffff' } });
 
   return (
