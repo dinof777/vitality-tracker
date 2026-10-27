@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSql } from '@/lib/db';
+import { readDeviceId } from '@/lib/device';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,7 +28,19 @@ export async function PUT(
   }
   const exercises = body.exercises ?? [];
 
+  // routine_exercises carries no device_id of its own — it is scoped through
+  // its parent routine, so ownership is checked here, before the delete. A
+  // `delete from routine_exercises where routine_id = <any id>` would
+  // otherwise empty a stranger's routine.
+  const deviceId = readDeviceId(req);
+  if (!deviceId) return NextResponse.json({ error: 'Routine not found' }, { status: 404 });
+
   try {
+    const owned = await sql`
+      select 1 from routines where id = ${params.routineId} and device_id = ${deviceId}
+    `;
+    if (!owned[0]) return NextResponse.json({ error: 'Routine not found' }, { status: 404 });
+
     // Replace the set: clear then re-insert in order.
     await sql`delete from routine_exercises where routine_id = ${params.routineId}`;
     for (let i = 0; i < exercises.length; i++) {

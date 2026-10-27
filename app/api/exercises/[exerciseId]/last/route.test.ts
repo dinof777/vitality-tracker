@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { getSql } from '@/lib/db';
+import { DEVICE_COOKIE } from '@/lib/device';
 import { GET } from './route';
 
 // The read half of the AMRAP contract (DESIGN.md §"AMRAP toggle" → Behaviour
@@ -13,7 +14,13 @@ vi.mock('@/lib/db', () => ({ getSql: vi.fn() }));
 
 type SqlOrNull = ReturnType<typeof getSql>;
 
-const get = () => GET(new Request('http://x'), { params: { exerciseId: 'ex-1' } });
+// The route is device-scoped (lib/device.ts): with no device cookie it answers
+// `last: null` without querying, so every request here carries one.
+const DEVICE = '11111111-2222-4333-8444-555555555555';
+const get = () =>
+  GET(new Request('http://x', { headers: { cookie: `${DEVICE_COOKIE}=${DEVICE}` } }), {
+    params: { exerciseId: 'ex-1' },
+  });
 
 function captureSql(rows: unknown[]) {
   const calls: Array<{ text: string; values: unknown[] }> = [];
@@ -48,6 +55,9 @@ describe('GET /api/exercises/[exerciseId]/last', () => {
     // A bare `limit 1` cannot skip anything — the window is what makes the
     // straight-set preference possible at all.
     expect(text).not.toMatch(/limit 1\b/);
+    // Scoped to the caller — unscoped, this pre-fills a stranger's weight.
+    expect(text).toContain('device_id');
+    expect(calls[0].values).toContain(DEVICE);
   });
 
   it('skips a trailing AMRAP set and returns the working set before it', async () => {
