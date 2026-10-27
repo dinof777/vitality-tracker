@@ -1,19 +1,25 @@
 import { NextResponse } from 'next/server';
 import { getSql } from '@/lib/db';
+import { readDeviceId } from '@/lib/device';
 
 // Always read live DB state — never serve a cached response.
 export const dynamic = 'force-dynamic';
 
 // GET /api/overload/[exerciseId] — max weight per the last 8 workout dates for
 // an exercise, oldest-to-newest, for the progressive-overload sparkline.
+// Scoped to the calling device: unscoped, this plotted every visitor's weights
+// blended into one line, which is worse than useless — it reads as your own
+// progress.
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: { exerciseId: string } },
 ) {
   const sql = getSql();
   if (!sql) {
     return NextResponse.json({ error: 'Database not configured', history: [] }, { status: 503 });
   }
+  const deviceId = readDeviceId(req);
+  if (!deviceId) return NextResponse.json({ history: [] });
 
   try {
     // Max weight per calendar day, last 8 days, oldest -> newest.
@@ -21,7 +27,9 @@ export async function GET(
       select day::text as date, max_weight from (
         select date_trunc('day', created_at) as day, max(weight) as max_weight
         from log_entries
-        where exercise_id = ${params.exerciseId} and weight is not null
+        where device_id = ${deviceId}
+          and exercise_id = ${params.exerciseId}
+          and weight is not null
         group by day
         order by day desc
         limit 8
