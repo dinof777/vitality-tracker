@@ -66,7 +66,7 @@ MERGED=0
 # account. Actions supplies the authenticated triggering actor and numeric ID.
 # Never invent an email: the previous .invalid identity blocked every release.
 if [ "${GITHUB_ACTIONS:-}" = "true" ]; then
-  if ! [[ "${GITHUB_ACTOR_ID:-}" =~ ^[0-9]+$ ]] || ! [[ "${GITHUB_ACTOR:-}" =~ ^[A-Za-z0-9][A-Za-z0-9-]*$ ]]; then
+  if ! [[ "${GITHUB_ACTOR_ID:-}" =~ ^[0-9]+$ ]] || ! [[ "${GITHUB_ACTOR:-}" =~ ^[A-Za-z0-9][A-Za-z0-9-]*(\[bot\])?$ ]]; then
     echo "[build-release] verified GitHub actor identity is missing; no release created" >&2
     exit 2
   fi
