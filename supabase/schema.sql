@@ -235,8 +235,12 @@ create table if not exists exercise_aliases (
 
 -- routines: a named training day / blueprint (e.g. "Upper Pump — Week 1").
 -- day_of_week is 1=Mon … 7=Sun, nullable for routines not tied to a weekday.
+-- device_id: which anonymous visitor owns this (see 0014) — the uuid in the
+-- httpOnly `vt_device` cookie. Nullable only so pre-0014 rows can stay
+-- orphaned; every query goes through lib/device.ts and filters on it.
 create table if not exists routines (
   id            uuid primary key default gen_random_uuid(),
+  device_id     text,
   name          text not null,
   day_of_week   int check (day_of_week between 1 and 7),
   sort_order    int not null default 0,
@@ -266,8 +270,10 @@ create table if not exists routine_exercises (
 
 -- workouts: a single training session. routine_id is nullable so you can log
 -- a freestyle session. finished_at is null while the session is in progress.
+-- device_id scopes the session to one anonymous visitor (0014).
 create table if not exists workouts (
   id          uuid primary key default gen_random_uuid(),
+  device_id   text,
   routine_id  uuid references routines(id) on delete set null,
   started_at  timestamptz not null default now(),
   finished_at timestamptz,
@@ -277,8 +283,11 @@ create table if not exists workouts (
 -- log_entries: one row per set performed. This is the progressive-overload spine.
 -- set_type is constrained to the four Vitality set styles.
 -- rpe (rate of perceived exertion) is 1–10, nullable.
+-- device_id is denormalized from the parent workout (0014) so the overload
+-- sparkline and last-set lookup can scope without a join.
 create table if not exists log_entries (
   id          uuid primary key default gen_random_uuid(),
+  device_id   text,
   workout_id  uuid not null references workouts(id)  on delete cascade,
   exercise_id uuid not null references exercises(id) on delete cascade,
   set_number  int  not null,
@@ -292,12 +301,16 @@ create table if not exists log_entries (
   created_at  timestamptz not null default now()
 );
 
--- mobility_logs: the Daily 5 mobility checklist, one row per calendar day.
+-- mobility_logs: the Daily 5 mobility checklist, one row per device per day.
 -- completed_items is a jsonb array of the checklist item keys ticked that day.
 -- streak_count is the running consecutive-day streak as of logged_date.
+-- The uniqueness is (device_id, logged_date), NOT logged_date alone: a
+-- table-wide unique on the date meant one Daily 5 row for the whole internet
+-- and two visitors overwrote each other (0014).
 create table if not exists mobility_logs (
   id              uuid primary key default gen_random_uuid(),
-  logged_date     date not null unique,
+  device_id       text,
+  logged_date     date not null,
   completed_items jsonb not null default '[]'::jsonb,
   streak_count    int  not null default 0,
   created_at      timestamptz not null default now()
@@ -345,6 +358,16 @@ create index if not exists idx_log_entries_exercise_id      on log_entries (exer
 -- Progressive-overload sparkline query: weight history per exercise over time.
 create index if not exists idx_log_entries_exercise_created on log_entries (exercise_id, created_at desc);
 create index if not exists idx_mobility_logs_logged_date    on mobility_logs (logged_date desc);
+-- Per-device scoping (0014): device_id leads, because every consumer query
+-- filters on it first. The mobility unique index is partial so the orphaned
+-- pre-0014 rows (device_id null) are excluded from it.
+create index if not exists idx_routines_device      on routines      (device_id, sort_order);
+create index if not exists idx_workouts_device      on workouts      (device_id, started_at desc);
+create index if not exists idx_log_entries_device   on log_entries   (device_id, exercise_id, created_at desc);
+create index if not exists idx_mobility_logs_device on mobility_logs (device_id, logged_date);
+create unique index if not exists uq_mobility_logs_device_date
+  on mobility_logs (device_id, logged_date)
+  where device_id is not null;
 -- Taxonomy: the picker reads "canon + this gym's" on every load.
 create index if not exists idx_taxonomy_kind_status on taxonomy_terms (kind, status);
 create index if not exists idx_taxonomy_proposer    on taxonomy_terms (created_by_tenant_id);
