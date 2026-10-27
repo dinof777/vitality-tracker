@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSql } from '@/lib/db';
-import { readDeviceId } from '@/lib/device';
 import { pickPrefillSet, type PrefillCandidate } from '@/lib/prefill';
+import { readDeviceId } from '@/lib/device';
 
 // Always read live DB state.
 export const dynamic = 'force-dynamic';

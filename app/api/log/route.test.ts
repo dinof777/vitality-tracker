@@ -39,6 +39,15 @@ function captureSql(result: unknown[] = [{ id: 'entry-1' }]) {
   return calls;
 }
 
+// A supplied workoutId is first checked against the caller's device (a
+// `select` before the INSERT), so the entry write is found by its text rather
+// than assumed to be the first query.
+function entryInsert(calls: Array<{ text: string; values: unknown[] }>) {
+  const call = calls.find((c) => c.text.toLowerCase().includes('insert into log_entries'));
+  if (!call) throw new Error('no insert into log_entries was run');
+  return call;
+}
+
 beforeEach(() => {
   vi.mocked(getSql).mockReset();
 });
@@ -49,14 +58,12 @@ describe('POST /api/log — set_type persistence', () => {
 
     await post({ ...baseSet, setType: 'amrap' });
 
-    expect(calls).toHaveLength(1);
-    const text = calls[0].text.toLowerCase();
-    expect(text).toContain('insert into log_entries');
+    const insert = entryInsert(calls);
     // The column must be named explicitly — relying on positional order or on
     // the column's `normal` default is how an AMRAP set turns into a straight
     // set without anything failing.
-    expect(text).toContain('set_type');
-    expect(calls[0].values).toContain('amrap');
+    expect(insert.text.toLowerCase()).toContain('set_type');
+    expect(insert.values).toContain('amrap');
   });
 
   it.each(['normal', 'amrap', 'dropset', 'half_rep'] as const)(
@@ -67,7 +74,7 @@ describe('POST /api/log — set_type persistence', () => {
       const res = await post({ ...baseSet, setType });
 
       expect(res.status).toBe(200);
-      expect(calls[0].values).toContain(setType);
+      expect(entryInsert(calls).values).toContain(setType);
     },
   );
 
@@ -78,9 +85,10 @@ describe('POST /api/log — set_type persistence', () => {
 
     await post({ ...baseSet, weight: 115, reps: 19, setType: 'amrap' });
 
-    expect(calls[0].values).toContain(115);
-    expect(calls[0].values).toContain(19);
-    expect(calls[0].values).toContain('amrap');
+    const { values } = entryInsert(calls);
+    expect(values).toContain(115);
+    expect(values).toContain(19);
+    expect(values).toContain('amrap');
   });
 
   it('attaches the set to the existing workout without creating a second one', async () => {
@@ -91,8 +99,11 @@ describe('POST /api/log — set_type persistence', () => {
     const res = await post({ ...baseSet, setType: 'amrap' });
     const json = await res.json();
 
-    expect(calls).toHaveLength(1); // no `insert into workouts`
-    expect(calls[0].text.toLowerCase()).not.toContain('insert into workouts');
+    // Ownership check, then the entry — no `insert into workouts`.
+    expect(calls).toHaveLength(2);
+    expect(calls[0].text.toLowerCase()).toContain('select 1 from workouts');
+    expect(calls.some((c) => c.text.toLowerCase().includes('insert into workouts'))).toBe(false);
+    expect(entryInsert(calls).values).toContain('workout-1');
     expect(json.workoutId).toBe('workout-1');
   });
 
