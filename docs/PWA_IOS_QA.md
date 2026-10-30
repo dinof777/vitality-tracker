@@ -4,12 +4,15 @@
 (`6152942f-bc47-4927-8543-4d02508cc942`)
 **Written:** 2026-10-08
 **Updated:** 2026-10-10 — C6 settled by Dino's decision; C2b and C3 closed from code (§6).
+**Retired:** 2026-10-29 — Dino: *"I dont care if people add to home screen or not."* Home Screen
+install is not a goal, so the device test (C1, C2, C4, C5) will not be run and nothing below is
+an open gate. The audit is kept for reference only; the C2b and C3 findings are not scheduled.
 **Scope of this document:** the pass criteria, the code-level audit behind each one, and the
 device record to fill in. It is the QA gate the project was missing — previously "Build the
 navigation shell + PWA install flow" was marked Done with no definition of done for iOS.
 
-**Current state:** four of the seven criteria still need a phone (C1, C2, C4, C5). C2b and C3 are
-closed as FAIL from the code and need no device. C6 is withdrawn by decision. See §6.
+**Current state:** retired (see above). Before retirement, four criteria were waiting on a phone
+(C1, C2, C4, C5), C2b and C3 were closed as FAIL from the code, and C6 was withdrawn. See §6.
 
 ---
 
